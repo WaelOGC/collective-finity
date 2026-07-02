@@ -1,12 +1,16 @@
+.cf-page-shell.cf-legal-page {
+    padding-bottom: 5px;
+}
+
 .cf-legal-page {
-    padding: 90px 20px 140px;
+    padding: 90px 20px 5px;
 }
 
 .cf-legal-layout {
     display: grid;
     gap: 28px;
     margin: 0 auto;
-    max-width: 720px;
+    max-width: 960px;
 }
 
 .cf-legal-breadcrumb ol {
@@ -157,6 +161,11 @@
 .cf-legal-quick-nav__list a:hover,
 .cf-legal-quick-nav__list a:focus-visible {
     text-decoration: underline;
+}
+
+main.cf-legal-page ~ .cf-site-footer,
+main.cf-legal-page ~ .cf-theme-part--footer {
+    margin-top: 0;
 }
 
 @media (max-width: 768px) {

@@ -319,10 +319,6 @@ function collective_finity_create_default_pages() {
         $existing_page = get_page_by_title( $page_data['post_title'], OBJECT, 'page' );
         if ( ! $existing_page ) {
             wp_insert_post( $page_data );
-        } else {
-            if ( ! empty( $page_data['meta_input']['_wp_page_template'] ) ) {
-                update_post_meta( $existing_page->ID, '_wp_page_template', $page_data['meta_input']['_wp_page_template'] );
-            }
         }
     }
 }
