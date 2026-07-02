@@ -76,7 +76,7 @@ function collective_finity_ad_zone_descriptions() {
  * @param string $zone_id Zone identifier.
  */
 function collective_finity_ad_slot( $zone_id ) {
-    $excluded_page_slugs = array( 'privacy-policy', 'terms-of-service', 'contact' );
+    $excluded_page_slugs = array( 'privacy-policy', 'terms-of-service', 'cookie-policy', 'copyright-policy', 'contact' );
 
     if ( is_front_page() || is_home() ) {
         return;
@@ -111,7 +111,13 @@ function collective_finity_ad_slot( $zone_id ) {
         return;
     }
 
+    $safe_code = preg_replace( '#</script>#i', '<\/script>', $code );
+
     echo '<div class="cf-ad-slot" data-zone="' . esc_attr( $zone_id ) . '">';
-    echo $code; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- admin-entered ad script, capability-gated.
+    printf(
+        '<script type="text/plain" class="cf-ad-consent-gate" data-zone="%1$s">%2$s</script>',
+        esc_attr( $zone_id ),
+        $safe_code // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- admin-entered ad script, capability-gated; deferred until consent.
+    );
     echo '</div>';
 }

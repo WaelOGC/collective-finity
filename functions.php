@@ -15,6 +15,7 @@ require_once get_template_directory() . '/inc/ad-manager.php';
 require_once get_template_directory() . '/inc/theme-options.php';
 require_once get_template_directory() . '/inc/admin-theme-builder.php';
 require_once get_template_directory() . '/inc/customizer-theme-parts.php';
+require_once get_template_directory() . '/inc/legal-pages.php';
 
 /**
  * 1. BASIC THEME SUPPORT & MENUS
@@ -175,12 +176,13 @@ function collective_finity_get_footer_menu_sections() {
         ),
         'legal' => array(
             'title' => __( 'Legal', 'collective-finity' ),
-            'links' => array(
-                array( 'label' => __( 'Privacy Policy', 'collective-finity' ), 'url' => collective_finity_get_page_link( 'privacy-policy', '/privacy-policy/' ) ),
-                array( 'label' => __( 'Terms of Service', 'collective-finity' ), 'url' => collective_finity_get_page_link( 'terms-of-service', '/terms-of-service/' ) ),
-            ),
+            'links' => collective_finity_get_published_legal_links_for_footer(),
         ),
     );
+
+    if ( empty( $sections['legal']['links'] ) ) {
+        unset( $sections['legal'] );
+    }
 
     return apply_filters( 'collective_finity_footer_menu_sections', $sections );
 }
@@ -342,6 +344,27 @@ function collective_finity_scripts() {
     wp_enqueue_style( 'dashicons' );
     wp_enqueue_script( 'jquery' );
     wp_enqueue_script( 'music-player-js', get_template_directory_uri() . '/js/music-player.js', array( 'jquery' ), $player_ver, true );
+
+    $cookie_css_path = get_template_directory() . '/assets/css/cookie-consent.css';
+    $cookie_js_path  = get_template_directory() . '/assets/js/cookie-consent.js';
+    $cookie_css_ver  = file_exists( $cookie_css_path ) ? filemtime( $cookie_css_path ) : $theme_version;
+    $cookie_js_ver   = file_exists( $cookie_js_path ) ? filemtime( $cookie_js_path ) : $theme_version;
+
+    wp_enqueue_style( 'cf-cookie-consent', get_template_directory_uri() . '/assets/css/cookie-consent.css', array( 'main-style' ), $cookie_css_ver );
+    wp_enqueue_script( 'cf-cookie-consent', get_template_directory_uri() . '/assets/js/cookie-consent.js', array(), $cookie_js_ver, true );
+
+    $cookie_policy_page = get_page_by_path( 'cookie-policy', OBJECT, 'page' );
+    $cookie_policy_url  = ( $cookie_policy_page && 'publish' === $cookie_policy_page->post_status )
+        ? get_permalink( $cookie_policy_page )
+        : home_url( '/cookie-policy/' );
+
+    wp_localize_script(
+        'cf-cookie-consent',
+        'cfCookieConsentConfig',
+        array(
+            'cookiePolicyUrl' => $cookie_policy_url,
+        )
+    );
 
     wp_localize_script( 'music-player-js', 'cf_ajax', array(
         'ajax_url'  => admin_url( 'admin-ajax.php' ),

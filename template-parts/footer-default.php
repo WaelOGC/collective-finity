@@ -100,6 +100,9 @@ $cf_copyright     = collective_finity_get_theme_option( 'footer_copyright' );
                 }
                 ?>
             </p>
+            <button type="button" class="cf-cookie-settings-link" data-cf-cookie-settings>
+                <?php esc_html_e( 'Cookie Settings', 'collective-finity' ); ?>
+            </button>
         </div>
     </div>
 </footer>
