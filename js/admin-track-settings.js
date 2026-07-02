@@ -44,6 +44,14 @@
 
         initMediaFieldStates();
 
+        var urlParams = new URLSearchParams(window.location.search);
+        var preselectAlbum = urlParams.get('preselect_album');
+        if (preselectAlbum) {
+            $('.cf-release-type-radio[value="album_track"]').prop('checked', true);
+            handleReleaseTypeToggle();
+            $('#associated_album').val(preselectAlbum);
+        }
+
         var mediaUploader;
 
         $(document).on('click', '.cf-media-upload-btn', function(e) {

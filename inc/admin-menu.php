@@ -17,6 +17,16 @@ function collective_finity_admin_menu_slug() {
 }
 
 /**
+ * Theme-owned admin.php page slugs that receive Collective Finity branding.
+ */
+function collective_finity_branded_admin_page_slugs() {
+    return array(
+        collective_finity_admin_menu_slug(),
+        'collective-finity-options',
+    );
+}
+
+/**
  * Register the Collective Finity top-level menu and dashboard (priority 5).
  */
 function collective_finity_register_admin_menu() {
@@ -208,8 +218,11 @@ function collective_finity_is_branded_admin_screen( $hook = '' ) {
         return true;
     }
 
-    if ( ! empty( $_GET['page'] ) && 'collective-finity-options' === sanitize_key( wp_unslash( $_GET['page'] ) ) ) {
-        return true;
+    if ( ! empty( $_GET['page'] ) ) {
+        $page = sanitize_key( wp_unslash( $_GET['page'] ) );
+        if ( in_array( $page, collective_finity_branded_admin_page_slugs(), true ) ) {
+            return true;
+        }
     }
 
     return false;
@@ -247,3 +260,27 @@ function collective_finity_branded_admin_body_class( $classes ) {
     return $classes;
 }
 add_filter( 'admin_body_class', 'collective_finity_branded_admin_body_class' );
+
+/**
+ * Amber accent for the Collective Finity top-level wp-admin sidebar menu icon.
+ */
+function collective_finity_admin_menu_icon_style() {
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        return;
+    }
+
+    $menu_id = 'toplevel_page_' . collective_finity_admin_menu_slug();
+    ?>
+    <style id="cf-admin-menu-icon">
+        #<?php echo esc_attr( $menu_id ); ?> .wp-menu-image:before {
+            color: #FFB700 !important;
+        }
+        #<?php echo esc_attr( $menu_id ); ?>:hover .wp-menu-image:before,
+        #<?php echo esc_attr( $menu_id ); ?>.wp-has-current-submenu .wp-menu-image:before,
+        #<?php echo esc_attr( $menu_id ); ?>.current .wp-menu-image:before {
+            color: #ffd35c !important;
+        }
+    </style>
+    <?php
+}
+add_action( 'admin_head', 'collective_finity_admin_menu_icon_style' );

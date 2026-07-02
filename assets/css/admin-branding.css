@@ -274,6 +274,17 @@ body.cf-branded-admin-screen .wrap .button-primary:hover {
     color: #000;
 }
 
+body.cf-branded-admin-screen .cf-badge {
+    border-radius: 999px;
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-left: 8px;
+    padding: 3px 10px;
+    vertical-align: middle;
+}
+
 body.cf-branded-admin-screen .cf-badge--active {
     background: var(--cf-gold-tint);
     color: #9a7200;

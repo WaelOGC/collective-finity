@@ -8,7 +8,7 @@
 .cf-meta-section {
     background: #fff;
     border: 1px solid #e2e4e7;
-    border-left: 3px solid transparent;
+    border-left: 3px solid #ffb700;
     border-radius: 10px;
     margin: 0 12px 14px;
     padding: 18px 20px;
@@ -235,29 +235,41 @@
 }
 
 .cf-streaming-field label {
-    align-items: center;
     color: #50575e;
-    display: flex;
+    display: block;
     font-size: 12px;
     font-weight: 600;
-    gap: 6px;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
-.cf-streaming-field--full {
-    grid-column: 1 / -1;
+.cf-streaming-input-wrap {
+    align-items: center;
+    display: flex;
+    position: relative;
 }
 
-.cf-streaming-icon {
+.cf-streaming-input-icon {
     align-items: center;
     background: rgba(255, 183, 0, 0.1);
     border-radius: 50%;
     color: #ffb700;
     display: inline-flex;
     font-size: 14px;
-    height: 22px;
+    height: 28px;
     justify-content: center;
-    width: 22px;
+    left: 8px;
+    pointer-events: none;
+    position: absolute;
+    width: 28px;
+    z-index: 1;
+}
+
+.cf-streaming-input {
+    padding-left: 44px !important;
+}
+
+.cf-streaming-field--full {
+    grid-column: 1 / -1;
 }
 
 .cf-visibility-toggle {
@@ -293,6 +305,83 @@
     border: 1px solid #f0d78c;
     border-radius: 8px;
     padding: 12px 14px;
+}
+
+/* ─── Album tracklist meta box ─── */
+.cf-album-tracklist-wrapper {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    padding: 10px 0;
+}
+
+.cf-album-tracklist-table {
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.cf-album-tracklist-table thead th {
+    background: #f6f7f7;
+    border-bottom: 1px solid #dcdcde;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 12px 14px;
+    text-transform: uppercase;
+}
+
+.cf-album-tracklist-table .cf-album-tracklist-col-bpm,
+.cf-album-tracklist-table .cf-album-tracklist-col-key {
+    width: 100px;
+}
+
+.cf-album-tracklist-table .cf-album-tracklist-col-actions {
+    text-align: right;
+    width: 100px;
+}
+
+.cf-album-tracklist-row td {
+    padding: 12px 14px;
+    vertical-align: middle;
+}
+
+.cf-album-tracklist-row a.cf-album-tracklist-title {
+    color: #0071a1;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.cf-album-tracklist-row a.cf-album-tracklist-title:hover {
+    color: #005a87;
+}
+
+.cf-album-tracklist-empty {
+    background: #f6f7f7;
+    border: 1px dashed #c3c4c7;
+    border-left: 3px solid #ffb700;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    padding: 24px 20px;
+    text-align: center;
+}
+
+.cf-album-tracklist-empty__message {
+    color: #50575e;
+    font-size: 14px;
+    margin: 0 0 16px;
+}
+
+.cf-album-tracklist-actions {
+    margin-top: 4px;
+}
+
+.cf-album-tracklist-actions .button-primary {
+    background: #ffb700;
+    border-color: #c99700;
+    color: #000;
+    font-weight: 700;
+    height: auto;
+    padding: 6px 16px;
 }
 
 @media (max-width: 782px) {

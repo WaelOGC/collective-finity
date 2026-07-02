@@ -539,26 +539,36 @@ add_action( 'init', 'collective_finity_register_track_artist_taxonomy' );
  */
 function collective_finity_enqueue_admin_track_scripts( $hook ) {
     $screen = get_current_screen();
-    
-    if ( $screen && 'tracks' === $screen->post_type ) {
+
+    if ( ! $screen || ! in_array( $hook, array( 'post.php', 'post-new.php' ), true ) ) {
+        return;
+    }
+
+    $css_file_path = get_template_directory() . '/assets/css/admin-track-meta.css';
+    $css_version   = file_exists( $css_file_path ) ? filemtime( $css_file_path ) : '1.0.0';
+
+    if ( 'tracks' === $screen->post_type ) {
         wp_enqueue_media();
-        
+
         $js_file_path = get_template_directory() . '/js/admin-track-settings.js';
         $js_file_uri  = get_template_directory_uri() . '/js/admin-track-settings.js';
-        
-        // Dynamic version based on file modification time to completely bypass browser caching
-        $js_version = file_exists( $js_file_path ) ? filemtime( $js_file_path ) : '1.3.0';
+        $js_version   = file_exists( $js_file_path ) ? filemtime( $js_file_path ) : '1.3.0';
 
-        wp_enqueue_script( 
-            'collective-finity-admin-track-js', 
-            $js_file_uri, 
-            array('jquery'), 
+        wp_enqueue_script(
+            'collective-finity-admin-track-js',
+            $js_file_uri,
+            array( 'jquery' ),
             $js_version,
-            true 
+            true
         );
 
-        $css_file_path = get_template_directory() . '/assets/css/admin-track-meta.css';
-        $css_version   = file_exists( $css_file_path ) ? filemtime( $css_file_path ) : '1.0.0';
+        wp_enqueue_style(
+            'collective-finity-admin-track-css',
+            get_template_directory_uri() . '/assets/css/admin-track-meta.css',
+            array( 'dashicons' ),
+            $css_version
+        );
+    } elseif ( 'albums' === $screen->post_type ) {
         wp_enqueue_style(
             'collective-finity-admin-track-css',
             get_template_directory_uri() . '/assets/css/admin-track-meta.css',
@@ -684,7 +694,7 @@ function collective_finity_render_tracks_meta_box( $post ) {
                     <input type="text" name="track_audio_url" id="track_audio_url" class="cf-input-text" value="<?php echo esc_url( $audio_url ); ?>" readonly />
                     <div class="cf-media-actions">
                         <button type="button" class="button button-primary cf-media-upload-btn" data-target="track_audio_url" data-type="audio"><?php esc_html_e( 'Select File', 'collective-finity' ); ?></button>
-                        <button type="button" class="button cf-media-clear-btn" data-target="track_audio_url" <?php disabled( empty( $audio_url ) ); ?>><?php esc_html_e( 'Remove', 'collective-finity' ); ?></button>
+                        <button type="button" class="button cf-media-clear-btn<?php echo empty( $audio_url ) ? ' is-disabled' : ''; ?>" data-target="track_audio_url" <?php disabled( empty( $audio_url ) ); ?>><?php esc_html_e( 'Remove', 'collective-finity' ); ?></button>
                     </div>
                 </div>
                 <div class="cf-field-group cf-audio-file-row" data-media-target="track_preview_url">
@@ -698,7 +708,7 @@ function collective_finity_render_tracks_meta_box( $post ) {
                     <input type="text" name="track_preview_url" id="track_preview_url" class="cf-input-text" value="<?php echo esc_url( $preview_url ); ?>" readonly />
                     <div class="cf-media-actions">
                         <button type="button" class="button button-primary cf-media-upload-btn" data-target="track_preview_url" data-type="audio"><?php esc_html_e( 'Select File', 'collective-finity' ); ?></button>
-                        <button type="button" class="button cf-media-clear-btn" data-target="track_preview_url" <?php disabled( empty( $preview_url ) ); ?>><?php esc_html_e( 'Remove', 'collective-finity' ); ?></button>
+                        <button type="button" class="button cf-media-clear-btn<?php echo empty( $preview_url ) ? ' is-disabled' : ''; ?>" data-target="track_preview_url" <?php disabled( empty( $preview_url ) ); ?>><?php esc_html_e( 'Remove', 'collective-finity' ); ?></button>
                     </div>
                 </div>
                 <div class="cf-field-group cf-cover-field-group">
@@ -706,7 +716,7 @@ function collective_finity_render_tracks_meta_box( $post ) {
                     <input type="text" name="track_cover_url" id="track_cover_url" class="cf-input-text" value="<?php echo esc_url( $cover_url ); ?>" readonly />
                     <div class="cf-media-actions">
                         <button type="button" class="button button-primary cf-media-upload-btn" data-target="track_cover_url" data-type="image"><?php esc_html_e( 'Upload Image', 'collective-finity' ); ?></button>
-                        <button type="button" class="button cf-media-clear-btn" data-target="track_cover_url" <?php disabled( empty( $cover_url ) ); ?>><?php esc_html_e( 'Remove', 'collective-finity' ); ?></button>
+                        <button type="button" class="button cf-media-clear-btn<?php echo empty( $cover_url ) ? ' is-disabled' : ''; ?>" data-target="track_cover_url" <?php disabled( empty( $cover_url ) ); ?>><?php esc_html_e( 'Remove', 'collective-finity' ); ?></button>
                     </div>
                     <div class="cf-cover-preview-wrap">
                         <img id="track_cover_url_preview" src="<?php echo $cover_url ? esc_url( $cover_url ) : esc_url( collective_finity_default_art_url() ); ?>" class="cf-cover-preview" alt="" />
@@ -724,7 +734,7 @@ function collective_finity_render_tracks_meta_box( $post ) {
                     <input type="text" name="track_lyrics_url" id="track_lyrics_url" class="cf-input-text" value="<?php echo esc_url( $lyrics_url ); ?>" readonly />
                     <div class="cf-media-actions">
                         <button type="button" class="button button-primary cf-media-upload-btn" data-target="track_lyrics_url" data-type="text"><?php esc_html_e( 'Select File', 'collective-finity' ); ?></button>
-                        <button type="button" class="button cf-media-clear-btn" data-target="track_lyrics_url" <?php disabled( empty( $lyrics_url ) ); ?>><?php esc_html_e( 'Remove', 'collective-finity' ); ?></button>
+                        <button type="button" class="button cf-media-clear-btn<?php echo empty( $lyrics_url ) ? ' is-disabled' : ''; ?>" data-target="track_lyrics_url" <?php disabled( empty( $lyrics_url ) ); ?>><?php esc_html_e( 'Remove', 'collective-finity' ); ?></button>
                     </div>
                 </div>
             </div>
@@ -772,24 +782,39 @@ function collective_finity_render_tracks_meta_box( $post ) {
             <h3 class="cf-meta-section-title"><span class="dashicons dashicons-share"></span><?php esc_html_e( 'Streaming Links', 'collective-finity' ); ?></h3>
             <div class="cf-streaming-box">
                 <div class="cf-streaming-field">
-                    <label for="track_spotify_url"><span class="dashicons dashicons-controls-play cf-streaming-icon" aria-hidden="true"></span>Spotify</label>
-                    <input type="url" name="track_spotify_url" id="track_spotify_url" class="cf-input-text" value="<?php echo esc_url( $spotify_url ); ?>" placeholder="https://open.spotify.com/..." />
+                    <label for="track_spotify_url">Spotify</label>
+                    <div class="cf-streaming-input-wrap">
+                        <span class="dashicons dashicons-controls-play cf-streaming-input-icon" aria-hidden="true"></span>
+                        <input type="url" name="track_spotify_url" id="track_spotify_url" class="cf-input-text cf-streaming-input" value="<?php echo esc_url( $spotify_url ); ?>" placeholder="https://open.spotify.com/..." />
+                    </div>
                 </div>
                 <div class="cf-streaming-field">
-                    <label for="track_apple_url"><span class="dashicons dashicons-smartphone cf-streaming-icon" aria-hidden="true"></span>Apple Music</label>
-                    <input type="url" name="track_apple_url" id="track_apple_url" class="cf-input-text" value="<?php echo esc_url( $apple_url ); ?>" placeholder="https://music.apple.com/..." />
+                    <label for="track_apple_url">Apple Music</label>
+                    <div class="cf-streaming-input-wrap">
+                        <span class="dashicons dashicons-smartphone cf-streaming-input-icon" aria-hidden="true"></span>
+                        <input type="url" name="track_apple_url" id="track_apple_url" class="cf-input-text cf-streaming-input" value="<?php echo esc_url( $apple_url ); ?>" placeholder="https://music.apple.com/..." />
+                    </div>
                 </div>
                 <div class="cf-streaming-field">
-                    <label for="track_soundcloud_url"><span class="dashicons dashicons-cloud cf-streaming-icon" aria-hidden="true"></span>SoundCloud</label>
-                    <input type="url" name="track_soundcloud_url" id="track_soundcloud_url" class="cf-input-text" value="<?php echo esc_url( $soundcloud_url ); ?>" placeholder="https://soundcloud.com/..." />
+                    <label for="track_soundcloud_url">SoundCloud</label>
+                    <div class="cf-streaming-input-wrap">
+                        <span class="dashicons dashicons-cloud cf-streaming-input-icon" aria-hidden="true"></span>
+                        <input type="url" name="track_soundcloud_url" id="track_soundcloud_url" class="cf-input-text cf-streaming-input" value="<?php echo esc_url( $soundcloud_url ); ?>" placeholder="https://soundcloud.com/..." />
+                    </div>
                 </div>
                 <div class="cf-streaming-field">
-                    <label for="track_youtube_url"><span class="dashicons dashicons-video-alt3 cf-streaming-icon" aria-hidden="true"></span>YouTube</label>
-                    <input type="url" name="track_youtube_url" id="track_youtube_url" class="cf-input-text" value="<?php echo esc_url( $youtube_url ); ?>" placeholder="https://youtube.com/..." />
+                    <label for="track_youtube_url">YouTube</label>
+                    <div class="cf-streaming-input-wrap">
+                        <span class="dashicons dashicons-video-alt3 cf-streaming-input-icon" aria-hidden="true"></span>
+                        <input type="url" name="track_youtube_url" id="track_youtube_url" class="cf-input-text cf-streaming-input" value="<?php echo esc_url( $youtube_url ); ?>" placeholder="https://youtube.com/..." />
+                    </div>
                 </div>
                 <div class="cf-streaming-field cf-streaming-field--full">
-                    <label for="track_bandcamp_url"><span class="dashicons dashicons-format-audio cf-streaming-icon" aria-hidden="true"></span>Bandcamp</label>
-                    <input type="url" name="track_bandcamp_url" id="track_bandcamp_url" class="cf-input-text" value="<?php echo esc_url( $bandcamp_url ); ?>" placeholder="https://bandcamp.com/..." />
+                    <label for="track_bandcamp_url">Bandcamp</label>
+                    <div class="cf-streaming-input-wrap">
+                        <span class="dashicons dashicons-format-audio cf-streaming-input-icon" aria-hidden="true"></span>
+                        <input type="url" name="track_bandcamp_url" id="track_bandcamp_url" class="cf-input-text cf-streaming-input" value="<?php echo esc_url( $bandcamp_url ); ?>" placeholder="https://bandcamp.com/..." />
+                    </div>
                 </div>
             </div>
         </section>
@@ -897,61 +922,104 @@ function collective_finity_add_album_tracks_meta_box() {
 }
 add_action( 'add_meta_boxes', 'collective_finity_add_album_tracks_meta_box' );
 
+/**
+ * Inject track-count badge beside the Album Tracklist meta box title.
+ */
+function collective_finity_album_tracklist_title_badge_script() {
+    $screen = get_current_screen();
+    if ( ! $screen || 'albums' !== $screen->post_type || 'post' !== $screen->base ) {
+        return;
+    }
+    ?>
+    <script>
+    (function() {
+        var wrap = document.querySelector('.cf-album-tracklist-wrapper[data-track-count]');
+        if (!wrap) {
+            return;
+        }
+        var count = parseInt(wrap.getAttribute('data-track-count'), 10) || 0;
+        var hndle = document.querySelector('#album_tracks_meta_box .postbox-header .hndle, #album_tracks_meta_box > .hndle');
+        if (!hndle || hndle.querySelector('.cf-badge')) {
+            return;
+        }
+        var badge = document.createElement('span');
+        badge.className = 'cf-badge cf-badge--active';
+        badge.textContent = count === 1 ? '1 track' : count + ' tracks';
+        hndle.appendChild(document.createTextNode(' '));
+        hndle.appendChild(badge);
+    })();
+    </script>
+    <?php
+}
+add_action( 'admin_footer', 'collective_finity_album_tracklist_title_badge_script' );
+
 // Render Dynamic Tracks Table inside Album editing screen
 function collective_finity_render_album_tracks_meta_box( $post ) {
     // Query all Tracks that have this Album selected as 'associated_album'
     $tracks_query = new WP_Query( array(
         'post_type'      => 'tracks',
         'posts_per_page' => -1,
-        'post_status'    => array('publish', 'draft', 'pending'),
+        'post_status'    => array( 'publish', 'draft', 'pending' ),
         'meta_query'     => array(
             array(
                 'key'     => 'associated_album',
                 'value'   => $post->ID,
-                'compare' => '='
-            )
-        )
+                'compare' => '=',
+            ),
+        ),
     ) );
 
-    echo '<div class="cf-album-tracklist-wrapper" style="padding: 10px 0; font-family: sans-serif;">';
-    
-    if ( $tracks_query->have_posts() ) {
-        echo '<table class="wp-list-table widefat fixed striped posts" style="margin-bottom: 20px; border-radius: 4px; overflow: hidden; border: 1px solid #ddd;">';
-        echo '<thead><tr style="background:#f9f9f9;">';
-        echo '<th style="font-weight:bold; padding: 10px;">' . __('Track Title', 'collective-finity') . '</th>';
-        echo '<th style="font-weight:bold; width: 100px; padding: 10px;">' . __('BPM', 'collective-finity') . '</th>';
-        echo '<th style="font-weight:bold; width: 100px; padding: 10px;">' . __('Key', 'collective-finity') . '</th>';
-        echo '<th style="font-weight:bold; width: 100px; text-align:right; padding: 10px;">' . __('Actions', 'collective-finity') . '</th>';
-        echo '</tr></thead>';
-        echo '<tbody>';
-        
-        while ( $tracks_query->have_posts() ) {
-            $tracks_query->the_post();
-            $track_id = get_the_ID();
-            $bpm = get_post_meta($track_id, 'track_bpm', true) ?: '-';
-            $key = get_post_meta($track_id, 'track_key', true) ?: '-';
-            $edit_link = get_edit_post_link($track_id);
-            
-            echo '<tr>';
-            echo '<td style="padding: 10px;"><strong><a href="' . esc_url($edit_link) . '" style="text-decoration:none; color:#0071a1;">' . esc_html(get_the_title()) . '</a></strong></td>';
-            echo '<td style="padding: 10px;">' . esc_html($bpm) . '</td>';
-            echo '<td style="padding: 10px;">' . esc_html($key) . '</td>';
-            echo '<td style="padding: 10px; text-align:right;"><a href="' . esc_url($edit_link) . '" class="button button-small">' . __('Edit Track', 'collective-finity') . '</a></td>';
-            echo '</tr>';
-        }
-        wp_reset_postdata();
-        
-        echo '</tbody>';
-        echo '</table>';
-    } else {
-        echo '<p style="color:#666; font-style:italic; margin-bottom: 20px; background: #fafafa; padding: 15px; border-radius: 4px; border: 1px solid #eee;">' . esc_html__( 'No tracks have been assigned to this album yet.', 'collective-finity' ) . '</p>';
-    }
+    $track_count = (int) $tracks_query->found_posts;
+    $add_new_url = admin_url( 'post-new.php?post_type=tracks&preselect_album=' . $post->ID );
+    ?>
+    <div class="cf-album-tracklist-wrapper" data-track-count="<?php echo esc_attr( (string) $track_count ); ?>">
+        <?php if ( $tracks_query->have_posts() ) : ?>
+            <table class="wp-list-table widefat fixed striped posts cf-album-tracklist-table">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e( 'Track Title', 'collective-finity' ); ?></th>
+                        <th class="cf-album-tracklist-col-bpm"><?php esc_html_e( 'BPM', 'collective-finity' ); ?></th>
+                        <th class="cf-album-tracklist-col-key"><?php esc_html_e( 'Key', 'collective-finity' ); ?></th>
+                        <th class="cf-album-tracklist-col-actions"><?php esc_html_e( 'Actions', 'collective-finity' ); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    while ( $tracks_query->have_posts() ) :
+                        $tracks_query->the_post();
+                        $track_id  = get_the_ID();
+                        $bpm       = get_post_meta( $track_id, 'track_bpm', true ) ?: '-';
+                        $key       = get_post_meta( $track_id, 'track_key', true ) ?: '-';
+                        $edit_link = get_edit_post_link( $track_id );
+                        ?>
+                        <tr class="cf-album-tracklist-row">
+                            <td>
+                                <a href="<?php echo esc_url( $edit_link ); ?>" class="cf-album-tracklist-title"><?php echo esc_html( get_the_title() ); ?></a>
+                            </td>
+                            <td><?php echo esc_html( $bpm ); ?></td>
+                            <td><?php echo esc_html( $key ); ?></td>
+                            <td class="cf-album-tracklist-col-actions">
+                                <a href="<?php echo esc_url( $edit_link ); ?>" class="button button-small"><?php esc_html_e( 'Edit Track', 'collective-finity' ); ?></a>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+            <?php wp_reset_postdata(); ?>
+        <?php else : ?>
+            <div class="cf-album-tracklist-empty">
+                <p class="cf-album-tracklist-empty__message"><?php esc_html_e( 'No tracks have been assigned to this album yet.', 'collective-finity' ); ?></p>
+                <a href="<?php echo esc_url( $add_new_url ); ?>" class="button button-primary"><?php esc_html_e( 'Add New Track', 'collective-finity' ); ?></a>
+            </div>
+        <?php endif; ?>
 
-    // Dynamic URL forwarding to "Add New Track" with current Album ID pre-selected
-    $add_new_url = admin_url('post-new.php?post_type=tracks&preselect_album=' . $post->ID);
-    echo '<a href="' . esc_url($add_new_url) . '" class="button button-primary" style="padding: 5px 15px; height: auto; font-weight: bold;">' . esc_html__( '+ Add New Track to this Album', 'collective-finity' ) . '</a>';
-    
-    echo '</div>';
+        <?php if ( $track_count > 0 ) : ?>
+            <div class="cf-album-tracklist-actions">
+                <a href="<?php echo esc_url( $add_new_url ); ?>" class="button button-primary"><?php esc_html_e( '+ Add New Track to this Album', 'collective-finity' ); ?></a>
+            </div>
+        <?php endif; ?>
+    </div>
+    <?php
 }
 
 
