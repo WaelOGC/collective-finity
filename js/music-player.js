@@ -39,6 +39,47 @@ jQuery(document).ready(function($) {
         }
     }
 
+    function queueTrackKeys(queue) {
+        return (queue || []).map(function(track) {
+            var t = normalizeTrack(track);
+            return t.id != null ? String(t.id) : t.url;
+        });
+    }
+
+    function isSameAlbumQueue(albumQueue) {
+        if (!albumQueue || !albumQueue.length || !window.cfPlayerQueue.length) {
+            return false;
+        }
+        if (albumQueue.length !== window.cfPlayerQueue.length) {
+            return false;
+        }
+        var albumKeys = queueTrackKeys(albumQueue);
+        var playerKeys = queueTrackKeys(window.cfPlayerQueue);
+        for (var i = 0; i < albumKeys.length; i++) {
+            if (albumKeys[i] !== playerKeys[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function updateAlbumPlayBtnState() {
+        var $btn = $('.cf-play-album-btn');
+        if (!$btn.length) {
+            return;
+        }
+        var queue = window.cfAlbumQueue || [];
+        var isSame = isSameAlbumQueue(queue);
+        var $icon = $btn.find('.cf-icon').first();
+        if (isSame && !audio.paused) {
+            $icon.removeClass('cf-icon-play').addClass('cf-icon-pause');
+            $btn.attr('aria-label', 'Pause album');
+        } else {
+            $icon.removeClass('cf-icon-pause').addClass('cf-icon-play');
+            $btn.attr('aria-label', 'Play album');
+        }
+    }
+
     function updatePlayState() {
         if (audio.paused) {
             playBtn.html('<span class="cf-icon cf-icon-play" aria-hidden="true"></span>');
@@ -47,6 +88,7 @@ jQuery(document).ready(function($) {
             playBtn.html('<span class="cf-icon cf-icon-pause" aria-hidden="true"></span>');
             playBtn.attr('aria-label', 'Pause');
         }
+        updateAlbumPlayBtnState();
     }
 
     function updateQueueIndicator() {
@@ -380,6 +422,15 @@ jQuery(document).ready(function($) {
         var queue = window.cfAlbumQueue || [];
         if (!queue.length) {
             showPlayerError('No playable tracks on this album');
+            return;
+        }
+        if (isSameAlbumQueue(queue)) {
+            if (audio.paused) {
+                audio.play().then(updatePlayState).catch(updatePlayState);
+            } else {
+                audio.pause();
+                updatePlayState();
+            }
             return;
         }
         window.playAlbumQueue(queue, 0);
