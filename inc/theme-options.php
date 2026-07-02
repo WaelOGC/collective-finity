@@ -88,51 +88,67 @@ function collective_finity_sanitize_theme_options( $input ) {
         return $output;
     }
 
-    $output['primary_color']      = sanitize_hex_color( $input['primary_color'] ?? $defaults['primary_color'] ) ?: $defaults['primary_color'];
-    $output['accent_color']       = sanitize_hex_color( $input['accent_color'] ?? $defaults['accent_color'] ) ?: $defaults['accent_color'];
-    $output['enable_preloader']   = empty( $input['enable_preloader'] ) ? 0 : 1;
-    $output['enable_back_to_top'] = empty( $input['enable_back_to_top'] ) ? 0 : 1;
-    $output['show_global_player'] = empty( $input['show_global_player'] ) ? 0 : 1;
-    $output['default_volume']     = min( 100, max( 0, absint( $input['default_volume'] ?? $defaults['default_volume'] ) ) );
-    $output['footer_copyright']   = sanitize_text_field( $input['footer_copyright'] ?? '' );
-    $output['footer_tagline']     = sanitize_text_field( $input['footer_tagline'] ?? $defaults['footer_tagline'] );
-    $desc                         = sanitize_text_field( $input['footer_description'] ?? '' );
-    $output['footer_description'] = mb_substr( $desc ?: $defaults['footer_description'], 0, 140 );
-    $social_fields                = array( 'social_instagram', 'social_youtube', 'social_spotify', 'social_facebook', 'social_x' );
-    foreach ( $social_fields as $field ) {
-        $output[ $field ] = esc_url_raw( $input[ $field ] ?? '' );
+    $submitted_tab = isset( $input['_submitted_tab'] ) ? sanitize_key( $input['_submitted_tab'] ) : '';
+
+    if ( 'general' === $submitted_tab ) {
+        $output['primary_color']      = sanitize_hex_color( $input['primary_color'] ?? $defaults['primary_color'] ) ?: $defaults['primary_color'];
+        $output['accent_color']       = sanitize_hex_color( $input['accent_color'] ?? $defaults['accent_color'] ) ?: $defaults['accent_color'];
+        $output['enable_preloader']   = empty( $input['enable_preloader'] ) ? 0 : 1;
+        $output['enable_back_to_top'] = empty( $input['enable_back_to_top'] ) ? 0 : 1;
     }
-    $output['custom_css']         = wp_strip_all_tags( $input['custom_css'] ?? '' );
 
-    $output['ad_preview_mode'] = empty( $input['ad_preview_mode'] ) ? 0 : 1;
+    if ( 'player' === $submitted_tab ) {
+        $output['show_global_player'] = empty( $input['show_global_player'] ) ? 0 : 1;
+        $output['default_volume']     = min( 100, max( 0, absint( $input['default_volume'] ?? $defaults['default_volume'] ) ) );
+    }
 
-    $default_zones = collective_finity_default_ad_zones();
-    $input_zones   = isset( $input['ad_zones'] ) && is_array( $input['ad_zones'] ) ? $input['ad_zones'] : array();
-    $output['ad_zones'] = $output['ad_zones'] ?? $default_zones;
-
-    foreach ( $default_zones as $zone_id => $zone_defaults ) {
-        $zone_input = isset( $input_zones[ $zone_id ] ) && is_array( $input_zones[ $zone_id ] ) ? $input_zones[ $zone_id ] : array();
-
-        $output['ad_zones'][ $zone_id ]['enabled'] = empty( $zone_input['enabled'] ) ? 0 : 1;
-
-        if ( current_user_can( 'unfiltered_html' ) ) {
-            $output['ad_zones'][ $zone_id ]['code'] = isset( $zone_input['code'] ) ? $zone_input['code'] : '';
-        } else {
-            $output['ad_zones'][ $zone_id ]['code'] = wp_kses_post( $zone_input['code'] ?? '' );
-        }
-
-        if ( isset( $zone_defaults['frequency'] ) ) {
-            $output['ad_zones'][ $zone_id ]['frequency'] = min( 50, max( 2, absint( $zone_input['frequency'] ?? $zone_defaults['frequency'] ) ) );
+    if ( 'footer' === $submitted_tab ) {
+        $output['footer_copyright']   = sanitize_text_field( $input['footer_copyright'] ?? '' );
+        $output['footer_tagline']     = sanitize_text_field( $input['footer_tagline'] ?? $defaults['footer_tagline'] );
+        $desc                         = sanitize_text_field( $input['footer_description'] ?? '' );
+        $output['footer_description'] = mb_substr( $desc ?: $defaults['footer_description'], 0, 140 );
+        $social_fields                = array( 'social_instagram', 'social_youtube', 'social_spotify', 'social_facebook', 'social_x' );
+        foreach ( $social_fields as $field ) {
+            $output[ $field ] = esc_url_raw( $input[ $field ] ?? '' );
         }
     }
 
-    if ( isset( $input['active_header'] ) ) {
+    if ( 'advanced' === $submitted_tab ) {
+        $output['footer_copyright'] = sanitize_text_field( $input['footer_copyright'] ?? '' );
+        $output['custom_css']       = wp_strip_all_tags( $input['custom_css'] ?? '' );
+    }
+
+    if ( 'ads' === $submitted_tab ) {
+        $output['ad_preview_mode'] = empty( $input['ad_preview_mode'] ) ? 0 : 1;
+
+        $default_zones = collective_finity_default_ad_zones();
+        $input_zones   = isset( $input['ad_zones'] ) && is_array( $input['ad_zones'] ) ? $input['ad_zones'] : array();
+        $output['ad_zones'] = $output['ad_zones'] ?? $default_zones;
+
+        foreach ( $default_zones as $zone_id => $zone_defaults ) {
+            $zone_input = isset( $input_zones[ $zone_id ] ) && is_array( $input_zones[ $zone_id ] ) ? $input_zones[ $zone_id ] : array();
+
+            $output['ad_zones'][ $zone_id ]['enabled'] = empty( $zone_input['enabled'] ) ? 0 : 1;
+
+            if ( current_user_can( 'unfiltered_html' ) ) {
+                $output['ad_zones'][ $zone_id ]['code'] = isset( $zone_input['code'] ) ? $zone_input['code'] : '';
+            } else {
+                $output['ad_zones'][ $zone_id ]['code'] = wp_kses_post( $zone_input['code'] ?? '' );
+            }
+
+            if ( isset( $zone_defaults['frequency'] ) ) {
+                $output['ad_zones'][ $zone_id ]['frequency'] = min( 50, max( 2, absint( $zone_input['frequency'] ?? $zone_defaults['frequency'] ) ) );
+            }
+        }
+    }
+
+    if ( 'header' === $submitted_tab && isset( $input['active_header'] ) ) {
         collective_finity_set_theme_part_template_id( 'header', absint( $input['active_header'] ) );
     }
-    if ( isset( $input['active_footer'] ) ) {
+    if ( 'footer' === $submitted_tab && isset( $input['active_footer'] ) ) {
         collective_finity_set_theme_part_template_id( 'footer', absint( $input['active_footer'] ) );
     }
-    if ( isset( $input['active_sidebar'] ) ) {
+    if ( 'sidebar' === $submitted_tab && isset( $input['active_sidebar'] ) ) {
         collective_finity_set_theme_part_template_id( 'sidebar', absint( $input['active_sidebar'] ) );
     }
 
@@ -188,6 +204,7 @@ function collective_finity_render_theme_options_page() {
 
         <form method="post" action="options.php" class="cf-theme-options-form">
             <?php settings_fields( 'collective_finity_theme_options_group' ); ?>
+            <input type="hidden" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[_submitted_tab]" value="<?php echo esc_attr( $active_tab ); ?>">
             <div class="cf-theme-options-panel">
                 <?php
                 switch ( $active_tab ) {
