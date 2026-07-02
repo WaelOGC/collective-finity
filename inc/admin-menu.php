@@ -60,98 +60,10 @@ function collective_finity_register_theme_options_submenu() {
 add_action( 'admin_menu', 'collective_finity_register_theme_options_submenu', 6 );
 
 /**
- * Attempt to nest the CF Auth plugin menu under Collective Finity without modifying the plugin.
- *
- * @return bool Whether reparenting succeeded.
- */
-function collective_finity_reparent_cf_auth_menu() {
-    global $menu, $submenu;
-
-    $auth_slug = null;
-
-    foreach ( (array) $menu as $item ) {
-        if ( empty( $item[2] ) ) {
-            continue;
-        }
-
-        $title = wp_strip_all_tags( (string) $item[0] );
-        $slug  = (string) $item[2];
-
-        if ( false !== stripos( $title, 'CF Auth' )
-            || 0 === strpos( $slug, 'cf-auth' )
-            || 0 === strpos( $slug, 'cf_auth' ) ) {
-            $auth_slug = $slug;
-            break;
-        }
-    }
-
-    if ( ! $auth_slug ) {
-        return false;
-    }
-
-    $parent = collective_finity_admin_menu_slug();
-
-    if ( ! empty( $submenu[ $auth_slug ] ) ) {
-        if ( ! isset( $submenu[ $parent ] ) ) {
-            $submenu[ $parent ] = array();
-        }
-
-        foreach ( $submenu[ $auth_slug ] as $item ) {
-            $submenu[ $parent ][] = $item;
-        }
-    } else {
-        add_submenu_page(
-            $parent,
-            __( 'CF Auth', 'collective-finity' ),
-            __( 'CF Auth', 'collective-finity' ),
-            'manage_options',
-            $auth_slug
-        );
-    }
-
-    remove_menu_page( $auth_slug );
-
-    return true;
-}
-add_action( 'admin_menu', 'collective_finity_reparent_cf_auth_menu', 999 );
-
-/**
- * Resolve CF Auth admin URL for dashboard quick-link.
+ * CF Auth admin URL for dashboard quick-link.
  */
 function collective_finity_get_cf_auth_admin_url() {
-    global $submenu;
-
-    $parent = collective_finity_admin_menu_slug();
-
-    if ( ! empty( $submenu[ $parent ] ) ) {
-        foreach ( $submenu[ $parent ] as $item ) {
-            if ( empty( $item[2] ) ) {
-                continue;
-            }
-            $slug = (string) $item[2];
-            if ( false !== stripos( (string) $item[0], 'CF Auth' )
-                || 0 === strpos( $slug, 'cf-auth' )
-                || 0 === strpos( $slug, 'cf_auth' ) ) {
-                return admin_url( 'admin.php?page=' . $slug );
-            }
-        }
-    }
-
-    global $menu;
-    foreach ( (array) $menu as $item ) {
-        if ( empty( $item[2] ) ) {
-            continue;
-        }
-        $title = wp_strip_all_tags( (string) $item[0] );
-        $slug  = (string) $item[2];
-        if ( false !== stripos( $title, 'CF Auth' )
-            || 0 === strpos( $slug, 'cf-auth' )
-            || 0 === strpos( $slug, 'cf_auth' ) ) {
-            return admin_url( 'admin.php?page=' . $slug );
-        }
-    }
-
-    return '';
+    return admin_url( 'admin.php?page=cf-auth' );
 }
 
 /**
