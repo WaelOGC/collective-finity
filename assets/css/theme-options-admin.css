@@ -1,0 +1,49 @@
+.cf-theme-options-wrap .cf-theme-options-panel {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-top: 16px;
+}
+
+.cf-theme-options-tabs {
+    margin-top: 16px;
+}
+
+.cf-theme-options-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0;
+}
+
+.cf-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #f0f0f1;
+    color: #50575e;
+    font-size: 12px;
+}
+
+.cf-badge--active {
+    background: #edfaef;
+    color: #1e7a33;
+    font-weight: 600;
+}
+
+.cf-back-to-top {
+    position: fixed;
+    right: 24px;
+    bottom: 110px;
+    z-index: 9999;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    background: var(--primary-color, #ffb700);
+    color: #000;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}

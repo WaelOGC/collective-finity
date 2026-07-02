@@ -1,0 +1,309 @@
+/**
+ * Collective Finity — scoped wp-admin branding for theme screens only.
+ */
+
+:root {
+    --cf-primary: #ffb700;
+    --cf-secondary: #0d0d0d;
+    --cf-darker-bg: #050505;
+    --cf-charcoal: #1a1a1a;
+    --cf-charcoal-light: #242424;
+    --cf-gold-tint: rgba(255, 183, 0, 0.1);
+    --cf-font-accent: "Space Mono", Consolas, Monaco, monospace;
+}
+
+/* ─── Page header card ─── */
+.cf-branded-admin-wrap .cf-admin-page-header,
+.cf-admin-dashboard-wrap .cf-admin-page-header {
+    background: var(--cf-secondary);
+    border: 1px solid rgba(255, 183, 0, 0.2);
+    border-bottom: 2px solid var(--cf-primary);
+    border-radius: 10px;
+    color: #fff;
+    margin: 12px 0 20px;
+    padding: 22px 26px;
+}
+
+.cf-branded-admin-wrap .cf-admin-page-header h1,
+.cf-admin-dashboard-wrap .cf-admin-page-header h1 {
+    color: #fff;
+    font-family: var(--cf-font-accent);
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin: 0 0 6px;
+}
+
+.cf-branded-admin-wrap .cf-admin-page-header .description,
+.cf-admin-dashboard-wrap .cf-admin-page-header .description {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 14px;
+    margin: 0;
+}
+
+/* List table screens: style WP's native h1 area */
+body.cf-branded-admin-screen .wrap > h1,
+body.cf-branded-admin-screen .wrap > .wp-header-end {
+    position: relative;
+}
+
+body.cf-branded-admin-screen .wrap > h1 {
+    background: var(--cf-secondary);
+    border: 1px solid rgba(255, 183, 0, 0.2);
+    border-bottom: 2px solid var(--cf-primary);
+    border-radius: 10px 10px 0 0;
+    color: #fff;
+    font-family: var(--cf-font-accent);
+    margin-bottom: 0;
+    padding: 18px 22px;
+}
+
+body.cf-branded-admin-screen .wrap > .page-title-action,
+body.cf-branded-admin-screen .wrap > h1 + .page-title-action {
+    background: var(--cf-primary);
+    border-color: var(--cf-primary);
+    border-radius: 6px;
+    color: #000;
+    font-weight: 700;
+    margin-top: -42px;
+    position: relative;
+    top: -52px;
+    z-index: 2;
+}
+
+body.cf-branded-admin-screen .wrap > .wp-header-end {
+    display: none;
+}
+
+body.cf-branded-admin-screen .wrap > hr.wp-header-end + .notice,
+body.cf-branded-admin-screen .wrap > .notice:first-of-type {
+    margin-top: 8px;
+}
+
+/* ─── Dashboard grid ─── */
+.cf-admin-dashboard-grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 8px;
+}
+
+.cf-admin-dashboard-card {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 140px;
+    padding: 22px;
+    text-decoration: none;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.cf-admin-dashboard-card:hover,
+.cf-admin-dashboard-card:focus {
+    border-color: var(--cf-primary);
+    box-shadow: 0 8px 24px rgba(255, 183, 0, 0.15);
+    color: inherit;
+    transform: translateY(-2px);
+}
+
+.cf-admin-dashboard-card--muted {
+    background: #f6f7f7;
+    cursor: default;
+    opacity: 0.85;
+}
+
+.cf-admin-dashboard-card__icon {
+    align-items: center;
+    background: var(--cf-gold-tint);
+    border-radius: 50%;
+    color: var(--cf-primary);
+    display: inline-flex;
+    font-size: 22px;
+    height: 44px;
+    justify-content: center;
+    width: 44px;
+}
+
+.cf-admin-dashboard-card__title {
+    font-family: var(--cf-font-accent);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.cf-admin-dashboard-card__desc {
+    color: #646970;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+/* ─── Theme Options pill tabs (filter-btn style) ─── */
+.cf-theme-options-wrap .cf-theme-options-tabs {
+    border-bottom: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+    padding: 0;
+}
+
+.cf-theme-options-wrap .cf-theme-options-tabs .nav-tab {
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 20px;
+    color: #50575e;
+    float: none;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0;
+    padding: 8px 18px;
+    transition: all 0.2s ease;
+}
+
+.cf-theme-options-wrap .cf-theme-options-tabs .nav-tab:hover {
+    background: rgba(255, 183, 0, 0.12);
+    border-color: rgba(255, 183, 0, 0.35);
+    color: #1d2327;
+}
+
+.cf-theme-options-wrap .cf-theme-options-tabs .nav-tab-active,
+.cf-theme-options-wrap .cf-theme-options-tabs .nav-tab-active:hover {
+    background: var(--cf-primary);
+    border-color: var(--cf-primary);
+    color: #000;
+    font-weight: 700;
+}
+
+.cf-theme-options-wrap .cf-theme-options-panel {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 0 0 10px 10px;
+    margin-top: 0;
+}
+
+.cf-theme-options-wrap .cf-settings-tab-help {
+    color: #646970;
+    font-style: italic;
+    margin-bottom: 12px;
+}
+
+/* ─── Ad Manager tab ─── */
+.cf-ad-manager-notice {
+    border-left-color: var(--cf-primary) !important;
+    margin: 0 0 20px !important;
+}
+
+.cf-ad-zone-cards {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    margin-top: 16px;
+}
+
+.cf-ad-zone-card {
+    background: #fafafa;
+    border: 1px solid #dcdcde;
+    border-left: 3px solid var(--cf-primary);
+    border-radius: 8px;
+    padding: 16px 18px;
+}
+
+.cf-ad-zone-card__header {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.cf-ad-zone-card__header h3 {
+    font-family: var(--cf-font-accent);
+    font-size: 14px;
+    margin: 0;
+}
+
+.cf-ad-zone-toggle {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* ─── List tables re-skin ─── */
+body.cf-branded-admin-screen .wp-list-table {
+    border: 1px solid #dcdcde;
+    border-radius: 0 0 10px 10px;
+    border-top: none;
+    overflow: hidden;
+}
+
+body.cf-branded-admin-screen .wp-list-table thead th,
+body.cf-branded-admin-screen .wp-list-table thead td {
+    background: var(--cf-charcoal);
+    border-bottom: 1px solid rgba(255, 183, 0, 0.2);
+    color: #fff;
+    font-family: var(--cf-font-accent);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+body.cf-branded-admin-screen .wp-list-table tbody tr:hover {
+    background: rgba(255, 183, 0, 0.06) !important;
+}
+
+body.cf-branded-admin-screen .wp-list-table.striped > tbody > :nth-child(odd) {
+    background: #fff;
+}
+
+body.cf-branded-admin-screen .tablenav .button,
+body.cf-branded-admin-screen .wrap .button-primary {
+    background: var(--cf-primary);
+    border-color: #c99700;
+    color: #000;
+    font-weight: 700;
+    text-shadow: none;
+}
+
+body.cf-branded-admin-screen .wrap .button-primary:hover {
+    background: #e6a500;
+    border-color: #b38600;
+    color: #000;
+}
+
+body.cf-branded-admin-screen .cf-badge--active {
+    background: var(--cf-gold-tint);
+    color: #9a7200;
+    font-weight: 700;
+}
+
+/* ─── Submit buttons on branded screens ─── */
+.cf-branded-admin-wrap .button-primary,
+.cf-branded-admin-wrap input[type="submit"].button-primary {
+    background: var(--cf-primary);
+    border-color: #c99700;
+    color: #000;
+    font-weight: 700;
+    text-shadow: none;
+}
+
+@media (max-width: 960px) {
+    .cf-admin-dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .cf-admin-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body.cf-branded-admin-screen .wrap > h1 + .page-title-action {
+        margin-top: 8px;
+        position: static;
+        top: auto;
+    }
+}

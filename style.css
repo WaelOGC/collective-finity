@@ -1,0 +1,118 @@
+/*
+Theme Name: Collective Finity
+Theme URI: https://collectivefinity.com/
+Author: Collective Finity
+Author URI: https://collectivefinity.com/
+Description: Custom WordPress music theme for cinematic tracks, albums, and immersive playback.
+Version: 1.0.0
+License: GNU General Public License v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: collective-finity
+Tags: music, audio, custom-background, custom-logo, featured-images, editor-style, responsive-layout
+*/
+
+:root {
+    --primary-color: #FFB700;
+    --hover-bg-trans: #FFB70026;
+    --accent-color: #ffbf006a;
+    --secondary-color: #0D0D0D;
+    --darker-bg: #050505;
+    --glass-blur: blur(15px);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.05);
+    --panel-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    --neon-glow: 0 0 15px rgba(255, 183, 0, 0.4);
+}
+
+body {
+    background-color: var(--darker-bg);
+    color: #ffffff;
+    font-family: 'Space Mono', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+#cf-main-app-content {
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.site-main,
+.elementor-page,
+#content,
+.main-content-container,
+.cf-page-shell,
+.cf-home-shell {
+    padding-bottom: 140px;
+    box-sizing: border-box;
+}
+
+.cf-site-brand-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 32px;
+}
+
+.cf-site-brand-link img,
+.cf-brand-logo,
+.cf-site-brand-link img.cf-brand-logo {
+    width: 32px !important;
+    height: 32px !important;
+    max-width: 32px !important;
+    max-height: 32px !important;
+    object-fit: contain !important;
+    border-radius: 6px !important;
+    display: block !important;
+}
+
+.cf-site-brand-link .custom-logo-link,
+.cf-site-brand-link .site-logo,
+.cf-site-brand-link .custom-logo-link img,
+.cf-site-brand-link img.custom-logo {
+    width: 32px !important;
+    height: 32px !important;
+    max-width: 32px !important;
+    max-height: 32px !important;
+    display: inline-block !important;
+}
+
+.cf-brand-text {
+    font-weight: bold;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    color: #fff;
+}
+
+.cf-brand-highlight {
+    color: var(--primary-color);
+}
+
+.cf-header-menu {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cf-header-menu li {
+    margin: 0;
+}
+
+.cf-header-menu li a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: color 0.2s ease;
+}
+
+.cf-header-menu li a:hover {
+    color: var(--primary-color, #FFB700);
+}
+
+.cf-page-loading {
+    opacity: 0.35;
+    transform: translateY(5px);
+    pointer-events: none;
+}
