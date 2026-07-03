@@ -484,74 +484,84 @@ $cf_site_name = collective_finity_brand_name();
             }
             #cf-main-app-content, .site-main, #content, .elementor-page { padding-top: 0 !important; }
         }
+
+        :root {
+            --right-sidebar-width-collapsed: 70px;
+            --right-sidebar-width-expanded: 320px;
+        }
+        body {
+            padding-right: var(--right-sidebar-width-collapsed) !important;
+            transition: padding-left 0.3s cubic-bezier(0.4,0,0.2,1), padding-right 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+        body.cf-account-sidebar-open {
+            padding-right: var(--right-sidebar-width-expanded) !important;
+        }
+        .cf-sidebar-panel--right {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: var(--right-sidebar-width-collapsed);
+            background: #060606;
+            border-left: var(--glass-border);
+            z-index: 10000;
+            overflow-x: hidden;
+            overflow-y: auto;
+            transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+            display: flex;
+            flex-direction: column;
+        }
+        body.cf-account-sidebar-open .cf-sidebar-panel--right {
+            width: var(--right-sidebar-width-expanded);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.8);
+        }
+        .cf-account-sidebar-player {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 20px 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        body.cf-account-sidebar-open .cf-account-sidebar-player {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .cf-account-sidebar-player .cf-player-track-info {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .cf-account-sidebar-player .cf-player-cover {
+            width: 140px;
+            height: 140px;
+        }
+        .cf-account-sidebar-player .cf-player-controls-wrapper {
+            width: 100%;
+        }
+        .cf-account-sidebar-player .cf-player-utilities {
+            justify-content: center;
+        }
+        .cf-account-sidebar-user {
+            padding: 14px 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        body.cf-account-sidebar-open .cf-account-sidebar-user {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #cf-main-app-content, .site-main, #content, .elementor-page {
+            padding-top: 4px !important;
+        }
     </style>
 </head>
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 
-<?php
-collective_finity_render_theme_part(
-    'header',
-    function () {
-        get_template_part( 'template-parts/header', 'default' );
-    }
-);
-?>
-
 <?php get_sidebar(); ?>
+<?php get_template_part( 'template-parts/sidebar-right', 'default' ); ?>
 
-<div id="cf-global-audio-player">
-    <audio id="cf-native-audio-element" preload="auto"></audio>
-    <div class="cf-player-track-info">
-        <div class="cf-player-cover" id="player-track-cover" style="background-image: url('<?php echo esc_url( $cf_logo_url ); ?>');"></div>
-        <div class="cf-player-meta">
-            <div class="cf-player-title" id="player-track-title"><?php esc_html_e( 'Select Track', 'collective-finity' ); ?></div>
-            <div class="cf-player-artist" id="player-track-artist"><?php echo esc_html( $cf_site_name ); ?></div>
-            <div id="player-queue-indicator"></div>
-        </div>
-    </div>
-    <div class="cf-player-controls-wrapper">
-        <div class="cf-player-buttons">
-            <button type="button" class="cf-p-btn" id="player-shuffle-btn" title="<?php esc_attr_e( 'Shuffle', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Shuffle', 'collective-finity' ); ?>">
-                <span class="cf-icon cf-icon-shuffle" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="cf-p-btn cf-skip-btn" id="player-prev-btn" title="<?php esc_attr_e( 'Previous track', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Previous track', 'collective-finity' ); ?>">
-                <span class="cf-icon cf-icon-prev" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="cf-p-btn cf-play-trigger" id="player-toggle-btn" aria-label="<?php esc_attr_e( 'Play', 'collective-finity' ); ?>">
-                <span class="cf-icon cf-icon-play" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="cf-p-btn cf-skip-btn" id="player-next-btn" title="<?php esc_attr_e( 'Next track', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Next track', 'collective-finity' ); ?>">
-                <span class="cf-icon cf-icon-next" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="cf-p-btn" id="player-repeat-btn" title="<?php esc_attr_e( 'Repeat: off', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Repeat', 'collective-finity' ); ?>" data-mode="off">
-                <span class="cf-icon cf-icon-repeat" aria-hidden="true"></span>
-            </button>
-        </div>
-        <div class="cf-player-progress-container">
-            <div class="cf-player-time" id="player-current-time">0:00</div>
-            <div class="cf-player-progress-bar-bg" id="player-progress-bg">
-                <div class="cf-player-progress-fill" id="player-progress-fill"></div>
-            </div>
-            <div class="cf-player-time" id="player-duration">0:00</div>
-        </div>
-    </div>
-    <div class="cf-player-utilities">
-        <button type="button" class="cf-p-btn" id="player-speed-btn" title="<?php esc_attr_e( 'Playback speed', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Playback speed', 'collective-finity' ); ?>">1×</button>
-        <button type="button" class="cf-p-btn cf-like-btn" id="player-like-btn" disabled title="<?php esc_attr_e( 'Like', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Like', 'collective-finity' ); ?>">
-            <span class="cf-icon cf-icon-heart" aria-hidden="true"></span>
-        </button>
-        <button type="button" class="cf-p-btn cf-playlist-btn" id="player-playlist-btn" disabled title="<?php esc_attr_e( 'Add to Playlist', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Add to Playlist', 'collective-finity' ); ?>">
-            <span class="cf-icon cf-icon-playlist" aria-hidden="true"></span>
-        </button>
-        <div class="cf-volume-wrapper">
-            <button type="button" class="cf-p-btn" id="player-volume-icon" aria-label="<?php esc_attr_e( 'Mute', 'collective-finity' ); ?>">
-                <span class="cf-icon cf-icon-volume" aria-hidden="true"></span>
-            </button>
-            <div class="cf-volume-slider-bg" id="player-volume-bg">
-                <div class="cf-volume-fill" id="player-volume-fill"></div>
-            </div>
-        </div>
-    </div>
-</div>
 

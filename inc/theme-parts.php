@@ -330,7 +330,7 @@ function collective_finity_frontend_theme_scripts() {
     $pct    = $volume / 100;
     wp_add_inline_script(
         'music-player-js',
-        'document.addEventListener("DOMContentLoaded",function(){var a=document.getElementById("cf-native-audio-element");if(a){a.volume=' . $pct . ';window.cfLastVolume=' . $pct . ';}var v=document.getElementById("player-volume-fill");if(v){v.style.width="' . $volume . '%";}var b=document.getElementById("cf-back-to-top");if(b){var toggleBtt=function(){if(window.scrollY>320){b.classList.add("is-visible");}else{b.classList.remove("is-visible");}};toggleBtt();window.addEventListener("scroll",toggleBtt,{passive:true});b.addEventListener("click",function(){window.scrollTo({top:0,behavior:"smooth"});});}});'
+        'document.addEventListener("DOMContentLoaded",function(){var a=document.getElementById("cf-native-audio-element");if(a){a.volume=' . $pct . ';window.cfLastVolume=' . $pct . ';}var v=document.getElementById("player-volume-fill");if(v){v.style.width="' . $volume . '%";}var b=document.getElementById("cf-back-to-top");if(b){var toggleBtt=function(){if(window.scrollY>320){b.classList.add("is-visible");}else{b.classList.remove("is-visible");}};toggleBtt();window.addEventListener("scroll",toggleBtt,{passive:true});b.addEventListener("click",function(){window.scrollTo({top:0,behavior:"smooth"});});}});jQuery(document).on("click","#cf-account-sidebar-toggle-btn",function(e){e.preventDefault();jQuery("body").toggleClass("cf-account-sidebar-open");});'
     );
 }
 add_action( 'wp_enqueue_scripts', 'collective_finity_frontend_theme_scripts', 30 );
