@@ -38,6 +38,15 @@ function collective_finity_setup() {
 add_action( 'after_setup_theme', 'collective_finity_setup' );
 
 /**
+ * Body classes for layout features.
+ */
+function collective_finity_body_classes( $classes ) {
+    $classes[] = 'cf-has-right-player';
+    return $classes;
+}
+add_filter( 'body_class', 'collective_finity_body_classes' );
+
+/**
  * Load theme translations.
  */
 function collective_finity_load_textdomain() {

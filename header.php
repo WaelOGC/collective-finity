@@ -168,7 +168,7 @@ $cf_site_name = collective_finity_brand_name();
         .cf-sidebar-logo { flex-shrink: 0 !important; border-radius: 6px; }
 
         /* ─── Global Music Player ─── */
-        #cf-global-audio-player {
+        body:not(.cf-has-right-player) #cf-global-audio-player {
             position: fixed;
             bottom: 0; left: 0; right: 0;
             height: 92px;
@@ -185,6 +185,19 @@ $cf_site_name = collective_finity_brand_name();
             padding: 0 28px;
             box-sizing: border-box;
             direction: ltr;
+        }
+        .cf-account-sidebar-player #cf-global-audio-player {
+            position: static !important;
+            display: flex !important;
+            flex-direction: column !important;
+            height: auto !important;
+            width: 100% !important;
+            background: none !important;
+            backdrop-filter: none !important;
+            box-shadow: none !important;
+            border-top: none !important;
+            padding: 0 !important;
+            gap: 16px !important;
         }
         .cf-player-track-info {
             display: flex;

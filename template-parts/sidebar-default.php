@@ -16,6 +16,9 @@ $playlists_url = is_user_logged_in() ? home_url( '/cf-profile#history' ) : home_
 ?>
 <div id="cf-music-sidebar" class="cf-sidebar-panel">
     <div class="cf-sidebar-brand">
+        <button id="cf-sidebar-toggle-btn" class="cf-p-btn" style="color: var(--primary-color); font-size: 1.3rem; flex-shrink: 0;" aria-label="Toggle sidebar" aria-expanded="false" aria-controls="cf-music-sidebar">
+            <span id="cf-toggle-icon" class="dashicons dashicons-menu-alt3"></span>
+        </button>
         <img src="<?php echo esc_url( $cf_logo_url ); ?>"
              class="cf-sidebar-logo"
              alt="<?php echo esc_attr( $cf_site_name ); ?>"
