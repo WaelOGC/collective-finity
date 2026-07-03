@@ -15,6 +15,17 @@ if ( ! defined( 'ABSPATH' ) ) {
         <?php echo do_shortcode( '[cf_user_menu]' ); ?>
     </div>
 
+    <div class="cf-account-sidebar-quicklinks">
+        <button type="button" class="cf-p-btn cf-quicklink-btn" disabled title="<?php esc_attr_e( 'Notifications — coming soon', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Notifications', 'collective-finity' ); ?>">
+            <span class="dashicons dashicons-bell"></span>
+            <span class="cf-menu-text"><?php esc_html_e( 'Notifications', 'collective-finity' ); ?></span>
+        </button>
+        <button type="button" class="cf-p-btn cf-quicklink-btn" disabled title="<?php esc_attr_e( 'Messages — coming soon', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Messages', 'collective-finity' ); ?>">
+            <span class="dashicons dashicons-email"></span>
+            <span class="cf-menu-text"><?php esc_html_e( 'Messages', 'collective-finity' ); ?></span>
+        </button>
+    </div>
+
     <div class="cf-sidebar-divider"></div>
 
     <div class="cf-account-sidebar-player">

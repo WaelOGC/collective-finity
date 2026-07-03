@@ -518,7 +518,7 @@ $cf_site_name = collective_finity_brand_name();
             background: #060606;
             border-left: var(--glass-border);
             z-index: 10000;
-            overflow-x: hidden;
+            overflow-x: visible;
             overflow-y: auto;
             transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
             display: flex;
@@ -528,18 +528,102 @@ $cf_site_name = collective_finity_brand_name();
             width: var(--right-sidebar-width-expanded);
             box-shadow: -10px 0 30px rgba(0,0,0,0.8);
         }
+        .cf-sidebar-header {
+            justify-content: space-between;
+        }
+        #cf-account-sidebar-toggle-btn .dashicons {
+            transition: transform 0.3s ease;
+        }
+        body.cf-account-sidebar-open #cf-account-sidebar-toggle-btn .dashicons {
+            transform: rotate(180deg);
+        }
+
+        .cf-account-sidebar-user,
         .cf-account-sidebar-player {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            padding: 14px 16px;
+        }
+
+        .cf-account-sidebar-quicklinks {
             display: flex;
             flex-direction: column;
-            gap: 14px;
-            padding: 20px 16px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease;
+            gap: 4px;
+            padding: 4px 10px;
         }
-        body.cf-account-sidebar-open .cf-account-sidebar-player {
-            opacity: 1;
-            pointer-events: auto;
+        body.cf-account-sidebar-open .cf-account-sidebar-quicklinks {
+            flex-direction: row;
+            justify-content: flex-start;
+            gap: 10px;
+            padding: 10px 16px;
+        }
+        body.cf-account-sidebar-open .cf-quicklink-btn {
+            width: auto;
+            flex: 0 0 auto;
+            padding: 10px;
+            justify-content: center;
+        }
+        body.cf-account-sidebar-open .cf-quicklink-btn .cf-menu-text {
+            display: none !important;
+        }
+        .cf-quicklink-btn {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            padding: 11px 12px;
+            background: none;
+            border: none;
+            border-radius: 10px;
+            color: rgba(255,255,255,0.3);
+            cursor: not-allowed;
+            justify-content: flex-start;
+            font-family: 'Space Mono', sans-serif;
+            font-size: 0.82rem;
+        }
+        .cf-quicklink-btn .dashicons {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        body:not(.cf-account-sidebar-open) .cf-user-chevron,
+        body:not(.cf-account-sidebar-open) .cf-menu-text {
+            display: none !important;
+        }
+        body:not(.cf-account-sidebar-open) .cf-account-sidebar-quicklinks {
+            align-items: center;
+        }
+        body:not(.cf-account-sidebar-open) .cf-quicklink-btn {
+            justify-content: center;
+            padding: 11px 0;
+        }
+
+        body:not(.cf-account-sidebar-open) .cf-account-sidebar-player .cf-player-meta,
+        body:not(.cf-account-sidebar-open) .cf-account-sidebar-player .cf-player-progress-container,
+        body:not(.cf-account-sidebar-open) .cf-account-sidebar-player .cf-player-utilities,
+        body:not(.cf-account-sidebar-open) .cf-account-sidebar-player #player-queue-indicator {
+            display: none !important;
+        }
+        body:not(.cf-account-sidebar-open) .cf-account-sidebar-player .cf-player-track-info {
+            justify-content: center;
+        }
+        body:not(.cf-account-sidebar-open) .cf-account-sidebar-player .cf-player-cover {
+            width: 40px;
+            height: 40px;
+        }
+        body:not(.cf-account-sidebar-open) .cf-account-sidebar-player .cf-player-buttons {
+            flex-direction: column;
+            gap: 10px;
+        }
+        body:not(.cf-account-sidebar-open) .cf-account-sidebar-player .cf-p-btn.cf-play-trigger {
+            width: 38px;
+            height: 38px;
+        }
+
+        .cf-account-sidebar-player {
+            border-top: 1px solid rgba(255,255,255,0.05);
         }
         .cf-account-sidebar-player .cf-player-track-info {
             flex-direction: column;
@@ -555,16 +639,6 @@ $cf_site_name = collective_finity_brand_name();
         }
         .cf-account-sidebar-player .cf-player-utilities {
             justify-content: center;
-        }
-        .cf-account-sidebar-user {
-            padding: 14px 16px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease;
-        }
-        body.cf-account-sidebar-open .cf-account-sidebar-user {
-            opacity: 1;
-            pointer-events: auto;
         }
         #cf-main-app-content, .site-main, #content, .elementor-page {
             padding-top: 4px !important;
