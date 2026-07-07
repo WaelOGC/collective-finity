@@ -4,29 +4,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 <div id="cf-account-sidebar" class="cf-sidebar-panel cf-sidebar-panel--right">
-    <div class="cf-sidebar-header">
-        <button id="cf-account-sidebar-toggle-btn" class="cf-p-btn" aria-label="<?php esc_attr_e( 'Toggle account panel', 'collective-finity' ); ?>" aria-expanded="false" aria-controls="cf-account-sidebar">
-            <span id="cf-account-toggle-icon" class="dashicons dashicons-arrow-left-alt2"></span>
-        </button>
-        <span class="cf-menu-text cf-sidebar-title-text"><?php esc_html_e( 'Account', 'collective-finity' ); ?></span>
-    </div>
+    <div class="cf-account-sidebar-top">
+        <div class="cf-sidebar-header">
+            <button id="cf-account-sidebar-toggle-btn" class="cf-p-btn" aria-label="<?php esc_attr_e( 'Toggle account panel', 'collective-finity' ); ?>" aria-expanded="false" aria-controls="cf-account-sidebar">
+                <span id="cf-account-toggle-icon" class="dashicons dashicons-menu-alt3"></span>
+            </button>
+            <span class="cf-menu-text cf-sidebar-title-text"><?php esc_html_e( 'Account', 'collective-finity' ); ?></span>
+        </div>
 
-    <div class="cf-account-sidebar-user">
-        <?php echo do_shortcode( '[cf_user_menu]' ); ?>
-    </div>
+        <div class="cf-account-sidebar-toprow">
+            <div class="cf-account-sidebar-user">
+                <?php echo do_shortcode( '[cf_user_menu]' ); ?>
+            </div>
 
-    <div class="cf-account-sidebar-quicklinks">
-        <button type="button" class="cf-p-btn cf-quicklink-btn" disabled title="<?php esc_attr_e( 'Notifications — coming soon', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Notifications', 'collective-finity' ); ?>">
-            <span class="dashicons dashicons-bell"></span>
-            <span class="cf-menu-text"><?php esc_html_e( 'Notifications', 'collective-finity' ); ?></span>
-        </button>
-        <button type="button" class="cf-p-btn cf-quicklink-btn" disabled title="<?php esc_attr_e( 'Messages — coming soon', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Messages', 'collective-finity' ); ?>">
-            <span class="dashicons dashicons-email"></span>
-            <span class="cf-menu-text"><?php esc_html_e( 'Messages', 'collective-finity' ); ?></span>
-        </button>
+            <div class="cf-account-sidebar-quicklinks">
+                <button type="button" class="cf-p-btn cf-quicklink-btn" disabled title="<?php esc_attr_e( 'Notifications — coming soon', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Notifications', 'collective-finity' ); ?>">
+                    <span class="dashicons dashicons-bell"></span>
+                    <span class="cf-menu-text"><?php esc_html_e( 'Notifications', 'collective-finity' ); ?></span>
+                </button>
+                <button type="button" class="cf-p-btn cf-quicklink-btn" disabled title="<?php esc_attr_e( 'Messages — coming soon', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Messages', 'collective-finity' ); ?>">
+                    <span class="dashicons dashicons-email"></span>
+                    <span class="cf-menu-text"><?php esc_html_e( 'Messages', 'collective-finity' ); ?></span>
+                </button>
+            </div>
+        </div>
     </div>
-
-    <div class="cf-sidebar-divider"></div>
 
     <div class="cf-account-sidebar-player">
         <div id="cf-global-audio-player">
