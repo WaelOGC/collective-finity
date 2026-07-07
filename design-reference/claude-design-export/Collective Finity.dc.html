@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #050505; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: #262626; border-radius: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    @keyframes cfFadeDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes cfDrawerIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+    @keyframes cfOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</helmet>
+
+<div style="background:#050505; min-height:100vh; width:100%; display:flex; flex-direction:column; align-items:center; padding:24px 16px 64px; font-family:'Inter',-apple-system,sans-serif; color:#FFFFFF;">
+
+  <!-- ============ PREVIEW CONTROL BAR ============ -->
+  <div style="width:100%; max-width:1440px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; background:#0B0B0B; border:1px solid #1E1E1E; border-radius:12px; padding:14px 18px; margin-bottom:22px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div style="width:10px; height:10px; border-radius:3px; background:#FFB700; transform:rotate(45deg);"></div>
+      <span style="font-family:'Space Mono',monospace; font-size:12px; letter-spacing:0.08em; color:#7A7A7A;">COLLECTIVE FINITY — PROTOTYPE CONTROLS</span>
+    </div>
+    <div style="display:flex; flex-wrap:wrap; align-items:center; gap:18px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-family:'Space Mono',monospace; font-size:11px; color:#7A7A7A;">BREAKPOINT</span>
+        <div style="display:flex; background:#141414; border:1px solid #232323; border-radius:8px; padding:3px; gap:2px;">
+          <sc-for list="{{ bpOptions }}" as="bp" hint-placeholder-count="4">
+            <button onClick="{{ bp.onClick }}" style="{{ bp.style }}" style-hover="{{ bp.styleHover }}">{{ bp.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-family:'Space Mono',monospace; font-size:11px; color:#7A7A7A;">AUTH</span>
+        <button onClick="{{ toggleAuth }}" style="{{ authToggleStyle }}" style-hover="{{ authToggleHoverStyle }}">{{ authToggleLabel }}</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-family:'Space Mono',monospace; font-size:11px; color:#7A7A7A;">JUMP</span>
+        <div style="display:flex; gap:6px;">
+          <sc-for list="{{ jumpOptions }}" as="j" hint-placeholder-count="12">
+            <button onClick="{{ j.onClick }}" style="{{ j.style }}" style-hover="{{ j.styleHover }}">{{ j.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DEVICE FRAME ============ -->
+  <div style="display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; max-width:1440px;">
+    <span style="font-family:'Space Mono',monospace; font-size:11px; color:#7A7A7A; letter-spacing:0.06em;">{{ frameBadge }}</span>
+    <div ref="{{ frameRef }}" style="{{ frameOuterStyle }}">
+      <div style="{{ frameChromeStyle }}">
+
+        <!-- ============ DESKTOP LAYOUT ============ -->
+        <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+          <div style="{{ leftSidebarStyle }}">
+            <div style="display:flex; align-items:center; gap:10px; padding:4px 8px 18px; {{ sidebarCollapsed_borderStyle }}">
+              <div style="width:14px; height:14px; min-width:14px; border-radius:3px; background:#FFB700; transform:rotate(45deg);"></div>
+              <sc-if value="{{ showSidebarLabels }}" hint-placeholder-val="{{ true }}">
+                <span style="font-family:'Space Mono',monospace; font-size:13px; letter-spacing:0.06em; color:#FFFFFF; white-space:nowrap; overflow:hidden;">COLLECTIVE FINITY</span>
+              </sc-if>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:3px;">
+              <sc-for list="{{ mainNav }}" as="item" hint-placeholder-count="5">
+                <button onClick="{{ item.onClick }}" style="{{ item.rowStyle }}" style-hover="{{ item.rowHoverStyle }}" style-active="{{ item.rowActiveStyle }}">
+                  {{ item.iconEl }}
+                  <sc-if value="{{ showSidebarLabels }}" hint-placeholder-val="{{ true }}">
+                    <span style="white-space:nowrap; overflow:hidden;">{{ item.label }}</span>
+                  </sc-if>
+                </button>
+              </sc-for>
+            </div>
+            <div style="height:1px; background:#1E1E1E; margin:12px 4px;"></div>
+            <div style="display:flex; flex-direction:column; gap:3px;">
+              <sc-for list="{{ secondaryNav }}" as="item" hint-placeholder-count="2">
+                <button onClick="{{ item.onClick }}" style="{{ item.rowStyle }}" style-hover="{{ item.rowHoverStyle }}" style-active="{{ item.rowActiveStyle }}">
+                  {{ item.iconEl }}
+                  <sc-if value="{{ showSidebarLabels }}" hint-placeholder-val="{{ true }}">
+                    <span style="white-space:nowrap; overflow:hidden;">{{ item.label }}</span>
+                  </sc-if>
+                </button>
+              </sc-for>
+            </div>
+            <div style="flex:1;"></div>
+            <button onClick="{{ toggleSidebarCollapsed }}" style="{{ collapseBtnStyle }}" style-hover="{{ collapseBtnHoverStyle }}">
+              {{ collapseIconEl }}
+              <sc-if value="{{ showSidebarLabels }}" hint-placeholder-val="{{ true }}">
+                <span>Collapse</span>
+              </sc-if>
+            </button>
+          </div>
+
+          <div ref="{{ mainScrollRef }}" onScroll="{{ onMainScroll }}" style="flex:1; overflow-y:auto; background:#0D0D0D; padding:30px 34px; min-width:0;">
+            {{ screenContent }}
+            {{ siteFooter }}
+          </div>
+
+          <div style="{{ rightSidebarStyle }}">
+            <div style="{{ rightIconsRowStyle }}">
+              <button onClick="{{ toggleDropdown }}" style="{{ accountBtnStyle }}" style-hover="{{ iconBtnHoverStyle }}">{{ userIconEl }}</button>
+              <button style="{{ iconBtnStyle }}" style-hover="{{ iconBtnHoverStyle }}">{{ mailIconEl }}</button>
+              <button style="{{ iconBtnStyle }}" style-hover="{{ iconBtnHoverStyle }}">{{ bellIconEl }}</button>
+            </div>
+            <sc-if value="{{ dropdownOpen }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ closeDropdown }}" style="position:absolute; inset:0; z-index:59;"></div>
+              <div style="position:absolute; top:60px; right:18px; z-index:60; {{ dropdownPanelStyleRaw }}">
+                {{ dropdownContent }}
+              </div>
+            </sc-if>
+            <div style="{{ rightPlayerWrapStyle }}">
+              {{ playerCard }}
+            </div>
+            <div style="flex:1;"></div>
+            <button onClick="{{ toggleRightCollapsed }}" style="{{ rightCollapseBtnStyle }}" style-hover="{{ collapseBtnHoverStyle }}">
+              {{ rightCollapseIconEl }}
+              <sc-if value="{{ playerExpanded }}" hint-placeholder-val="{{ true }}">
+                <span>Collapse</span>
+              </sc-if>
+            </button>
+          </div>
+        </sc-if>
+
+        <!-- ============ TABLET / MOBILE LAYOUT ============ -->
+        <sc-if value="{{ isNotDesktop }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-direction:column; width:100%; height:100%; position:relative;">
+            <div style="height:60px; min-height:60px; border-bottom:1px solid #1E1E1E; background:#0B0B0B; display:flex; align-items:center; justify-content:space-between; padding:0 16px; position:relative; z-index:20;">
+              <button onClick="{{ toggleMobileNav }}" style="{{ iconBtnStyle }}" style-hover="{{ iconBtnHoverStyle }}">{{ menuIconEl }}</button>
+              <span style="position:absolute; left:50%; transform:translateX(-50%); font-family:'Space Mono',monospace; font-size:13px; letter-spacing:0.06em; color:#FFFFFF;">COLLECTIVE FINITY</span>
+              <button onClick="{{ toggleDropdown }}" style="{{ iconBtnStyle }}" style-hover="{{ iconBtnHoverStyle }}">{{ userIconEl }}</button>
+            </div>
+
+            <sc-if value="{{ dropdownOpen }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ closeDropdown }}" style="position:absolute; inset:0; z-index:59;"></div>
+              <div style="position:absolute; top:66px; right:14px; z-index:60; {{ dropdownPanelStyleRaw }}">
+                {{ dropdownContent }}
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ mobileNavOpen }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ toggleMobileNav }}" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); z-index:39; animation:cfOverlayIn 0.18s ease;"></div>
+              <div style="position:absolute; top:0; left:0; bottom:0; width:250px; background:#0B0B0B; border-right:1px solid #1E1E1E; z-index:40; padding:18px 14px; display:flex; flex-direction:column; animation:cfDrawerIn 0.22s ease;">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:4px 6px 18px;">
+                  <span style="font-family:'Space Mono',monospace; font-size:13px; letter-spacing:0.06em; color:#FFFFFF;">MENU</span>
+                  <button onClick="{{ toggleMobileNav }}" style="{{ iconBtnStyle }}" style-hover="{{ iconBtnHoverStyle }}">{{ closeIconEl }}</button>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:3px;">
+                  <sc-for list="{{ mainNav }}" as="item" hint-placeholder-count="5">
+                    <button onClick="{{ item.onClick }}" style="{{ item.rowStyleExpanded }}" style-hover="{{ item.rowHoverStyle }}" style-active="{{ item.rowActiveStyle }}">
+                      {{ item.iconEl }}<span>{{ item.label }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+                <div style="height:1px; background:#1E1E1E; margin:12px 4px;"></div>
+                <div style="display:flex; flex-direction:column; gap:3px;">
+                  <sc-for list="{{ secondaryNav }}" as="item" hint-placeholder-count="2">
+                    <button onClick="{{ item.onClick }}" style="{{ item.rowStyleExpanded }}" style-hover="{{ item.rowHoverStyle }}" style-active="{{ item.rowActiveStyle }}">
+                      {{ item.iconEl }}<span>{{ item.label }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <div ref="{{ mainScrollRef }}" onScroll="{{ onMainScroll }}" style="flex:1; overflow-y:auto; background:#0D0D0D; padding:{{ contentPadding }}; min-height:0;">
+              {{ screenContent }}
+              {{ siteFooter }}
+            </div>
+
+            <div style="{{ footerPlayerStyle }}">
+              {{ footerPlayerContent }}
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.trackTitles = ['Wire & Rust','Afterglow Station','Slow Static','Loose Gravity','Midnight Ledger','Paper Tide','Low Orbit','Paper Moons','Bloomfield','The Long Fade','Grey Hour','Halflight','Vacant Signal','Salt Amber','Delay Line','Undertow','Nine Rooms','Faint Radio','Split Second','Coastline Static'];
+    this.durations = ['2:48','3:12','3:24','2:59','4:05','3:37','2:21','3:50','4:18','3:03'];
+    this.artists = ['Nova Wraith','Kilo Static','Glass Horizon','Ember Choir','Vantage Low','Iron Season','Half Light Radio','Paper Satellites','Quiet Machine','Northline','Faded Circuits','The Long Signal'];
+    this.albumTitles = ['Night Circuits','Amber Frequency','Second Skyline','Static Bloom','Interior Weather','Vacant Signal Redux','Cold Amber EP','Nine Hours','Tape Delay','Glass Radio Sessions'];
+    this.albums = this.buildAlbums();
+    this.libraryTracks = this.buildLibraryTracks();
+    this._ro = null;
+    this.state = {
+      screen: 'home',
+      auth: 'out',
+      bpOverride: 'auto',
+      measuredWidth: 1440,
+      sidebarCollapsed: false,
+      mobileNavOpen: false,
+      dropdownOpen: false,
+      playerCollapsed: false,
+      selectedAlbumId: this.albums[0].id,
+      likedAlbumIds: {},
+      profileTab: 'overview',
+      notifPrefs: { emailUpdates: true, newReleases: true, community: false },
+      contactSent: false,
+      openFaqIndex: 0,
+      selectedCategory: 'All',
+      selectedPostId: 'p1',
+      blogTocOpen: false,
+      readProgress: 0,
+      openPostFaqIndex: null,
+      shareMenuOpen: false,
+      postLiked: false,
+      postLikeCount: 24,
+      draftRating: 0,
+      draftReviewText: '',
+      extraReviews: [],
+      player: { title: 'Select a track', artist: '—', playing: false, progress: 0.0, volume: 0.7, liked: false, shuffle: false, repeat: false, albumId: null, trackIndex: 0 },
+    };
+  }
+
+  componentDidMount() {
+    window.addEventListener('resize', this.measureFrame);
+    this._measureInterval = setInterval(this.measureFrame, 350);
+  }
+  componentWillUnmount() {
+    if (this._ro) this._ro.disconnect();
+    window.removeEventListener('resize', this.measureFrame);
+    if (this._measureInterval) clearInterval(this._measureInterval);
+  }
+
+  measureFrame = () => {
+    if (!this._frameEl) return;
+    const w = Math.round(this._frameEl.getBoundingClientRect().width);
+    if (w && w !== this.state.measuredWidth) this.setState({ measuredWidth: w });
+  };
+
+  setFrameRef = (el) => {
+    this._frameEl = el;
+    if (el) {
+      if (window.ResizeObserver) {
+        if (this._ro) this._ro.disconnect();
+        this._ro = new ResizeObserver(() => this.measureFrame());
+        this._ro.observe(el);
+      }
+      this.measureFrame();
+    }
+  };
+
+  gradientFor(seed) {
+    const angle = 110 + (seed * 41) % 180;
+    const px = 15 + (seed * 31) % 65;
+    const py = 10 + (seed * 53) % 70;
+    const light1 = (0.30 + ((seed * 13) % 18) / 100).toFixed(2);
+    const chroma1 = (0.10 + ((seed * 7) % 5) / 100).toFixed(2);
+    return `radial-gradient(circle at ${px}% ${py}%, oklch(${light1} ${chroma1} 85) 0%, oklch(0.15 0.025 60) 45%, oklch(0.06 0.01 40) 100%)`;
+  }
+
+  buildAlbums() {
+    const alb = [];
+    for (let i = 0; i < 10; i++) {
+      const title = this.albumTitles[i % this.albumTitles.length];
+      const artist = this.artists[(i * 3 + 1) % this.artists.length];
+      const year = 2019 + (i % 7);
+      const trackCount = 5 + (i % 4);
+      const tracks = [];
+      for (let t = 0; t < trackCount; t++) {
+        tracks.push({
+          id: 'a' + i + '-t' + t,
+          title: this.trackTitles[(i * 5 + t) % this.trackTitles.length],
+          duration: this.durations[(i + t) % this.durations.length],
+        });
+      }
+      alb.push({ id: 'a' + i, title, artist, year, trackCount, seed: i, tracks, gradient: this.gradientFor(i) });
+    }
+    return alb;
+  }
+
+  buildLibraryTracks() {
+    const out = [];
+    this.albums.slice(0, 7).forEach((a) => {
+      a.tracks.slice(0, 2).forEach((t) => out.push({ ...t, artist: a.artist, album: a.title, albumId: a.id }));
+    });
+    return out;
+  }
+
+  icon(name, size = 18, filled = false) {
+    const s = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' };
+    const map = {
+      home: [['path', { d: 'M4 11.5 12 4l8 7.5' }], ['path', { d: 'M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9' }]],
+      library: [['rect', { x: 4, y: 4, width: 6, height: 16, rx: 1 }], ['rect', { x: 14, y: 4, width: 6, height: 16, rx: 1 }]],
+      albums: [['circle', { cx: 12, cy: 12, r: 8 }], ['circle', { cx: 12, cy: 12, r: 2 }]],
+      about: [['circle', { cx: 12, cy: 12, r: 8.5 }], ['line', { x1: 12, y1: 11, x2: 12, y2: 16 }], ['circle', { cx: 12, cy: 7.5, r: 0.6, fill: 'currentColor' }]],
+      community: [['circle', { cx: 9, cy: 9, r: 3 }], ['path', { d: 'M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5' }], ['circle', { cx: 17, cy: 9, r: 2.4 }], ['path', { d: 'M15.5 14.2c2.4.3 4.2 2.1 4.2 4.8' }]],
+      heart: [['path', { d: 'M12 20s-7-4.35-9.5-8.8C.8 8 2 4.5 5.5 4.5c2 0 3.3 1.2 6.5 3.9C15.2 5.7 16.5 4.5 18.5 4.5 22 4.5 23.2 8 21.5 11.2 19 15.65 12 20 12 20z', fill: filled ? 'currentColor' : 'none' }]],
+      playlist: [['line', { x1: 4, y1: 6, x2: 16, y2: 6 }], ['line', { x1: 4, y1: 12, x2: 16, y2: 12 }], ['line', { x1: 4, y1: 18, x2: 11, y2: 18 }], ['circle', { cx: 19, cy: 15, r: 2.4 }], ['line', { x1: 21.4, y1: 15, x2: 21.4, y2: 8 }]],
+      user: [['circle', { cx: 12, cy: 8, r: 3.4 }], ['path', { d: 'M4.5 20c1-4 4-6 7.5-6s6.5 2 7.5 6' }]],
+      bell: [['path', { d: 'M6 16v-4.5A6 6 0 0 1 12 5.5v0a6 6 0 0 1 6 6V16l1.6 2.2H4.4z' }], ['path', { d: 'M9.5 19.5a2.5 2.5 0 0 0 5 0' }]],
+      mail: [['rect', { x: 3, y: 5.5, width: 18, height: 13, rx: 1.5 }], ['path', { d: 'M3.5 6.5 12 13l8.5-6.5' }]],
+      menu: [['line', { x1: 4, y1: 7, x2: 20, y2: 7 }], ['line', { x1: 4, y1: 12, x2: 20, y2: 12 }], ['line', { x1: 4, y1: 17, x2: 20, y2: 17 }]],
+      close: [['line', { x1: 6, y1: 6, x2: 18, y2: 18 }], ['line', { x1: 18, y1: 6, x2: 6, y2: 18 }]],
+      chevronLeft: [['polyline', { points: '15 6 9 12 15 18' }]],
+      play: [['path', { d: 'M7 5.5v13l11-6.5z', fill: 'currentColor', stroke: 'none' }]],
+      pause: [['rect', { x: 6.5, y: 5, width: 4, height: 14, fill: 'currentColor', stroke: 'none' }], ['rect', { x: 13.5, y: 5, width: 4, height: 14, fill: 'currentColor', stroke: 'none' }]],
+      skipBack: [['polygon', { points: '18 5 8 12 18 19', fill: 'currentColor', stroke: 'none' }], ['line', { x1: 6, y1: 5, x2: 6, y2: 19, strokeWidth: 2.4 }]],
+      skipFwd: [['polygon', { points: '6 5 16 12 6 19', fill: 'currentColor', stroke: 'none' }], ['line', { x1: 18, y1: 5, x2: 18, y2: 19, strokeWidth: 2.4 }]],
+      shuffle: [['polyline', { points: '16 3 21 3 21 8' }], ['line', { x1: 4, y1: 20, x2: 21, y2: 3 }], ['polyline', { points: '21 16 21 21 16 21' }], ['line', { x1: 15, y1: 15, x2: 21, y2: 21 }], ['line', { x1: 4, y1: 4, x2: 9, y2: 9 }]],
+      repeat: [['polyline', { points: '17 2 21 6 17 10' }], ['path', { d: 'M3 11V9a4 4 0 0 1 4-4h14' }], ['polyline', { points: '7 22 3 18 7 14' }], ['path', { d: 'M21 13v2a4 4 0 0 1-4 4H3' }]],
+      volume: [['path', { d: 'M4 9v6h4l5 4V5L8 9z' }], ['path', { d: 'M17 8.5a5 5 0 0 1 0 7' }], ['path', { d: 'M19.5 6a8.5 8.5 0 0 1 0 12' }]],
+      search: [['circle', { cx: 10.5, cy: 10.5, r: 6.5 }], ['line', { x1: 15.5, y1: 15.5, x2: 21, y2: 21 }]],
+      share: [['circle', { cx: 18, cy: 5, r: 2.2 }], ['circle', { cx: 6, cy: 12, r: 2.2 }], ['circle', { cx: 18, cy: 19, r: 2.2 }], ['line', { x1: 8.2, y1: 10.8, x2: 15.8, y2: 6.2 }], ['line', { x1: 8.2, y1: 13.2, x2: 15.8, y2: 17.8 }]],
+      lock: [['rect', { x: 5.5, y: 10.5, width: 13, height: 9, rx: 1.5 }], ['path', { d: 'M8 10.5V8a4 4 0 0 1 8 0v2.5' }]],
+      plus: [['line', { x1: 12, y1: 5, x2: 12, y2: 19 }], ['line', { x1: 5, y1: 12, x2: 19, y2: 12 }]],
+      pin: [['path', { d: 'M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z' }], ['circle', { cx: 12, cy: 9.5, r: 2.4 }]],
+      link: [['path', { d: 'M9 15 15 9' }], ['path', { d: 'M11 6.5 12.5 5A3.8 3.8 0 0 1 18 10.5L16.5 12' }], ['path', { d: 'M13 17.5 11.5 19A3.8 3.8 0 0 1 6 13.5L7.5 12' }]],
+      star: [['path', { d: 'M12 3.5 14.5 9l6 .6-4.5 4 1.3 5.9-5.3-3.1-5.3 3.1 1.3-5.9-4.5-4 6-.6z', fill: filled ? 'currentColor' : 'none' }]],
+      blog: [['rect', { x: 4, y: 4, width: 16, height: 16, rx: 2 }], ['line', { x1: 7.5, y1: 9, x2: 16.5, y2: 9 }], ['line', { x1: 7.5, y1: 12.5, x2: 16.5, y2: 12.5 }], ['line', { x1: 7.5, y1: 16, x2: 13, y2: 16 }]],
+      chevronDown: [['polyline', { points: '6 9 12 15 18 9' }]],
+      chat: [['path', { d: 'M4 6h16a2 2 0 0 1 2 2v6.5a2 2 0 0 1-2 2H10l-4.5 3.5V16.5H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z' }]],
+      video: [['rect', { x: 3, y: 6.5, width: 13, height: 11, rx: 2 }], ['path', { d: 'M16.5 10.2 21 7v10l-4.5-3.2z' }]],
+      camera: [['rect', { x: 3, y: 7.5, width: 18, height: 12.5, rx: 2 }], ['path', { d: 'M8.5 7.5 10 5h4l1.5 2.5' }], ['circle', { cx: 12, cy: 13.8, r: 3.6 }]],
+      cart: [['circle', { cx: 9.5, cy: 20, r: 1.3, fill: 'currentColor', stroke: 'none' }], ['circle', { cx: 18, cy: 20, r: 1.3, fill: 'currentColor', stroke: 'none' }], ['path', { d: 'M3 4h2.2l2.3 12h11.3l1.7-8H6.1' }]],
+      waveform: [['line', { x1: 4, y1: 10, x2: 4, y2: 14 }], ['line', { x1: 8, y1: 6, x2: 8, y2: 18 }], ['line', { x1: 12, y1: 3, x2: 12, y2: 21 }], ['line', { x1: 16, y1: 7, x2: 16, y2: 17 }], ['line', { x1: 20, y1: 9.5, x2: 20, y2: 14.5 }]],
+      musicNote: [['circle', { cx: 7, cy: 18, r: 2.6 }], ['circle', { cx: 17, cy: 16, r: 2.6 }], ['line', { x1: 9.5, y1: 18, x2: 9.5, y2: 4.5 }], ['line', { x1: 19.5, y1: 16, x2: 19.5, y2: 2.5 }], ['path', { d: 'M9.5 4.5 19.5 2.5' }]],
+    };
+    const children = (map[name] || []).map((el, idx) => React.createElement(el[0], { key: idx, ...el[1] }));
+    return React.createElement('svg', s, ...children);
+  }
+
+  navigate = (screen) => { this.setState({ screen, mobileNavOpen: false }); };
+  selectAlbum = (id) => { this.setState({ selectedAlbumId: id, screen: 'albumDetail', mobileNavOpen: false }); };
+  toggleAuth = () => { this.setState((s) => ({ auth: s.auth === 'out' ? 'in' : 'out', dropdownOpen: false })); };
+  setBpOverride = (v) => { this.setState({ bpOverride: v }); };
+  toggleSidebarCollapsed = () => { this.setState((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })); };
+  toggleRightCollapsed = () => { this.setState((s) => ({ playerCollapsed: !s.playerCollapsed })); };
+  toggleMobileNav = () => { this.setState((s) => ({ mobileNavOpen: !s.mobileNavOpen, dropdownOpen: false })); };
+  toggleDropdown = () => { this.setState((s) => ({ dropdownOpen: !s.dropdownOpen, mobileNavOpen: false })); };
+  closeDropdown = () => { this.setState({ dropdownOpen: false }); };
+
+  playTrack = (title, artist, albumId, trackIndex) => { this.setState((s) => ({ player: { ...s.player, title, artist, playing: true, progress: 0.04, liked: false, albumId: albumId ?? null, trackIndex: trackIndex ?? 0 } })); };
+  togglePlay = () => { this.setState((s) => ({ player: { ...s.player, playing: !s.player.playing } })); };
+  togglePlayerLike = () => { this.setState((s) => ({ player: { ...s.player, liked: !s.player.liked } })); };
+  toggleShuffle = () => { this.setState((s) => ({ player: { ...s.player, shuffle: !s.player.shuffle } })); };
+  toggleRepeat = () => { this.setState((s) => ({ player: { ...s.player, repeat: !s.player.repeat } })); };
+  toggleAlbumLike = (id) => { this.setState((s) => ({ likedAlbumIds: { ...s.likedAlbumIds, [id]: !s.likedAlbumIds[id] } })); };
+  setProfileTab = (tab) => { this.setState({ profileTab: tab }); };
+  goProfile = (tab) => { this.setState({ screen: 'profile', profileTab: tab, dropdownOpen: false, mobileNavOpen: false }); };
+  goAuthScreen = (mode) => { this.setState({ screen: mode, dropdownOpen: false, mobileNavOpen: false }); };
+  toggleNotifPref = (key) => { this.setState((s) => ({ notifPrefs: { ...s.notifPrefs, [key]: !s.notifPrefs[key] } })); };
+  submitContact = (e) => { e.preventDefault(); this.setState({ contactSent: true }); };
+  toggleFaq = (i) => { this.setState((s) => ({ openFaqIndex: s.openFaqIndex === i ? null : i })); };
+  togglePostFaq = (i) => { this.setState((s) => ({ openPostFaqIndex: s.openPostFaqIndex === i ? null : i })); };
+  toggleShareMenu = () => { this.setState((s) => ({ shareMenuOpen: !s.shareMenuOpen })); };
+  closeShareMenu = () => { this.setState({ shareMenuOpen: false }); };
+  togglePostLike = () => { this.setState((s) => ({ postLiked: !s.postLiked, postLikeCount: s.postLiked ? s.postLikeCount - 1 : s.postLikeCount + 1 })); };
+  setDraftRating = (n) => { this.setState({ draftRating: n }); };
+  setDraftReviewText = (v) => { this.setState({ draftReviewText: v }); };
+  submitReview = (e) => {
+    e.preventDefault();
+    if (!this.state.draftRating || !this.state.draftReviewText.trim()) return;
+    this.setState((s) => ({
+      extraReviews: [{ id: 'r' + Date.now(), name: 'Sasha Reyes', avatar: 'S', rating: s.draftRating, text: s.draftReviewText, date: 'Just now' }, ...s.extraReviews],
+      draftRating: 0,
+      draftReviewText: '',
+    }));
+  };
+  goBlogHub = () => { this.setState({ screen: 'blog', selectedCategory: 'All' }); };
+  goBlogCategory = (cat) => { this.setState({ screen: 'blogCategory', selectedCategory: cat }); };
+  goBlogPost = (id) => { this.setState({ screen: 'blogPost', selectedPostId: id, blogTocOpen: false, readProgress: 0 }); if (this._mainScrollEl) this._mainScrollEl.scrollTop = 0; };
+  toggleBlogToc = () => { this.setState((s) => ({ blogTocOpen: !s.blogTocOpen })); };
+  mainScrollRef = (el) => { this._mainScrollEl = el; };
+  onMainScroll = (e) => {
+    const el = e.currentTarget;
+    const max = el.scrollHeight - el.clientHeight;
+    const progress = max > 0 ? Math.min(1, Math.max(0, el.scrollTop / max)) : 0;
+    this.setState({ readProgress: progress });
+  };
+  registerSectionRef = (id) => (el) => { if (!this._sectionRefs) this._sectionRefs = {}; this._sectionRefs[id] = el; };
+  scrollToSection = (id) => {
+    const el = this._sectionRefs && this._sectionRefs[id];
+    const container = this._mainScrollEl;
+    if (el && container) {
+      const contRect = container.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      container.scrollTop += (elRect.top - contRect.top) - 24;
+    }
+    this.setState({ blogTocOpen: false });
+  };
+  submitAuthForm = (e) => { e.preventDefault(); this.setState((s) => ({ auth: 'in', screen: 'home', dropdownOpen: false })); };
+  stepTrack = (dir) => {
+    this.setState((s) => {
+      const album = this.albums.find((a) => a.id === s.player.albumId);
+      if (!album) return null;
+      const len = album.tracks.length;
+      const nextIndex = (s.player.trackIndex + dir + len) % len;
+      const t = album.tracks[nextIndex];
+      return { player: { ...s.player, title: t.title, artist: album.artist, trackIndex: nextIndex, progress: 0.04, playing: true, liked: false } };
+    });
+  };
+  seekProgress = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    this.setState((s) => ({ player: { ...s.player, progress: ratio } }));
+  };
+  seekVolume = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    this.setState((s) => ({ player: { ...s.player, volume: ratio } }));
+  };
+
+  renderVals() {
+    const bpWidths = { desktop: 1600, tablet: 834, mobile: 390 };
+    const effectiveWidth = this.state.bpOverride === 'auto' ? this.state.measuredWidth : bpWidths[this.state.bpOverride];
+    const effectiveBP = effectiveWidth >= 1024 ? 'desktop' : effectiveWidth >= 768 ? 'tablet' : 'mobile';
+    const isDesktop = effectiveBP === 'desktop';
+    const isMobile = effectiveBP === 'mobile';
+    const isTablet = effectiveBP === 'tablet';
+
+    const frameOuterStyle = {
+      width: this.state.bpOverride === 'auto' ? '100%' : bpWidths[this.state.bpOverride] + 'px',
+      maxWidth: '100%', transition: 'width 0.25s ease',
+    };
+    const frameChromeStyle = {
+      display: 'flex', flexDirection: isDesktop ? 'row' : 'column', width: '100%', height: 'min(840px, 82vh)',
+      background: '#0D0D0D', borderRadius: '16px', overflow: 'hidden', border: '1px solid #1C1C1C',
+      boxShadow: '0 40px 90px -30px rgba(0,0,0,0.7)', position: 'relative',
+    };
+
+    const bpOptions = ['auto', 'desktop', 'tablet', 'mobile'].map((v) => {
+      const active = this.state.bpOverride === v;
+      return {
+        label: v === 'auto' ? 'Auto' : v[0].toUpperCase() + v.slice(1),
+        onClick: () => this.setBpOverride(v),
+        style: { padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontFamily: "'Space Mono',monospace", fontSize: '11px', background: active ? '#FFB700' : 'transparent', color: active ? '#0D0D0D' : '#B3B3B3', fontWeight: active ? 700 : 400 },
+        styleHover: active ? {} : { background: '#1E1E1E', color: '#fff' },
+      };
+    });
+
+    const jumpOptions = [
+      { id: 'home', label: 'Home' }, { id: 'library', label: 'Library' }, { id: 'albums', label: 'Albums' }, { id: 'albumDetail', label: 'Album Detail' },
+      { id: 'about', label: 'About' }, { id: 'community', label: 'Community' }, { id: 'contact', label: 'Contact' },
+      { id: 'blog', label: 'Blog' }, { id: 'blogPost', label: 'Blog Post' },
+      { id: 'profile', label: 'Profile' }, { id: 'favorites', label: 'Favorites' }, { id: 'playlists', label: 'Playlists' },
+      { id: 'login', label: 'Login' }, { id: 'register', label: 'Register' },
+    ].map((j) => ({
+      label: j.label,
+      onClick: () => this.setState({ screen: j.id }),
+      style: { padding: '6px 10px', borderRadius: '6px', border: '1px solid #232323', cursor: 'pointer', fontFamily: "'Space Mono',monospace", fontSize: '11px', background: this.state.screen === j.id ? '#1E1E1E' : 'transparent', color: this.state.screen === j.id ? '#FFB700' : '#7A7A7A' },
+      styleHover: { background: '#1a1a1a', color: '#fff' },
+    }));
+
+    const authToggleLabel = this.state.auth === 'out' ? 'Logged out' : 'Logged in';
+    const authToggleStyle = { padding: '6px 14px', borderRadius: '6px', border: '1px solid #232323', cursor: 'pointer', fontFamily: "'Space Mono',monospace", fontSize: '11px', background: this.state.auth === 'in' ? 'rgba(255,183,0,0.14)' : 'transparent', color: this.state.auth === 'in' ? '#FFB700' : '#B3B3B3' };
+    const authToggleHoverStyle = { background: '#1a1a1a' };
+
+    const showSidebarLabels = !this.state.sidebarCollapsed;
+
+    const navRow = (id, label, iconName, collapsed, expanded) => {
+      const active = this.state.screen === id;
+      const base = {
+        display: 'flex', alignItems: 'center', gap: '12px', padding: collapsed ? '11px 0' : '10px 12px',
+        borderRadius: '10px', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left',
+        background: active ? 'rgba(255,183,0,0.14)' : 'transparent',
+        color: active ? '#FFB700' : '#B3B3B3', fontFamily: "Inter,sans-serif", fontSize: '14px', fontWeight: active ? 600 : 500,
+        justifyContent: collapsed ? 'center' : 'flex-start',
+      };
+      return {
+        id, label, active,
+        onClick: () => this.navigate(id),
+        iconEl: this.icon(iconName, 18),
+        rowStyle: base,
+        rowStyleExpanded: { ...base, padding: '11px 12px' },
+        rowHoverStyle: active ? {} : { background: '#161616', color: '#fff' },
+        rowActiveStyle: { transform: 'scale(0.98)' },
+      };
+    };
+
+    const mainNav = [
+      navRow('home', 'Home', 'home', this.state.sidebarCollapsed),
+      navRow('library', 'Music Library', 'library', this.state.sidebarCollapsed),
+      (() => {
+        const blogActive = ['blog', 'blogCategory', 'blogPost'].includes(this.state.screen);
+        const collapsed = this.state.sidebarCollapsed;
+        const base = { display: 'flex', alignItems: 'center', gap: '12px', padding: collapsed ? '11px 0' : '10px 12px', borderRadius: '10px', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', background: blogActive ? 'rgba(255,183,0,0.14)' : 'transparent', color: blogActive ? '#FFB700' : '#B3B3B3', fontFamily: 'Inter,sans-serif', fontSize: '14px', fontWeight: blogActive ? 600 : 500, justifyContent: collapsed ? 'center' : 'flex-start' };
+        return { id: 'blog', label: 'Blog', active: blogActive, onClick: this.goBlogHub, iconEl: this.icon('blog', 18), rowStyle: base, rowStyleExpanded: { ...base, padding: '11px 12px' }, rowHoverStyle: blogActive ? {} : { background: '#161616', color: '#fff' }, rowActiveStyle: { transform: 'scale(0.98)' } };
+      })(),
+      navRow('albums', 'Albums & Collections', 'albums', this.state.sidebarCollapsed),
+      navRow('about', 'About', 'about', this.state.sidebarCollapsed),
+      navRow('community', 'Join Community', 'community', this.state.sidebarCollapsed),
+    ];
+    const secondaryNav = [
+      navRow('favorites', 'Favorites & Liked', 'heart', this.state.sidebarCollapsed),
+      navRow('playlists', 'Personal Playlists', 'playlist', this.state.sidebarCollapsed),
+    ];
+
+    const iconBtnStyle = { width: '36px', height: '36px', minWidth: '36px', borderRadius: '9px', border: 'none', background: 'transparent', color: '#B3B3B3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' };
+    const iconBtnHoverStyle = { background: '#1a1a1a', color: '#fff' };
+    const accountBtnStyle = { ...iconBtnStyle, background: this.state.dropdownOpen ? '#1a1a1a' : 'transparent', color: this.state.dropdownOpen ? '#FFB700' : '#B3B3B3' };
+
+    const collapseBtnStyle = { display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '10px', border: '1px solid #1E1E1E', background: 'transparent', color: '#7A7A7A', cursor: 'pointer', fontSize: '13px', justifyContent: showSidebarLabels ? 'flex-start' : 'center' };
+    const collapseBtnHoverStyle = { background: '#161616', color: '#fff' };
+    const collapseIconEl = React.createElement('span', { style: { display: 'flex', transform: this.state.sidebarCollapsed ? 'rotate(180deg)' : 'none', transition: 'transform .2s' } }, this.icon('chevronLeft', 16));
+
+    const leftSidebarStyle = { width: this.state.sidebarCollapsed ? '72px' : '236px', minWidth: this.state.sidebarCollapsed ? '72px' : '236px', transition: 'width 0.2s ease', background: '#0B0B0B', borderRight: '1px solid #1E1E1E', display: 'flex', flexDirection: 'column', padding: '18px 12px', gap: '2px' };
+
+    // ---- dropdown ----
+    const ddItemStyle = { display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', color: '#E4E4E4', borderRadius: '8px', cursor: 'pointer', fontSize: '13.5px', textAlign: 'left' };
+    const ddItemHover = { background: '#232323' };
+    const dropdownPanelStyleRaw = 'background:#161616; border:1px solid #262626; border-radius:12px; min-width:210px; padding:8px; box-shadow:0 24px 48px -12px rgba(0,0,0,0.6); animation:cfFadeDown 0.16s ease;';
+
+    let dropdownContent;
+    if (this.state.auth === 'in') {
+      dropdownContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '2px' } },
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px 12px', borderBottom: '1px solid #262626', marginBottom: '4px' } },
+          React.createElement('div', { style: { width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg,#FFB700,#8a6200)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D0D0D', fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: '13px' } }, 'S'),
+          React.createElement('div', {},
+            React.createElement('div', { style: { fontSize: '13px', color: '#fff', fontWeight: 600 } }, 'Sasha Reyes'),
+            React.createElement('div', { style: { fontSize: '11px', color: '#7A7A7A' } }, 'sasha@collectivefinity.co'))),
+        React.createElement('button', { style: ddItemStyle, 'style-hover': ddItemHover, onClick: () => this.goProfile('overview') }, this.icon('user', 16), 'Profile'),
+        React.createElement('button', { style: ddItemStyle, 'style-hover': ddItemHover, onClick: () => this.goProfile('settings') }, this.icon('lock', 16), 'Settings'),
+        React.createElement('button', { style: { ...ddItemStyle, color: '#FF8A65' }, 'style-hover': { background: '#2a1a16' }, onClick: () => { this.toggleAuth(); this.navigate('home'); } }, this.icon('close', 16), 'Logout'));
+    } else {
+      dropdownContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '2px' } },
+        React.createElement('button', { style: { ...ddItemStyle, background: 'rgba(255,183,0,0.14)', color: '#FFB700', fontWeight: 600 }, 'style-hover': { background: 'rgba(255,183,0,0.22)' }, onClick: () => this.goAuthScreen('login') }, this.icon('user', 16), 'Login'),
+        React.createElement('button', { style: ddItemStyle, 'style-hover': ddItemHover, onClick: () => this.goAuthScreen('register') }, this.icon('community', 16), 'Register'));
+    }
+
+    // ---- right sidebar collapse ----
+    const rightSidebarStyle = { width: this.state.playerCollapsed ? '76px' : '296px', minWidth: this.state.playerCollapsed ? '76px' : '296px', height: '100%', transition: 'width 0.2s ease', borderLeft: '1px solid #1E1E1E', background: '#0B0B0B', display: 'flex', flexDirection: 'column', position: 'relative' };
+    const rightIconsRowStyle = { display: 'flex', alignItems: 'center', gap: '10px', padding: this.state.playerCollapsed ? '18px 8px 12px' : '18px 18px 14px', justifyContent: this.state.playerCollapsed ? 'center' : 'flex-end', flexDirection: this.state.playerCollapsed ? 'column' : 'row', flexShrink: 0 };
+    const rightPlayerWrapStyle = { padding: this.state.playerCollapsed ? '4px 10px' : '8px 20px 22px', display: 'flex', flexDirection: 'column', minHeight: 0, flex: '0 1 auto', overflowY: this.state.playerCollapsed ? 'visible' : 'auto' };
+    const rightCollapseBtnStyle = { display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', margin: '0 12px 14px', borderRadius: '10px', border: '1px solid #1E1E1E', background: 'transparent', color: '#7A7A7A', cursor: 'pointer', fontSize: '13px', justifyContent: this.state.playerCollapsed ? 'center' : 'flex-start' };
+    const rightCollapseIconEl = React.createElement('span', { style: { display: 'flex', transform: this.state.playerCollapsed ? 'none' : 'rotate(180deg)', transition: 'transform .2s' } }, this.icon('chevronLeft', 16));
+
+    // ---- player card (desktop, rich) ----
+    const currentAlbum = this.albums.find((a) => a.id === this.state.selectedAlbumId) || this.albums[0];
+    const ctrlBtn = (extra) => ({ width: extra?.big ? '52px' : '38px', height: extra?.big ? '52px' : '38px', borderRadius: '50%', border: 'none', background: extra?.big ? '#FFB700' : 'transparent', color: extra?.big ? '#0D0D0D' : '#B3B3B3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' });
+
+    const playerCard = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' } },
+      React.createElement('div', { style: { width: '100%', aspectRatio: '1', borderRadius: '12px', background: currentAlbum.gradient, boxShadow: '0 20px 40px -14px rgba(0,0,0,0.6)' } }),
+      React.createElement('div', { style: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' } },
+        React.createElement('div', { style: { minWidth: 0 } },
+          React.createElement('div', { style: { fontSize: '15px', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, this.state.player.title),
+          React.createElement('div', { style: { fontSize: '13px', color: '#7A7A7A', marginTop: '2px' } }, this.state.player.artist)),
+        React.createElement('button', { onClick: this.togglePlayerLike, style: { width: '30px', height: '30px', minWidth: '30px', borderRadius: '50%', border: 'none', background: 'transparent', color: this.state.player.liked ? '#FFB700' : '#7A7A7A', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }, 'style-hover': { color: '#FFB700' } }, this.icon('heart', 17, this.state.player.liked))),
+      React.createElement('div', {},
+        React.createElement('div', { onClick: this.seekProgress, style: { height: '4px', borderRadius: '2px', background: '#232323', cursor: 'pointer', position: 'relative' } },
+          React.createElement('div', { style: { position: 'absolute', left: 0, top: 0, bottom: 0, width: (this.state.player.progress * 100) + '%', background: '#FFB700', borderRadius: '2px' } })),
+        React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '11px', color: '#7A7A7A', fontFamily: "'Space Mono',monospace" } },
+          React.createElement('span', {}, Math.floor(this.state.player.progress * 3) + ':' + String(Math.floor(this.state.player.progress * 180) % 60).padStart(2, '0')),
+          React.createElement('span', {}, '3:24'))),
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' } },
+        React.createElement('button', { onClick: this.toggleShuffle, style: { ...ctrlBtn(), color: this.state.player.shuffle ? '#FFB700' : '#B3B3B3' }, 'style-hover': { color: '#fff' } }, this.icon('shuffle', 16)),
+        React.createElement('button', { onClick: () => this.stepTrack(-1), style: ctrlBtn(), 'style-hover': { color: '#fff' } }, this.icon('skipBack', 20)),
+        React.createElement('button', { onClick: this.togglePlay, style: ctrlBtn({ big: true }), 'style-hover': { background: '#ffc633' } }, this.icon(this.state.player.playing ? 'pause' : 'play', 20)),
+        React.createElement('button', { onClick: () => this.stepTrack(1), style: ctrlBtn(), 'style-hover': { color: '#fff' } }, this.icon('skipFwd', 20)),
+        React.createElement('button', { onClick: this.toggleRepeat, style: { ...ctrlBtn(), color: this.state.player.repeat ? '#FFB700' : '#B3B3B3' }, 'style-hover': { color: '#fff' } }, this.icon('repeat', 16))),
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
+        this.icon('volume', 16),
+        React.createElement('div', { onClick: this.seekVolume, style: { flex: 1, height: '3px', borderRadius: '2px', background: '#232323', cursor: 'pointer', position: 'relative' } },
+          React.createElement('div', { style: { position: 'absolute', left: 0, top: 0, bottom: 0, width: (this.state.player.volume * 100) + '%', background: '#7A7A7A', borderRadius: '2px' } }))),
+      React.createElement('button', { style: { marginTop: 'auto', padding: '10px 14px', borderRadius: '9px', border: '1px solid #232323', background: 'transparent', color: '#B3B3B3', fontSize: '12.5px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }, 'style-hover': { background: '#161616', color: '#fff' } }, this.icon('playlist', 15), 'Queue'));
+
+    const miniPlayerCard = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' } },
+      React.createElement('div', { style: { width: '44px', height: '44px', borderRadius: '9px', background: currentAlbum.gradient, flexShrink: 0 } }),
+      React.createElement('button', { onClick: this.togglePlay, style: ctrlBtn({ big: true }), 'style-hover': { background: '#ffc633' } }, this.icon(this.state.player.playing ? 'pause' : 'play', 18)),
+      React.createElement('button', { onClick: () => this.stepTrack(-1), style: { width: '30px', height: '30px', borderRadius: '50%', border: 'none', background: 'transparent', color: '#B3B3B3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }, 'style-hover': { color: '#fff' } }, this.icon('skipBack', 16)),
+      React.createElement('button', { onClick: () => this.stepTrack(1), style: { width: '30px', height: '30px', borderRadius: '50%', border: 'none', background: 'transparent', color: '#B3B3B3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }, 'style-hover': { color: '#fff' } }, this.icon('skipFwd', 16)),
+      React.createElement('button', { onClick: this.toggleShuffle, style: { width: '30px', height: '30px', borderRadius: '50%', border: 'none', background: 'transparent', color: this.state.player.shuffle ? '#FFB700' : '#7A7A7A', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }, 'style-hover': { color: '#fff' } }, this.icon('shuffle', 15)),
+      React.createElement('button', { onClick: this.toggleRepeat, style: { width: '30px', height: '30px', borderRadius: '50%', border: 'none', background: 'transparent', color: this.state.player.repeat ? '#FFB700' : '#7A7A7A', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }, 'style-hover': { color: '#fff' } }, this.icon('repeat', 15)),
+      React.createElement('button', { onClick: this.togglePlayerLike, style: { width: '30px', height: '30px', borderRadius: '50%', border: 'none', background: 'transparent', color: this.state.player.liked ? '#FFB700' : '#7A7A7A', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }, 'style-hover': { color: '#FFB700' } }, this.icon('heart', 16, this.state.player.liked)));
+
+    const playerCardToShow = this.state.playerCollapsed ? miniPlayerCard : playerCard;
+
+    // ---- footer player (tablet/mobile, minimal) ----
+    const footerPlayerStyle = { height: '80px', minHeight: '80px', borderTop: '1px solid #1E1E1E', background: '#0B0B0B', display: 'flex', alignItems: 'center', gap: '8px', padding: '0 14px', position: 'relative', zIndex: 10 };
+    const footerCtrlBtn = (big) => ({ width: big ? '38px' : '28px', height: big ? '38px' : '28px', minWidth: big ? '38px' : '28px', borderRadius: '50%', border: 'none', background: big ? '#FFB700' : 'transparent', color: big ? '#0D0D0D' : '#B3B3B3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 });
+    const footerPlayerContent = React.createElement(React.Fragment, {},
+      React.createElement('div', { style: { width: '40px', height: '40px', minWidth: '40px', borderRadius: '8px', background: currentAlbum.gradient, flexShrink: 0 } }),
+      React.createElement('div', { style: { flex: 1, minWidth: 0 } },
+        React.createElement('div', { style: { fontSize: '12.5px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, this.state.player.title),
+        React.createElement('div', { style: { height: '3px', borderRadius: '2px', background: '#232323', marginTop: '5px', position: 'relative' } },
+          React.createElement('div', { style: { position: 'absolute', left: 0, top: 0, bottom: 0, width: (this.state.player.progress * 100) + '%', background: '#FFB700', borderRadius: '2px' } }))),
+      React.createElement('button', { onClick: this.toggleShuffle, style: { ...footerCtrlBtn(), color: this.state.player.shuffle ? '#FFB700' : '#7A7A7A' }, 'style-active': { transform: 'scale(0.9)' } }, this.icon('shuffle', 14)),
+      React.createElement('button', { onClick: () => this.stepTrack(-1), style: footerCtrlBtn(), 'style-active': { transform: 'scale(0.9)' } }, this.icon('skipBack', 16)),
+      React.createElement('button', { onClick: this.togglePlay, style: footerCtrlBtn(true), 'style-active': { transform: 'scale(0.94)' } }, this.icon(this.state.player.playing ? 'pause' : 'play', 17)),
+      React.createElement('button', { onClick: () => this.stepTrack(1), style: footerCtrlBtn(), 'style-active': { transform: 'scale(0.9)' } }, this.icon('skipFwd', 16)),
+      React.createElement('button', { onClick: this.toggleRepeat, style: { ...footerCtrlBtn(), color: this.state.player.repeat ? '#FFB700' : '#7A7A7A' }, 'style-active': { transform: 'scale(0.9)' } }, this.icon('repeat', 14)),
+      React.createElement('button', { onClick: this.togglePlayerLike, style: { ...footerCtrlBtn(), color: this.state.player.liked ? '#FFB700' : '#7A7A7A' }, 'style-active': { transform: 'scale(0.9)' } }, this.icon('heart', 15, this.state.player.liked)));
+
+    // ---- shared card builders ----
+    const trackRowStyle = { display: 'grid', gridTemplateColumns: isMobile ? '28px 1fr 50px' : '28px 1fr 1fr 70px', alignItems: 'center', gap: '14px', padding: '11px 10px', borderRadius: '9px', border: 'none', background: 'transparent', cursor: 'pointer', width: '100%', textAlign: 'left', color: '#B3B3B3' };
+
+    const albumCard = (a, w) => React.createElement('button', { key: a.id, onClick: () => this.selectAlbum(a.id), style: { width: w || '100%', minWidth: w || undefined, flexShrink: 0, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', textAlign: 'left', color: '#fff' }, 'style-hover': { opacity: 0.9 } },
+      React.createElement('div', { style: { width: '100%', aspectRatio: '1', borderRadius: '12px', background: a.gradient, marginBottom: '10px', boxShadow: '0 14px 28px -12px rgba(0,0,0,0.55)' } }),
+      React.createElement('div', { style: { fontSize: '14px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, a.title),
+      React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A', fontFamily: "'Space Mono',monospace", marginTop: '2px' } }, a.artist));
+
+    const heroAlbum = this.albums[0];
+    const homeContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '34px' } },
+      React.createElement('div', { style: { borderRadius: '16px', padding: isMobile ? '24px' : '36px', minHeight: isMobile ? '180px' : '230px', background: heroAlbum.gradient, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '10px' } },
+        React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '11px', letterSpacing: '0.1em', color: '#FFE9B0' } }, 'FEATURED COLLECTIVE'),
+        React.createElement('div', { style: { fontSize: isMobile ? '22px' : '32px', fontWeight: 700, color: '#fff', maxWidth: '520px', lineHeight: 1.15 } }, 'Half Light Radio — Season Two'),
+        React.createElement('div', { style: { fontSize: '13.5px', color: '#E7E7E7', maxWidth: '480px' } }, 'A late-night transmission of slow static and amber tape loops, curated weekly by the collective.'),
+        React.createElement('div', { style: { display: 'flex', gap: '10px', marginTop: '8px', flexWrap: 'wrap' } },
+          React.createElement('button', { onClick: () => this.playTrack(heroAlbum.tracks[0].title, heroAlbum.artist, heroAlbum.id, 0), style: { padding: '11px 20px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13.5px', cursor: 'pointer', whiteSpace: 'nowrap' }, 'style-hover': { background: '#ffc633' } }, 'Play Spotlight'),
+          React.createElement('button', { onClick: () => this.selectAlbum(heroAlbum.id), style: { padding: '11px 20px', borderRadius: '9px', border: '1px solid rgba(255,255,255,0.35)', background: 'rgba(0,0,0,0.15)', color: '#fff', fontWeight: 600, fontSize: '13.5px', cursor: 'pointer', whiteSpace: 'nowrap' }, 'style-hover': { background: 'rgba(0,0,0,0.3)' } }, 'View Album'))),
+      React.createElement('div', {},
+        React.createElement('div', { style: { fontSize: '17px', fontWeight: 700, color: '#fff', marginBottom: '14px' } }, 'Featured Albums'),
+        React.createElement('div', { style: { display: 'flex', gap: '18px', overflowX: 'auto', paddingBottom: '6px' } }, this.albums.slice(0, 6).map((a) => albumCard(a, isMobile ? '130px' : '164px')))),
+      React.createElement('div', {},
+        React.createElement('div', { style: { fontSize: '17px', fontWeight: 700, color: '#fff', marginBottom: '14px' } }, 'New Releases'),
+        React.createElement('div', { style: { display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '110px' : '150px'}, 1fr))`, gap: '18px' } }, this.albums.slice(4).map((a) => albumCard(a)))));
+
+    const libraryContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '20px' } },
+      React.createElement('div', { style: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '14px' } },
+        React.createElement('div', { style: { fontSize: '22px', fontWeight: 700, color: '#fff' } }, 'Music Library'),
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', background: '#141414', border: '1px solid #232323', borderRadius: '9px', padding: '9px 12px', minWidth: '220px', flex: isMobile ? '1 1 100%' : undefined } },
+          this.icon('search', 15),
+          React.createElement('span', { style: { fontSize: '13px', color: '#7A7A7A' } }, 'Search tracks, artists, albums'))),
+      React.createElement('div', { style: { display: 'flex', flexDirection: 'column' } },
+        !isMobile && React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '28px 1fr 1fr 70px', gap: '14px', padding: '0 10px 10px', fontSize: '11px', color: '#7A7A7A', fontFamily: "'Space Mono',monospace", borderBottom: '1px solid #1E1E1E' } },
+          React.createElement('span', {}, '#'), React.createElement('span', {}, 'TITLE'), React.createElement('span', {}, 'ALBUM'), React.createElement('span', {}, 'TIME')),
+        this.libraryTracks.map((t, i) => React.createElement('button', { key: t.id, onClick: () => { const alb = this.albums.find((a) => a.id === t.albumId); const idx = alb ? alb.tracks.findIndex((x) => x.id === t.id) : 0; this.playTrack(t.title, t.artist, t.albumId, idx); }, style: trackRowStyle, 'style-hover': { background: '#151515' } },
+          React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '12px', color: '#7A7A7A' } }, String(i + 1).padStart(2, '0')),
+          React.createElement('span', {},
+            React.createElement('div', { style: { fontSize: '13.5px', fontWeight: 600, color: '#fff' } }, t.title),
+            React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A' } }, t.artist)),
+          !isMobile && React.createElement('span', { style: { fontSize: '13px', color: '#7A7A7A' } }, t.album),
+          React.createElement('span', { style: { fontSize: '12px', color: '#7A7A7A', fontFamily: "'Space Mono',monospace", textAlign: 'right' } }, t.duration)))));
+
+    const albumsGridContent = React.createElement('div', {},
+      React.createElement('div', { style: { fontSize: '22px', fontWeight: 700, color: '#fff', marginBottom: '20px' } }, 'Albums & Collections'),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '130px' : '170px'}, 1fr))`, gap: '20px' } }, this.albums.map((a) => React.createElement('button', { key: a.id, onClick: () => this.selectAlbum(a.id), style: { border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', textAlign: 'left', color: '#fff' }, 'style-hover': { opacity: 0.9 } },
+        React.createElement('div', { style: { width: '100%', aspectRatio: '1', borderRadius: '12px', background: a.gradient, marginBottom: '10px' } }),
+        React.createElement('div', { style: { fontSize: '14px', fontWeight: 600 } }, a.title),
+        React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A', marginTop: '2px' } }, `${a.year} · ${a.trackCount} tracks`)))));
+
+    const shareMenuItems = [
+      { label: 'Facebook', icon: 'community' },
+      { label: 'X', icon: 'chat' },
+      { label: 'LinkedIn', icon: 'community' },
+      { label: 'WhatsApp', icon: 'chat' },
+      { label: 'Copy Link', icon: 'link' },
+    ];
+    const shareMenuPanel = this.state.shareMenuOpen ? React.createElement(React.Fragment, {},
+      React.createElement('div', { onClick: this.closeShareMenu, style: { position: 'fixed', inset: 0, zIndex: 59 } }),
+      React.createElement('div', { style: { position: 'absolute', top: '46px', right: 0, zIndex: 60, background: '#161616', border: '1px solid #262626', borderRadius: '12px', padding: '8px', minWidth: '190px', boxShadow: '0 24px 48px -12px rgba(0,0,0,0.6)' } },
+        shareMenuItems.map((item) => React.createElement('button', { key: item.label, onClick: this.closeShareMenu, style: { display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', color: '#E4E4E4', borderRadius: '8px', cursor: 'pointer', fontSize: '13.5px', textAlign: 'left' }, 'style-hover': { background: '#232323' } }, this.icon(item.icon, 16), item.label)))) : null;
+
+    const albumDetailContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '26px' } },
+      React.createElement('button', { onClick: () => this.navigate('albums'), style: { display: 'flex', alignItems: 'center', gap: '6px', border: 'none', background: 'transparent', color: '#7A7A7A', cursor: 'pointer', fontSize: '13px', padding: 0, width: 'fit-content' }, 'style-hover': { color: '#fff' } }, this.icon('chevronLeft', 15), 'Back to Albums'),
+      React.createElement('div', { style: { display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-end' } },
+        React.createElement('div', { style: { width: isMobile ? '120px' : '180px', height: isMobile ? '120px' : '180px', borderRadius: '14px', background: currentAlbum.gradient, flexShrink: 0, boxShadow: '0 24px 48px -16px rgba(0,0,0,0.6)' } }),
+        React.createElement('div', {},
+          React.createElement('div', { style: { fontSize: isMobile ? '22px' : '30px', fontWeight: 700, color: '#fff' } }, currentAlbum.title),
+          React.createElement('div', { style: { fontSize: '14px', color: '#FFB700', fontFamily: "'Space Mono',monospace", marginTop: '6px' } }, currentAlbum.artist),
+          React.createElement('div', { style: { fontSize: '12.5px', color: '#7A7A7A', marginTop: '4px' } }, `${currentAlbum.year} · ${currentAlbum.trackCount} tracks`),
+          React.createElement('div', { style: { display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' } },
+            React.createElement('button', { onClick: () => this.playTrack(currentAlbum.tracks[0].title, currentAlbum.artist, currentAlbum.id, 0), style: { padding: '10px 18px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }, 'style-hover': { background: '#ffc633' } }, 'Play All'),
+            React.createElement('button', { onClick: this.toggleShuffle, style: { padding: '10px 18px', borderRadius: '9px', border: this.state.player.shuffle ? '1px solid #FFB700' : '1px solid #262626', background: this.state.player.shuffle ? 'rgba(255,183,0,0.14)' : 'transparent', color: this.state.player.shuffle ? '#FFB700' : '#B3B3B3', fontSize: '13px', cursor: 'pointer', fontWeight: this.state.player.shuffle ? 700 : 400 }, 'style-hover': { background: '#161616', color: '#fff' } }, 'Shuffle'),
+            React.createElement('button', { onClick: () => this.toggleAlbumLike(currentAlbum.id), style: { width: '40px', height: '40px', borderRadius: '9px', border: this.state.likedAlbumIds[currentAlbum.id] ? '1px solid #FFB700' : '1px solid #262626', background: this.state.likedAlbumIds[currentAlbum.id] ? 'rgba(255,183,0,0.14)' : 'transparent', color: this.state.likedAlbumIds[currentAlbum.id] ? '#FFB700' : '#B3B3B3', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }, 'style-hover': { color: '#FFB700' } }, this.icon('heart', 16, this.state.likedAlbumIds[currentAlbum.id])),
+            React.createElement('div', { style: { position: 'relative' } },
+              React.createElement('button', { onClick: this.toggleShareMenu, style: { width: '40px', height: '40px', borderRadius: '9px', border: '1px solid #262626', background: 'transparent', color: '#B3B3B3', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }, 'style-hover': { color: '#fff' } }, this.icon('share', 16)),
+              shareMenuPanel)))),
+      React.createElement('div', {}, currentAlbum.tracks.map((t, i) => React.createElement('button', { key: t.id, onClick: () => this.playTrack(t.title, currentAlbum.artist, currentAlbum.id, i), style: { ...trackRowStyle, gridTemplateColumns: '28px 1fr 70px' }, 'style-hover': { background: '#151515' } },
+        React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '12px', color: '#7A7A7A' } }, String(i + 1).padStart(2, '0')),
+        React.createElement('span', { style: { fontSize: '13.5px', fontWeight: 600, color: '#fff' } }, t.title),
+        React.createElement('span', { style: { fontSize: '12px', color: '#7A7A7A', fontFamily: "'Space Mono',monospace", textAlign: 'right' } }, t.duration)))));
+
+    const sectionHeading = (t) => React.createElement('div', { style: { fontSize: isMobile ? '19px' : '22px', fontWeight: 700, color: '#fff', marginBottom: '16px' } }, t);
+
+    const gatedPanel = (iconName, heading) => React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px', padding: '60px 20px', maxWidth: '380px', margin: '0 auto' } },
+      React.createElement('div', { style: { width: '52px', height: '52px', borderRadius: '14px', background: 'rgba(255,183,0,0.12)', color: '#FFB700', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, this.icon(iconName, 24)),
+      React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff' } }, heading),
+      React.createElement('div', { style: { fontSize: '13.5px', color: '#7A7A7A', lineHeight: 1.5 } }, 'Sign in to your Collective Finity account to keep this personalized.'),
+      React.createElement('button', { onClick: () => this.goAuthScreen('login'), style: { padding: '11px 22px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13.5px', cursor: 'pointer', marginTop: '4px' }, 'style-hover': { background: '#ffc633' } }, 'Log In'));
+
+    // ---- ABOUT ----
+    const aboutCardStyle = { background: '#141414', border: '1px solid #232323', borderRadius: '12px', padding: '20px' };
+    const aboutQuoteStyle = { borderLeft: '3px solid #FFB700', paddingLeft: '18px', fontSize: '15px', fontStyle: 'italic', color: '#E4E4E4', lineHeight: 1.6 };
+
+    const aboutHero = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '16px' } },
+      React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '11px', letterSpacing: '0.1em', color: '#FFB700' } }, 'ABOUT COLLECTIVE FINITY'),
+      React.createElement('div', { style: { fontSize: isMobile ? '26px' : '36px', fontWeight: 700, color: '#fff', lineHeight: 1.15 } }, 'About Collective Finity'),
+      React.createElement('div', { style: { fontSize: isMobile ? '15px' : '17px', fontWeight: 600, color: '#FFB700' } }, 'Where Human Artistry Meets AI Innovation'),
+      React.createElement('div', { style: { fontSize: '14.5px', color: '#B3B3B3', lineHeight: 1.7, maxWidth: '640px' } }, 'Collective Finity is a cinematic music universe shaping the future of sound. By combining human emotional lyrics with advanced AI synthesis, we craft immersive sonic journeys.'),
+      React.createElement('div', { style: { display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '4px' } },
+        React.createElement('button', { onClick: () => this.navigate('library'), style: { padding: '11px 20px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13.5px', cursor: 'pointer', whiteSpace: 'nowrap' }, 'style-hover': { background: '#ffc633' } }, 'Explore Music'),
+        React.createElement('button', { style: { padding: '11px 20px', borderRadius: '9px', border: '1px solid #262626', background: 'transparent', color: '#fff', fontWeight: 600, fontSize: '13.5px', cursor: 'pointer', whiteSpace: 'nowrap' }, 'style-hover': { background: '#161616' } }, 'Our Story')));
+
+    const aboutChronicle = React.createElement('div', {},
+      React.createElement('div', { style: { fontFamily: "'Space Mono',monospace", fontSize: '12px', color: '#FFB700', marginBottom: '8px' } }, '01 / THE CHRONICLE'),
+      React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff', marginBottom: '12px' } }, 'The Story Behind The Sound'),
+      React.createElement('div', { style: { fontSize: '14.5px', color: '#B3B3B3', lineHeight: 1.7, marginBottom: '16px' } }, 'Collective Finity was born from a desire to redefine cinematic music. Every creation begins with a pure human spark\u2014original lyrics written by hand, conceptual themes, and strict artistic direction.'),
+      React.createElement('div', { style: aboutQuoteStyle }, '\u201CWe guide advanced AI technology not as a simple shortcut, but as a complex production instrument to execute deep, multi-layered soundscapes.\u201D'));
+
+    const aboutFuture = React.createElement('div', {},
+      React.createElement('div', { style: { fontFamily: "'Space Mono',monospace", fontSize: '12px', color: '#FFB700', marginBottom: '8px' } }, '02 / THE FUTURE'),
+      React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff', marginBottom: '12px' } }, 'Our Creative Vision'),
+      React.createElement('div', { style: { fontSize: '14.5px', color: '#B3B3B3', lineHeight: 1.7, marginBottom: '16px' } }, 'Our vision is to build a limitless digital ecosystem where music and technology evolve together. By combining meticulous human composition with AI synthesis, we prove that innovation has no boundaries.'),
+      React.createElement('div', { style: aboutQuoteStyle }, '\u201CEvery track is a curated balance of professional musical direction and modern technology.\u201D'));
+
+    const aboutPillarsData = [
+      { t: 'Cinematic Lyrics', d: 'Every track begins with a pure human spark. Original lyrics written by hand, conceptual storytelling, and profound narratives that establish a deep emotional connection before a single note is synthesized.' },
+      { t: 'Human Artistry', d: 'Strict artistic direction and meticulous human composition guide advanced production instruments. Technology never drives our process; it executes our deep, multi-layered cinematic vision.' },
+      { t: 'Sonic Innovation', d: 'Building a limitless digital ecosystem where music and technology evolve together. We push boundaries to craft immersive soundscapes and unforgettable auditory journeys.' },
+    ];
+    const aboutPillars = React.createElement('div', {},
+      React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff', marginBottom: '16px' } }, 'Core Pillars'),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '16px' } },
+        aboutPillarsData.map((p) => React.createElement('div', { key: p.t, style: aboutCardStyle },
+          React.createElement('div', { style: { fontSize: '14.5px', fontWeight: 700, color: '#fff', marginBottom: '8px' } }, p.t),
+          React.createElement('div', { style: { fontSize: '13px', color: '#7A7A7A', lineHeight: 1.6 } }, p.d)))));
+
+    const aboutTimelineData = [
+      { q: 'Q1 2025', t: 'The Genesis', d: 'The human spark is ignited. Collective Finity began as a conceptual movement to challenge standard digital music production, focusing entirely on original, handwritten lyrics and deep cinematic themes.' },
+      { q: 'Q3 2025', t: 'Synthesis Protocol', d: 'Integrating advanced production instruments. We developed our proprietary creative methodology, proving that modern tech can amplify raw human artistry without destroying its emotional core.' },
+      { q: 'Q1 2026', t: 'The Infinite Expansion', d: 'Launching a limitless digital universe where immersive orchestration, dark-themed visual design, and multi-layered soundscapes evolve continuously beyond imagination.' },
+    ];
+    const aboutTimeline = React.createElement('div', {},
+      React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff', marginBottom: '20px' } }, 'Timeline'),
+      React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '22px' } },
+        aboutTimelineData.map((mi) => React.createElement('div', { key: mi.q, style: { display: 'flex', gap: '16px' } },
+          React.createElement('div', { style: { width: '10px', height: '10px', minWidth: '10px', borderRadius: '50%', background: '#FFB700', marginTop: '6px' } }),
+          React.createElement('div', {},
+            React.createElement('div', { style: { fontFamily: "'Space Mono',monospace", fontSize: '12px', color: '#FFB700', marginBottom: '4px' } }, mi.q + ' \u2014 ' + mi.t),
+            React.createElement('div', { style: { fontSize: '13.5px', color: '#B3B3B3', lineHeight: 1.6 } }, mi.d))))));
+
+    const aboutFaqData = [
+      { q: 'What makes Collective Finity different from other music platforms?', a: 'Unlike traditional automated platforms, Collective Finity bridges raw human artistry with advanced technology. Every project begins with handcrafted, original lyrics and structured cinematic concepts, ensuring that the emotional core of independent music remains entirely authentic and deeply impactful.' },
+      { q: 'Are the lyrics and musical themes fully original?', a: 'Yes, completely. We follow a strict creative protocol where all lyrical narratives, poetic structures, and thematic concepts are generated directly from genuine human inspiration. Technology is utilized strictly as an advanced production tool to execute and scale this cinematic vision.' },
+      { q: 'How does this platform support independent digital artists?', a: 'We provide an immersive, limitless ecosystem tailored for independent audio creators. By offering high-tier multi-layered soundscapes, persistent web players, and sophisticated visual frameworks, we empower artists to showcase their work within a premium, high-fidelity environment.' },
+      { q: 'Can I integrate these cinematic tracks into my own external projects?', a: 'Absolutely. Our digital compositions and orchestration parameters are designed to seamlessly integrate with modern technical agencies, web architectures, and multimedia productions looking for elite, atmospheric, and continuous sound design.' },
+    ];
+    const aboutFaq = React.createElement('div', {},
+      React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff', marginBottom: '16px' } }, 'FAQ'),
+      React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '10px' } },
+        aboutFaqData.map((f, i) => React.createElement('div', { key: f.q, style: { border: '1px solid #232323', borderRadius: '10px', background: '#141414', overflow: 'hidden' } },
+          React.createElement('button', { onClick: () => this.toggleFaq(i), style: { width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '16px 18px', border: 'none', background: 'transparent', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer', textAlign: 'left' }, 'style-hover': { background: '#181818' } },
+            React.createElement('span', {}, f.q),
+            React.createElement('span', { style: { display: 'flex', flexShrink: 0, transform: this.state.openFaqIndex === i ? 'rotate(180deg)' : 'none', transition: 'transform .15s' } }, this.icon('chevronDown', 16))),
+          this.state.openFaqIndex === i ? React.createElement('div', { style: { padding: '0 18px 18px', fontSize: '13.5px', color: '#B3B3B3', lineHeight: 1.6 } }, f.a) : null))));
+
+    const aboutContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: isMobile ? '40px' : '54px', maxWidth: '820px' } },
+      aboutHero, aboutChronicle, aboutFuture, aboutPillars, aboutTimeline, aboutFaq);
+
+    // ---- COMMUNITY ----
+    const channels = [
+      { icon: 'chat', name: 'Discord', desc: 'Voice channels and daily drops with the crew.' },
+      { icon: 'community', name: 'Facebook Group', desc: 'Community discussions and event announcements.' },
+      { icon: 'video', name: 'TikTok', desc: 'Behind-the-scenes clips and track teasers.' },
+      { icon: 'camera', name: 'Instagram \u2014 Music', desc: 'Cover art, visuals, and release announcements.' },
+      { icon: 'camera', name: 'Instagram \u2014 Community', desc: 'Fan features and community spotlights.' },
+      { icon: 'video', name: 'YouTube', desc: 'Full releases, visualizers, and session videos.' },
+      { icon: 'cart', name: 'Amazon Music', desc: 'Stream the full catalog and curated playlists.' },
+      { icon: 'waveform', name: 'SoundCloud', desc: 'Early demos, remixes, and DJ sets.' },
+      { icon: 'musicNote', name: 'Spotify', desc: 'Official playlists and new releases.' },
+    ];
+    const communityContent = React.createElement('div', {},
+      React.createElement('div', { style: { fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: '#fff' } }, 'Join the Community'),
+      React.createElement('div', { style: { fontSize: '13.5px', color: '#7A7A7A', marginTop: '8px', marginBottom: '26px', maxWidth: '520px', lineHeight: 1.6 } }, 'Every channel we run, in one place \u2014 pick your favorite and say hello.'),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' } },
+        channels.map((c) => React.createElement('button', { key: c.name, style: { display: 'flex', alignItems: 'flex-start', gap: '14px', textAlign: 'left', padding: '18px', borderRadius: '12px', background: '#141414', border: '1px solid #232323', cursor: 'pointer', color: '#fff' }, 'style-hover': { background: '#181818', border: '1px solid #2c2c2c' } },
+          React.createElement('div', { style: { width: '42px', height: '42px', minWidth: '42px', borderRadius: '10px', background: 'rgba(255,183,0,0.12)', color: '#FFB700', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, this.icon(c.icon, 20)),
+          React.createElement('div', {},
+            React.createElement('div', { style: { fontSize: '14.5px', fontWeight: 700 } }, c.name),
+            React.createElement('div', { style: { fontSize: '12.5px', color: '#7A7A7A', marginTop: '4px', lineHeight: 1.5 } }, c.desc))))));
+
+    // ---- CONTACT ----
+    const inputStyle = { width: '100%', padding: '11px 13px', borderRadius: '9px', border: '1px solid #262626', background: '#141414', color: '#fff', fontSize: '13.5px', fontFamily: 'Inter,sans-serif' };
+    const labelStyle = { fontSize: '12px', color: '#B3B3B3', marginBottom: '6px', display: 'block', fontFamily: "'Space Mono',monospace" };
+
+    const contactHero = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '640px' } },
+      React.createElement('div', { style: { fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: '#fff', lineHeight: 1.2 } }, 'Where Music Meets Infinite Imagination'),
+      React.createElement('div', { style: { fontSize: '14.5px', color: '#B3B3B3', lineHeight: 1.7 } }, 'A vibrant global community for music producers, creators, and sonic artists. Connect, collaborate, and push the boundaries of sound with infinite possibilities.'),
+      React.createElement('div', { style: { display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '4px' } },
+        React.createElement('button', { onClick: () => this.navigate('community'), style: { padding: '11px 20px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13.5px', cursor: 'pointer', whiteSpace: 'nowrap' }, 'style-hover': { background: '#ffc633' } }, 'Join Collective'),
+        React.createElement('button', { onClick: () => this.navigate('library'), style: { padding: '11px 20px', borderRadius: '9px', border: '1px solid #262626', background: 'transparent', color: '#fff', fontWeight: 600, fontSize: '13.5px', cursor: 'pointer', whiteSpace: 'nowrap' }, 'style-hover': { background: '#161616' } }, 'Explore Music')));
+
+    const contactMethodsData = [
+      { icon: 'mail', title: 'Email Us', desc: 'Got questions? We\u2019re here to help.', value: 'contact@collectivefinity.com' },
+      { icon: 'pin', title: 'Our Location', desc: 'Based in the heart of Europe.', value: 'Netherlands' },
+      { icon: 'chat', title: 'Discord Server', desc: 'Join our vibrant community of creators.', btn: 'Join Official Server' },
+      { icon: 'community', title: 'Facebook Group', desc: 'Connect with fellow music lovers.', btn: 'Join The Group' },
+      { icon: 'community', title: 'Facebook Page', desc: 'Follow us for latest updates.', btn: 'Follow Our Page' },
+    ];
+    const contactMethods = React.createElement('div', {},
+      React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff', marginBottom: '6px' } }, 'Get In Touch \u2014 Let\u2019s Create Together'),
+      React.createElement('div', { style: { fontSize: '13.5px', color: '#7A7A7A', marginBottom: '20px', maxWidth: '520px', lineHeight: 1.6 } }, 'Have a question or want to join the collective? Reach out directly through our official channels.'),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(230px, 1fr))', gap: '16px' } },
+        contactMethodsData.map((c) => React.createElement('div', { key: c.title, style: { display: 'flex', flexDirection: 'column', gap: '10px', padding: '18px', borderRadius: '12px', background: '#141414', border: '1px solid #232323' } },
+          React.createElement('div', { style: { width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,183,0,0.12)', color: '#FFB700', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, this.icon(c.icon, 18)),
+          React.createElement('div', { style: { fontSize: '14.5px', fontWeight: 700, color: '#fff' } }, c.title),
+          React.createElement('div', { style: { fontSize: '12.5px', color: '#7A7A7A', lineHeight: 1.5 } }, c.desc),
+          c.value ? React.createElement('div', { style: { fontSize: '13px', color: '#FFB700', fontFamily: "'Space Mono',monospace" } }, c.value) : null,
+          c.btn ? React.createElement('button', { style: { marginTop: '4px', padding: '9px 14px', borderRadius: '8px', border: '1px solid #FFB700', background: 'transparent', color: '#FFB700', fontWeight: 600, fontSize: '12.5px', cursor: 'pointer', width: 'fit-content' }, 'style-hover': { background: 'rgba(255,183,0,0.12)' } }, c.btn) : null))));
+
+    const contactFormSection = React.createElement('form', { onSubmit: this.submitContact, style: { display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '520px' } },
+      React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff' } }, 'Send Us a Message'),
+      this.state.contactSent
+        ? React.createElement('div', { style: { padding: '14px 16px', borderRadius: '9px', background: 'rgba(255,183,0,0.12)', border: '1px solid rgba(255,183,0,0.3)', color: '#FFB700', fontSize: '13.5px' } }, 'Message sent \u2014 we\u2019ll get back to you soon.')
+        : null,
+      React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'YOUR NAME'), React.createElement('input', { type: 'text', placeholder: 'Your name', style: inputStyle })),
+      React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'EMAIL ADDRESS'), React.createElement('input', { type: 'email', placeholder: 'you@example.com', style: inputStyle })),
+      React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'SUBJECT'), React.createElement('input', { type: 'text', placeholder: 'What\u2019s this about?', style: inputStyle })),
+      React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'YOUR MESSAGE'), React.createElement('textarea', { rows: 5, placeholder: 'Tell us more...', style: { ...inputStyle, resize: 'vertical', fontFamily: 'Inter,sans-serif' } })),
+      React.createElement('button', { type: 'submit', style: { padding: '12px 20px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13.5px', cursor: 'pointer', width: 'fit-content' }, 'style-hover': { background: '#ffc633' } }, 'Send'));
+
+    const releasesData = [
+      { t: 'Night Circuits', a: 'Nova Wraith', type: 'Album', seed: 11 },
+      { t: 'Afterglow Station', a: 'Kilo Static', type: 'Single', seed: 22 },
+      { t: 'Amber Frequency', a: 'Glass Horizon', type: 'Album', seed: 33 },
+      { t: 'Grey Hour', a: 'Ember Choir', type: 'EP', seed: 44 },
+      { t: 'Second Skyline', a: 'Vantage Low', type: 'Single', seed: 55 },
+    ];
+    const latestReleases = React.createElement('div', {},
+      React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff', marginBottom: '16px' } }, 'Latest Releases'),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '130px' : '160px'}, 1fr))`, gap: '18px' } },
+        releasesData.map((r) => React.createElement('div', { key: r.t },
+          React.createElement('div', { style: { width: '100%', aspectRatio: '1', borderRadius: '12px', background: this.gradientFor(r.seed), marginBottom: '10px' } }),
+          React.createElement('div', { style: { fontSize: '14px', fontWeight: 600, color: '#fff' } }, r.t),
+          React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A', marginTop: '2px' } }, r.a),
+          React.createElement('span', { style: { display: 'inline-block', marginTop: '6px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(255,183,0,0.12)', color: '#FFB700', fontSize: '10.5px', fontFamily: "'Space Mono',monospace" } }, r.type)))));
+
+    const contactContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: isMobile ? '38px' : '50px', maxWidth: '900px' } },
+      contactHero, contactMethods,
+      React.createElement('div', { style: { display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '40px' } }, contactFormSection),
+      latestReleases);
+
+    // ---- BLOG ----
+    const blogCategories = ['All', 'AI Music Production', 'AI Music Tutorials', 'Audio Production', 'Industry & Resources', 'Insights', 'Music Theory', 'Prompt Engineering'];
+    const categoryDescriptions = {
+      'AI Music Production': 'How AI tools are reshaping the process of writing, producing, and finishing tracks.',
+      'AI Music Tutorials': 'Step-by-step guides for producing music with AI tools, from prompt engineering to full track generation.',
+      'Audio Production': 'Mixing, mastering, and recording fundamentals for producers at every level.',
+      'Industry & Resources': 'Licensing, distribution, and the business side of releasing independent music.',
+      'Insights': 'Perspectives on where listener taste and music technology are headed next.',
+      'Music Theory': 'Chords, structure, and the building blocks behind memorable songwriting.',
+      'Prompt Engineering': 'Getting better, more controllable results out of generative music tools.',
+    };
+    const blogPosts = [
+      { id: 'p1', title: 'What Is AI Music Production? A Complete Beginner\u2019s Guide', category: 'AI Music Production', readTime: '12 min read', date: 'Jul 2, 2026', seed: 61, excerpt: 'The global landscape of AI music production is undergoing its most profound transformation since the invention of the DAW and the synthesizer.' },
+      { id: 'p2', title: '5 Prompt Engineering Tricks for Better AI Tracks', category: 'Prompt Engineering', readTime: '8 min read', date: 'Jun 24, 2026', seed: 72, excerpt: 'Small changes to how you describe a track can dramatically change what a generative model gives back.' },
+      { id: 'p3', title: 'Mixing Fundamentals Every Producer Should Know', category: 'Audio Production', readTime: '10 min read', date: 'Jun 18, 2026', seed: 83, excerpt: 'Gain staging, EQ carving, and bus compression \u2014 the fundamentals that hold up no matter what tools you use.' },
+      { id: 'p4', title: 'Understanding Chord Progressions in Modern Pop', category: 'Music Theory', readTime: '9 min read', date: 'Jun 10, 2026', seed: 94, excerpt: 'Why the same handful of progressions keep showing up on the charts, and how to bend them into something new.' },
+      { id: 'p5', title: 'The State of AI Music Licensing in 2026', category: 'Industry & Resources', readTime: '7 min read', date: 'Jun 3, 2026', seed: 15, excerpt: 'What independent artists need to know before releasing AI-assisted tracks commercially.' },
+      { id: 'p6', title: 'From Idea to Master: A Tutorial Walkthrough', category: 'AI Music Tutorials', readTime: '11 min read', date: 'May 27, 2026', seed: 26, excerpt: 'A full walkthrough of one track from a rough voice memo to a finished, mastered file.' },
+      { id: 'p7', title: 'Why Listeners Are Embracing AI-Assisted Records', category: 'Insights', readTime: '6 min read', date: 'May 19, 2026', seed: 37, excerpt: 'Audience attitudes toward AI in music have shifted faster than the industry expected.' },
+      { id: 'p8', title: 'Building Your First AI Music Workflow', category: 'AI Music Tutorials', readTime: '9 min read', date: 'May 12, 2026', seed: 48, excerpt: 'A simple, repeatable workflow for turning ideas into finished demos without getting lost in tools.' },
+    ];
+    const getPost = (id) => blogPosts.find((p) => p.id === id) || blogPosts[0];
+
+    const categoryChip = (cat, onClick, active) => React.createElement('button', { key: cat, onClick, style: { padding: '8px 14px', borderRadius: '999px', border: active ? '1px solid #FFB700' : '1px solid #262626', background: active ? 'rgba(255,183,0,0.14)' : 'transparent', color: active ? '#FFB700' : '#B3B3B3', fontSize: '12.5px', fontWeight: active ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap' }, 'style-hover': { color: '#fff' } }, cat);
+
+    const postCard = (post) => React.createElement('button', { key: post.id, onClick: () => this.goBlogPost(post.id), style: { display: 'flex', flexDirection: 'column', textAlign: 'left', border: '1px solid #232323', background: '#141414', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', padding: 0, color: '#fff' }, 'style-hover': { border: '1px solid #2c2c2c' } },
+      React.createElement('div', { style: { width: '100%', aspectRatio: '16/9', background: this.gradientFor(post.seed) } }),
+      React.createElement('div', { style: { padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' } },
+        React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '10.5px', color: '#FFB700' } }, post.category.toUpperCase()),
+        React.createElement('div', { style: { fontSize: '15px', fontWeight: 700, lineHeight: 1.35 } }, post.title),
+        React.createElement('div', { style: { fontSize: '12.5px', color: '#7A7A7A', lineHeight: 1.5 } }, post.excerpt),
+        React.createElement('div', { style: { fontSize: '11.5px', color: '#4a4a4a', fontFamily: "'Space Mono',monospace", marginTop: '2px' } }, post.date + ' \u00B7 ' + post.readTime)));
+
+    const featuredPost = blogPosts[0];
+    const featuredPostCard = React.createElement('button', { onClick: () => this.goBlogPost(featuredPost.id), style: { display: 'flex', flexDirection: isMobile ? 'column' : 'row', textAlign: 'left', border: '1px solid #232323', background: '#141414', borderRadius: '14px', overflow: 'hidden', cursor: 'pointer', padding: 0, color: '#fff', width: '100%' }, 'style-hover': { border: '1px solid #2c2c2c' } },
+      React.createElement('div', { style: { width: isMobile ? '100%' : '46%', aspectRatio: isMobile ? '16/9' : 'auto', minHeight: isMobile ? undefined : '220px', background: this.gradientFor(featuredPost.seed), flexShrink: 0 } }),
+      React.createElement('div', { style: { padding: isMobile ? '20px' : '28px', display: 'flex', flexDirection: 'column', gap: '10px', justifyContent: 'center' } },
+        React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '11px', color: '#FFB700' } }, featuredPost.category.toUpperCase() + ' \u00B7 FEATURED'),
+        React.createElement('div', { style: { fontSize: isMobile ? '19px' : '24px', fontWeight: 700, lineHeight: 1.3 } }, featuredPost.title),
+        React.createElement('div', { style: { fontSize: '13.5px', color: '#B3B3B3', lineHeight: 1.6 } }, featuredPost.excerpt),
+        React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A', fontFamily: "'Space Mono',monospace" } }, featuredPost.date + ' \u00B7 ' + featuredPost.readTime)));
+
+    const blogHubContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '26px' } },
+      React.createElement('div', { style: { fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: '#fff' } }, 'Blog'),
+      featuredPostCard,
+      React.createElement('div', { style: { display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' } },
+        blogCategories.map((cat) => categoryChip(cat, () => cat === 'All' ? this.goBlogHub() : this.goBlogCategory(cat), this.state.selectedCategory === cat && this.state.screen === 'blog'))),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '100%' : '260px'}, 1fr))`, gap: '18px' } },
+        blogPosts.map((p) => postCard(p))));
+
+    const blogCategoryContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '20px' } },
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', color: '#7A7A7A' } },
+        React.createElement('button', { onClick: this.goBlogHub, style: { border: 'none', background: 'transparent', color: '#7A7A7A', cursor: 'pointer', fontSize: '12.5px', padding: 0 }, 'style-hover': { color: '#FFB700' } }, 'Blog'),
+        React.createElement('span', {}, '/'),
+        React.createElement('span', { style: { color: '#FFB700' } }, this.state.selectedCategory)),
+      React.createElement('div', {},
+        React.createElement('div', { style: { fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: '#fff', marginBottom: '8px' } }, this.state.selectedCategory),
+        React.createElement('div', { style: { fontSize: '13.5px', color: '#B3B3B3', maxWidth: '560px', lineHeight: 1.6 } }, categoryDescriptions[this.state.selectedCategory] || '')),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '100%' : '260px'}, 1fr))`, gap: '18px' } },
+        blogPosts.filter((p) => p.category === this.state.selectedCategory).map((p) => postCard(p))));
+
+    // shared long-form building blocks
+    const adZone = React.createElement('div', { style: { border: '1px dashed #333', borderRadius: '10px', padding: '18px', textAlign: 'center', color: '#5a5a5a', fontFamily: "'Space Mono',monospace", fontSize: '11px', letterSpacing: '0.06em' } }, 'AD ZONE \u2014 728\u00D790');
+
+    const calloutBox = (text) => React.createElement('div', { style: { border: '1px solid rgba(255,183,0,0.3)', borderLeft: '3px solid #FFB700', borderRadius: '8px', background: '#141414', padding: '18px 20px', fontFamily: "'Space Mono',monospace", fontSize: '13px', color: '#E4E4E4', lineHeight: 1.7, overflowX: 'auto' } }, text);
+
+    const pullQuote = (text) => React.createElement('div', { style: { borderLeft: '3px solid #FFB700', paddingLeft: '20px', fontSize: '19px', fontStyle: 'italic', color: '#fff', lineHeight: 1.5, margin: '8px 0' } }, text);
+
+    const h2 = (id, text) => React.createElement('h2', { key: id, ref: this.registerSectionRef(id), style: { fontSize: '22px', fontWeight: 700, color: '#fff', marginTop: '8px', marginBottom: '4px', scrollMarginTop: '20px' } }, text);
+    const p = (text) => React.createElement('p', { style: { fontSize: '18px', color: '#C7C7C7', lineHeight: 1.8, margin: 0 } }, text);
+    const compareTable = React.createElement('div', { style: { overflowX: 'auto', border: '1px solid #232323', borderRadius: '10px' } },
+      React.createElement('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: '14.5px', minWidth: '480px' } },
+        React.createElement('thead', {},
+          React.createElement('tr', {},
+            React.createElement('th', { style: { textAlign: 'left', padding: '12px 16px', background: 'rgba(255,183,0,0.14)', color: '#FFB700', fontFamily: "'Space Mono',monospace", fontSize: '11.5px' } }, 'FEATURE'),
+            React.createElement('th', { style: { textAlign: 'left', padding: '12px 16px', background: 'rgba(255,183,0,0.14)', color: '#FFB700', fontFamily: "'Space Mono',monospace", fontSize: '11.5px' } }, 'TRADITIONAL PRODUCTION'),
+            React.createElement('th', { style: { textAlign: 'left', padding: '12px 16px', background: 'rgba(255,183,0,0.14)', color: '#FFB700', fontFamily: "'Space Mono',monospace", fontSize: '11.5px' } }, 'AI-DRIVEN PRODUCTION'))),
+        React.createElement('tbody', {},
+          React.createElement('tr', { style: { background: '#141414' } },
+            React.createElement('td', { style: { padding: '14px 16px', color: '#fff', fontWeight: 600 } }, 'Skill Curve'),
+            React.createElement('td', { style: { padding: '14px 16px', color: '#B3B3B3' } }, 'Years of learning music theory, synthesis, and software'),
+            React.createElement('td', { style: { padding: '14px 16px', color: '#B3B3B3' } }, 'High focus on creative direction, conceptualization, and prompt engineering')),
+          React.createElement('tr', { style: { background: '#181818' } },
+            React.createElement('td', { style: { padding: '14px 16px', color: '#fff', fontWeight: 600 } }, 'Time Investment'),
+            React.createElement('td', { style: { padding: '14px 16px', color: '#B3B3B3' } }, 'Hours to weeks per track'),
+            React.createElement('td', { style: { padding: '14px 16px', color: '#B3B3B3' } }, 'Seconds to minutes for core generation')))));
+
+    const postFaqData = [
+      { q: 'Do I need musical training to start with AI music production?', a: 'No. A working ear and a clear creative direction matter more than formal theory \u2014 you can learn theory alongside the process as your projects demand it.' },
+      { q: 'Will AI-generated stems hold up next to a professionally mixed track?', a: 'With the right mixing and mastering pass, yes. AI handles generation; the finishing work that makes a track feel professional is still a human skill worth learning.' },
+      { q: 'Is it fair to call AI-assisted music \u201Creal\u201D music?', a: 'The creative direction, lyrics, and editorial choices are entirely human \u2014 AI is a production instrument, the same way a synthesizer or a DAW is.' },
+    ];
+
+    const tocSections = [
+      ['sec-1', 'What Is AI Music Production?'], ['sec-2', 'How AI Is Changing Music Creation'], ['sec-3', 'How AI Music Production Works'],
+      ['sec-4', 'Benefits of AI Music Production'], ['sec-5', 'Traditional vs. AI Production'], ['sec-6', 'Common Misconceptions'],
+      ['sec-7', 'Can AI Replace Human Musicians?'], ['sec-8', 'Popular AI Music Tools'], ['sec-9', 'Who Can Benefit'],
+      ['sec-10', 'Getting Started'], ['sec-11', 'Frequently Asked Questions'], ['sec-12', 'Conclusion'],
+    ];
+    const tocList = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '2px' } },
+      tocSections.map(([id, label]) => React.createElement('button', { key: id, onClick: () => this.scrollToSection(id), style: { textAlign: 'left', border: 'none', background: 'transparent', color: '#7A7A7A', fontSize: '12.5px', padding: '7px 10px', borderRadius: '7px', cursor: 'pointer', lineHeight: 1.4 }, 'style-hover': { background: '#181818', color: '#fff' } }, label)));
+
+    const postBody = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '22px' } },
+      p('The global landscape of AI music production is undergoing its most profound transformation since the invention of the digital audio workstation (DAW) and the synthesizer. For decades, creative radio-ready or cinematic-grade music required thousands of dollars in high-end hardware, extensive years of highly specialized technical training, and a traditional paradigm where innovation was often gated behind expensive studio access. Today, we live in an independent future where anyone can transform raw musical inspiration into a professional soundscape.'),
+      h2('sec-1', 'What Is AI Music Production?'),
+      p('AI music production is the practice of using machine learning models \u2014 for composition, sound design, stem separation, or mastering \u2014 as part of an otherwise human-directed creative process. It sits alongside the DAW and the synthesizer as another instrument in the producer\u2019s toolkit, not a replacement for the producer.'),
+      h2('sec-2', 'How AI Is Changing Music Creation'),
+      p('Where a first draft once took a full studio session to rough out, AI tools now let a producer iterate on arrangement, instrumentation, and tone in minutes. That speed changes the creative loop itself: more ideas get auditioned, and the ones that survive are chosen on feel rather than sunk cost.'),
+      adZone,
+      h2('sec-3', 'How AI Music Production Works (The Tech Made Simple)'),
+      p('Most tools follow the same basic shape: a model trained on large amounts of audio learns the statistical relationships between sounds, then generates new audio conditioned on a prompt, a melody, or a reference track. The output is raw material \u2014 it still needs a producer\u2019s ear to arrange, mix, and finish.'),
+      calloutBox('[Human Creative Vision + Textual Intent] \u2192 [AI Generative Synthesis] \u2192 [High-Fidelity Sonic Output]'),
+      h2('sec-4', 'Benefits of AI Music Production'),
+      p('Faster iteration, lower upfront cost, and access for creators who never had a home studio budget top the list. It also lowers the cost of experimentation \u2014 trying a genre or arrangement you\u2019d otherwise never attempt becomes nearly free.'),
+      h2('sec-5', 'Traditional Music Production vs. AI Music Production'),
+      compareTable,
+      h2('sec-6', 'Common Misconceptions About AI Music'),
+      pullQuote('We guide advanced AI technology not as a simple shortcut, but as a complex production instrument to execute deep, multi-layered soundscapes.'),
+      p('The most common misconception is that AI removes the need for taste. In practice, the opposite is true \u2014 with generation this cheap, editorial judgment becomes the scarce, valuable skill.'),
+      adZone,
+      h2('sec-7', 'Can AI Replace Human Musicians? (The Collaborative Reality)'),
+      p('No tool we\u2019ve used replaces the decisions a human makes about what a song is actually about. AI accelerates execution; the creative direction, lyrics, and emotional throughline remain entirely human.'),
+      h2('sec-8', 'Popular AI Music Tools (An Overview)'),
+      p('The landscape spans full-track generators, stem-level assistants, AI-powered mastering chains, and vocal modeling tools \u2014 most producers end up combining several rather than relying on one end-to-end platform.'),
+      h2('sec-9', 'Who Can Benefit From AI Music Production?'),
+      p('Independent artists without studio access, songwriters who don\u2019t produce, and established producers looking to prototype faster all get real value \u2014 the common thread is a clear creative vision looking for a faster path to execution.'),
+      h2('sec-10', 'Getting Started: Your First AI Music Workflow'),
+      p('Start with a clear reference and a short, specific prompt describing mood, instrumentation, and tempo. Generate several variations, pick the one closest to your vision, then treat it as a stem to arrange, mix, and master by hand.'),
+      adZone,
+      h2('sec-11', 'Frequently Asked Questions'),
+      React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '10px' } },
+        postFaqData.map((f, i) => React.createElement('div', { key: f.q, style: { border: '1px solid #232323', borderRadius: '10px', background: '#141414', overflow: 'hidden' } },
+          React.createElement('button', { onClick: () => this.togglePostFaq(i), style: { width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '16px 18px', border: 'none', background: 'transparent', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer', textAlign: 'left' }, 'style-hover': { background: '#181818' } },
+            React.createElement('span', {}, f.q),
+            React.createElement('span', { style: { display: 'flex', flexShrink: 0, transform: this.state.openPostFaqIndex === i ? 'rotate(180deg)' : 'none', transition: 'transform .15s' } }, this.icon('chevronDown', 16))),
+          this.state.openPostFaqIndex === i ? React.createElement('div', { style: { padding: '0 18px 18px', fontSize: '13.5px', color: '#B3B3B3', lineHeight: 1.6 } }, f.a) : null))),
+      h2('sec-12', 'Conclusion'),
+      p('AI music production doesn\u2019t remove craft from the equation \u2014 it redistributes where the craft happens, from operating hardware toward creative direction and editorial judgment. The artists who benefit most treat it as an instrument, not an autopilot.'));
+
+    const authorBio = React.createElement('div', { style: { display: 'flex', gap: '14px', padding: '20px', borderRadius: '12px', background: '#141414', border: '1px solid #232323', alignItems: 'flex-start' } },
+      React.createElement('div', { style: { width: '48px', height: '48px', minWidth: '48px', borderRadius: '12px', background: 'linear-gradient(135deg,#FFB700,#8a6200)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D0D0D', fontFamily: "'Space Mono',monospace", fontWeight: 700 } }, 'S'),
+      React.createElement('div', {},
+        React.createElement('div', { style: { fontSize: '14.5px', fontWeight: 700, color: '#fff' } }, 'Sasha Reyes'),
+        React.createElement('div', { style: { fontSize: '12.5px', color: '#7A7A7A', marginTop: '4px', lineHeight: 1.6 } }, 'Producer and writer on the Collective Finity team, covering the intersection of AI tools and independent music production.')));
+
+    const newsletterBox = React.createElement('div', { style: { padding: '24px', borderRadius: '14px', background: 'linear-gradient(135deg, rgba(255,183,0,0.14), rgba(255,183,0,0.03))', border: '1px solid rgba(255,183,0,0.25)', display: 'flex', flexDirection: 'column', gap: '14px' } },
+      React.createElement('div', { style: { fontSize: '17px', fontWeight: 700, color: '#fff' } }, 'Get notified about new courses and tutorials'),
+      React.createElement('div', { style: { display: 'flex', gap: '10px', flexWrap: 'wrap' } },
+        React.createElement('input', { type: 'email', placeholder: 'you@example.com', style: { flex: 1, minWidth: '200px', padding: '11px 13px', borderRadius: '9px', border: '1px solid #262626', background: '#141414', color: '#fff', fontSize: '13.5px', fontFamily: 'Inter,sans-serif' } }),
+        React.createElement('button', { style: { padding: '11px 20px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13.5px', cursor: 'pointer', whiteSpace: 'nowrap' }, 'style-hover': { background: '#ffc633' } }, 'Subscribe')),
+      // NOTE for dev handoff: replace this visual form with the real WP shortcode at publish time:
+      // [contact-form-7 id="a1d896d" title="Subscription Form"]
+      React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '10px', color: 'rgba(255,183,0,0.4)' } }, 'Visual only \u2014 CF7 shortcode a1d896d wires up here at build time'));
+
+    const relatedPosts = blogPosts.filter((p2) => p2.id !== this.state.selectedPostId).slice(0, 3);
+    const relatedArticles = React.createElement('div', {},
+      React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff', marginBottom: '16px' } }, 'Related Articles'),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '100%' : '220px'}, 1fr))`, gap: '16px' } }, relatedPosts.map((rp) => postCard(rp))));
+
+    const activePost = getPost(this.state.selectedPostId);
+
+    const engagementBar = React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
+      React.createElement('button', { onClick: this.togglePostLike, style: { display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 16px', borderRadius: '9px', border: this.state.postLiked ? '1px solid #FFB700' : '1px solid #262626', background: this.state.postLiked ? 'rgba(255,183,0,0.14)' : 'transparent', color: this.state.postLiked ? '#FFB700' : '#B3B3B3', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }, 'style-hover': { color: '#FFB700' } }, this.icon('heart', 16, this.state.postLiked), this.state.postLikeCount),
+      React.createElement('div', { style: { position: 'relative' } },
+        React.createElement('button', { onClick: this.toggleShareMenu, style: { display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 16px', borderRadius: '9px', border: '1px solid #262626', background: 'transparent', color: '#B3B3B3', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }, 'style-hover': { color: '#fff' } }, this.icon('share', 16), 'Share'),
+        shareMenuPanel));
+
+    const reviewsData = [
+      { id: 'rv1', name: 'Marcus Webb', avatar: 'M', rating: 5, text: 'Finally a clear breakdown that doesn\u2019t oversell or dismiss the tech. The workflow section alone saved me a weekend.', date: '3 days ago' },
+      { id: 'rv2', name: 'Priya Nandan', avatar: 'P', rating: 5, text: 'The traditional vs. AI comparison table is exactly the framing I needed to explain this to my bandmates.', date: '1 week ago' },
+      { id: 'rv3', name: 'Theo Ricci', avatar: 'T', rating: 4, text: 'Solid overview. Would love a follow-up that goes deeper into mixing AI-generated stems.', date: '2 weeks ago' },
+      { id: 'rv4', name: 'Ana Kowalski', avatar: 'A', rating: 5, text: 'The misconceptions section is what got me to actually try this instead of dismissing it.', date: '3 weeks ago' },
+    ];
+    const allReviews = [...this.state.extraReviews, ...reviewsData];
+    const avgRating = (allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length).toFixed(1);
+    const starRow = (rating, size, onStarClick) => React.createElement('div', { style: { display: 'flex', gap: '3px' } },
+      [1, 2, 3, 4, 5].map((n) => React.createElement(onStarClick ? 'button' : 'span', { key: n, onClick: onStarClick ? () => onStarClick(n) : undefined, style: { border: 'none', background: 'transparent', padding: 0, cursor: onStarClick ? 'pointer' : 'default', color: n <= rating ? '#FFB700' : '#3a3a3a', display: 'flex' } }, this.icon('star', size || 16, n <= rating))));
+
+    const reviewForm = this.state.auth === 'in'
+      ? React.createElement('form', { onSubmit: this.submitReview, style: { display: 'flex', gap: '14px', alignItems: 'flex-start', padding: '20px', borderRadius: '12px', background: '#141414', border: '1px solid #232323' } },
+          React.createElement('div', { style: { width: '38px', height: '38px', minWidth: '38px', borderRadius: '10px', background: 'linear-gradient(135deg,#FFB700,#8a6200)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D0D0D', fontFamily: "'Space Mono',monospace", fontWeight: 700 } }, 'S'),
+          React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0 } },
+            React.createElement('div', { style: { fontSize: '13.5px', fontWeight: 700, color: '#fff' } }, 'Sasha Reyes'),
+            starRow(this.state.draftRating, 20, this.setDraftRating),
+            React.createElement('textarea', { rows: 3, value: this.state.draftReviewText, onChange: (e) => this.setDraftReviewText(e.target.value), placeholder: 'Share your thoughts on this article...', style: { width: '100%', padding: '11px 13px', borderRadius: '9px', border: '1px solid #262626', background: '#0D0D0D', color: '#fff', fontSize: '13.5px', fontFamily: 'Inter,sans-serif', resize: 'vertical' } }),
+            React.createElement('button', { type: 'submit', style: { padding: '10px 18px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13px', cursor: 'pointer', width: 'fit-content' }, 'style-hover': { background: '#ffc633' } }, 'Submit Review')))
+      : React.createElement('div', { style: { position: 'relative', borderRadius: '12px', overflow: 'hidden' } },
+          React.createElement('div', { style: { display: 'flex', gap: '14px', alignItems: 'flex-start', padding: '20px', borderRadius: '12px', background: '#141414', border: '1px solid #232323', opacity: 0.35, filter: 'grayscale(0.4)', pointerEvents: 'none' } },
+            React.createElement('div', { style: { width: '38px', height: '38px', minWidth: '38px', borderRadius: '10px', background: '#333' } }),
+            React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' } },
+              starRow(0, 20, null),
+              React.createElement('div', { style: { width: '100%', height: '72px', borderRadius: '9px', border: '1px solid #262626', background: '#0D0D0D' } }))),
+          React.createElement('div', { style: { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '10px', background: 'rgba(13,13,13,0.55)' } },
+            React.createElement('div', { style: { fontSize: '13.5px', color: '#fff', fontWeight: 600 } }, 'Sign in to leave a review'),
+            React.createElement('button', { onClick: () => this.goAuthScreen('login'), style: { padding: '9px 18px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '12.5px', cursor: 'pointer' }, 'style-hover': { background: '#ffc633' } }, 'Log In')));
+
+    const reviewsSection = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '20px' } },
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' } },
+        React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff' } }, 'Ratings & Comments'),
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#B3B3B3' } },
+          this.icon('star', 15, true), React.createElement('span', { style: { color: '#fff', fontWeight: 700 } }, avgRating), React.createElement('span', {}, '(' + allReviews.length + ' reviews)'))),
+      reviewForm,
+      React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '14px' } },
+        allReviews.map((r) => React.createElement('div', { key: r.id, style: { display: 'flex', gap: '14px', alignItems: 'flex-start', paddingBottom: '14px', borderBottom: '1px solid #1E1E1E' } },
+          React.createElement('div', { style: { width: '36px', height: '36px', minWidth: '36px', borderRadius: '10px', background: 'linear-gradient(135deg,#FFB700,#8a6200)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D0D0D', fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: '13px' } }, r.avatar),
+          React.createElement('div', { style: { flex: 1, minWidth: 0 } },
+            React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' } },
+              React.createElement('span', { style: { fontSize: '13.5px', fontWeight: 700, color: '#fff' } }, r.name),
+              starRow(r.rating, 13, null),
+              React.createElement('span', { style: { fontSize: '11.5px', color: '#4a4a4a', fontFamily: "'Space Mono',monospace" } }, r.date)),
+            React.createElement('div', { style: { fontSize: '13px', color: '#B3B3B3', lineHeight: 1.6, marginTop: '6px' } }, r.text))))));
+
+    const blogPostContent = React.createElement('div', { style: { display: 'flex', gap: '32px', alignItems: 'flex-start', width: '100%' } },
+      React.createElement('div', { style: { flex: '1 1 auto', maxWidth: '720px', display: 'flex', flexDirection: 'column', gap: '28px', minWidth: 0 } },
+        React.createElement('div', { style: { position: 'sticky', top: 0, height: '3px', background: '#1E1E1E', borderRadius: '2px', zIndex: 5, marginBottom: '-10px' } },
+          React.createElement('div', { style: { height: '100%', width: (this.state.readProgress * 100) + '%', background: '#FFB700', borderRadius: '2px', transition: 'width 0.1s linear' } })),
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', color: '#7A7A7A', flexWrap: 'wrap' } },
+          React.createElement('button', { onClick: this.goBlogHub, style: { border: 'none', background: 'transparent', color: '#7A7A7A', cursor: 'pointer', fontSize: '12.5px', padding: 0 }, 'style-hover': { color: '#FFB700' } }, 'Blog'),
+          React.createElement('span', {}, '/'),
+          React.createElement('button', { onClick: () => this.goBlogCategory(activePost.category), style: { border: 'none', background: 'transparent', color: '#7A7A7A', cursor: 'pointer', fontSize: '12.5px', padding: 0 }, 'style-hover': { color: '#FFB700' } }, activePost.category),
+          React.createElement('span', {}, '/'),
+          React.createElement('span', { style: { color: '#FFB700' } }, activePost.title)),
+        React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '14px' } },
+          React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '11px', color: '#FFB700', width: 'fit-content', padding: '4px 10px', borderRadius: '999px', background: 'rgba(255,183,0,0.12)' } }, activePost.category),
+          React.createElement('h1', { style: { fontSize: isMobile ? '26px' : '34px', fontWeight: 700, color: '#fff', lineHeight: 1.2, margin: 0 } }, activePost.title),
+          React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' } },
+            React.createElement('div', { style: { width: '30px', height: '30px', borderRadius: '9px', background: 'linear-gradient(135deg,#FFB700,#8a6200)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D0D0D', fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: '12px' } }, 'S'),
+            React.createElement('span', { style: { fontSize: '13px', color: '#B3B3B3' } }, 'Sasha Reyes'),
+            React.createElement('span', { style: { color: '#4a4a4a' } }, '\u00B7'),
+            React.createElement('span', { style: { fontSize: '13px', color: '#7A7A7A', fontFamily: "'Space Mono',monospace" } }, activePost.date + ' \u00B7 ' + activePost.readTime))),
+        engagementBar,
+        isMobile || isTablet ? React.createElement('div', { style: { border: '1px solid #232323', borderRadius: '10px', background: '#141414', overflow: 'hidden' } },
+          React.createElement('button', { onClick: this.toggleBlogToc, style: { width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', border: 'none', background: 'transparent', color: '#fff', fontWeight: 600, fontSize: '13.5px', cursor: 'pointer' }, 'style-hover': { background: '#181818' } },
+            React.createElement('span', {}, 'Contents'),
+            React.createElement('span', { style: { display: 'flex', transform: this.state.blogTocOpen ? 'rotate(180deg)' : 'none', transition: 'transform .15s' } }, this.icon('chevronDown', 16))),
+          this.state.blogTocOpen ? React.createElement('div', { style: { padding: '4px 10px 14px' } }, tocList) : null) : null,
+        React.createElement('div', { style: { width: '100%', aspectRatio: '16/9', borderRadius: '14px', background: this.gradientFor(activePost.seed) } }),
+        postBody,
+        authorBio, newsletterBox, relatedArticles, reviewsSection),
+      !isMobile && !isTablet ? React.createElement('div', { style: { flex: '0 0 200px', width: '200px', position: 'sticky', top: '20px' } },
+        React.createElement('div', { style: { fontFamily: "'Space Mono',monospace", fontSize: '11px', color: '#7A7A7A', letterSpacing: '0.06em', marginBottom: '10px', padding: '0 10px' } }, 'CONTENTS'),
+        tocList) : null);
+
+    // ---- FAVORITES / PLAYLISTS (logged in) ----
+    const likedTrackList = this.libraryTracks.slice(0, 5);
+    const likedAlbumsList = this.albums.filter((a) => this.state.likedAlbumIds[a.id]).length ? this.albums.filter((a) => this.state.likedAlbumIds[a.id]) : this.albums.slice(0, 3);
+    const favoritesLoggedIn = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '32px' } },
+      React.createElement('div', {},
+        sectionHeading('Liked Tracks'),
+        React.createElement('div', {}, likedTrackList.map((t, i) => React.createElement('button', { key: t.id, onClick: () => { const alb = this.albums.find((a) => a.id === t.albumId); const idx = alb ? alb.tracks.findIndex((x) => x.id === t.id) : 0; this.playTrack(t.title, t.artist, t.albumId, idx); }, style: { ...trackRowStyle, gridTemplateColumns: isMobile ? '28px 1fr 50px' : '28px 1fr 1fr 70px' }, 'style-hover': { background: '#151515' } },
+          React.createElement('span', { style: { color: '#FFB700', display: 'flex' } }, this.icon('heart', 13, true)),
+          React.createElement('span', {},
+            React.createElement('div', { style: { fontSize: '13.5px', fontWeight: 600, color: '#fff' } }, t.title),
+            React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A' } }, t.artist)),
+          !isMobile && React.createElement('span', { style: { fontSize: '13px', color: '#7A7A7A' } }, t.album),
+          React.createElement('span', { style: { fontSize: '12px', color: '#7A7A7A', fontFamily: "'Space Mono',monospace", textAlign: 'right' } }, t.duration))))),
+      React.createElement('div', {},
+        sectionHeading('Liked Albums'),
+        React.createElement('div', { style: { display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '130px' : '164px'}, 1fr))`, gap: '18px' } }, likedAlbumsList.map((a) => albumCard(a)))));
+
+    const playlistsLoggedIn = React.createElement('div', {},
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' } },
+        sectionHeading('Personal Playlists'),
+        React.createElement('button', { style: { padding: '10px 16px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', height: 'fit-content' }, 'style-hover': { background: '#ffc633' } }, this.icon('plus', 15), 'Create Playlist')),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '130px' : '170px'}, 1fr))`, gap: '20px' } },
+        [{ n: 'Late Shift Loops', c: 18 }, { n: 'Static & Amber', c: 9 }, { n: 'Slow Signal', c: 24 }].map((p) => React.createElement('div', { key: p.n },
+          React.createElement('div', { style: { width: '100%', aspectRatio: '1', borderRadius: '12px', background: '#161616', border: '1px solid #232323', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333' } }, this.icon('playlist', 26)),
+          React.createElement('div', { style: { fontSize: '14px', fontWeight: 600, color: '#fff' } }, p.n),
+          React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A' } }, `${p.c} tracks`)))));
+
+    // ---- PROFILE (tabs) ----
+    const profileTabs = [['overview', 'Overview'], ['favorites', 'Favorites'], ['history', 'History'], ['settings', 'Settings']];
+    const profileTabRow = React.createElement('div', { style: { display: 'flex', gap: '4px', borderBottom: '1px solid #1E1E1E', marginBottom: '26px', overflowX: 'auto' } },
+      profileTabs.map(([id, label]) => React.createElement('button', { key: id, onClick: () => this.setProfileTab(id), style: { padding: '11px 4px', marginRight: '22px', border: 'none', borderBottom: this.state.profileTab === id ? '2px solid #FFB700' : '2px solid transparent', background: 'transparent', color: this.state.profileTab === id ? '#FFB700' : '#7A7A7A', fontWeight: this.state.profileTab === id ? 700 : 500, fontSize: '13.5px', cursor: 'pointer', whiteSpace: 'nowrap' }, 'style-hover': { color: '#fff' } }, label)));
+
+    const statCard = (label, value) => React.createElement('div', { style: { background: '#141414', border: '1px solid #232323', borderRadius: '12px', padding: '18px', flex: 1, minWidth: '120px' } },
+      React.createElement('div', { style: { fontSize: '22px', fontWeight: 700, color: '#fff' } }, value),
+      React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A', marginTop: '4px', fontFamily: "'Space Mono',monospace" } }, label));
+
+    const overviewTab = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '26px' } },
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '18px', flexWrap: 'wrap' } },
+        React.createElement('div', { style: { width: '68px', height: '68px', borderRadius: '18px', background: 'linear-gradient(135deg,#FFB700,#8a6200)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D0D0D', fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: '24px' } }, 'S'),
+        React.createElement('div', {},
+          React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff' } }, 'Sasha Reyes'),
+          React.createElement('div', { style: { fontSize: '13px', color: '#7A7A7A', marginTop: '3px' } }, 'sasha@collectivefinity.co'),
+          React.createElement('div', { style: { fontSize: '12px', color: '#4a4a4a', marginTop: '3px', fontFamily: "'Space Mono',monospace" } }, 'Member since March 2024'))),
+      React.createElement('div', { style: { display: 'flex', gap: '14px', flexWrap: 'wrap' } }, statCard('FAV TRACKS', '5'), statCard('FAV ALBUMS', '3'), statCard('PLAN', 'Collective+')));
+
+    const historyTab = React.createElement('div', {},
+      sectionHeading('Recently Played'),
+      this.libraryTracks.slice(0, 6).map((t, i) => React.createElement('div', { key: t.id, style: { display: 'grid', gridTemplateColumns: '28px 1fr 90px', alignItems: 'center', gap: '14px', padding: '11px 10px' } },
+        React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '12px', color: '#7A7A7A' } }, String(i + 1).padStart(2, '0')),
+        React.createElement('span', {},
+          React.createElement('div', { style: { fontSize: '13.5px', fontWeight: 600, color: '#fff' } }, t.title),
+          React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A' } }, t.artist)),
+        React.createElement('span', { style: { fontSize: '11.5px', color: '#7A7A7A', textAlign: 'right', fontFamily: "'Space Mono',monospace" } }, ['2h ago', '5h ago', 'Yesterday', '2d ago', '3d ago', '1w ago'][i]))));
+
+    const toggleSwitch = (checked, onClick) => React.createElement('button', { onClick, style: { width: '42px', height: '24px', borderRadius: '12px', border: 'none', background: checked ? '#FFB700' : '#262626', position: 'relative', cursor: 'pointer', flexShrink: 0 } },
+      React.createElement('div', { style: { width: '18px', height: '18px', borderRadius: '50%', background: checked ? '#0D0D0D' : '#7A7A7A', position: 'absolute', top: '3px', left: checked ? '21px' : '3px', transition: 'left 0.15s ease' } }));
+
+    const settingsTab = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '30px', maxWidth: '480px' } },
+      React.createElement('div', {},
+        React.createElement('div', { style: { fontSize: '15px', fontWeight: 700, color: '#fff', marginBottom: '14px' } }, 'Profile Details'),
+        React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '14px' } },
+          React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'DISPLAY NAME'), React.createElement('input', { type: 'text', defaultValue: 'Sasha Reyes', style: inputStyle })),
+          React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'EMAIL'), React.createElement('input', { type: 'email', defaultValue: 'sasha@collectivefinity.co', style: inputStyle })))),
+      React.createElement('div', {},
+        React.createElement('div', { style: { fontSize: '15px', fontWeight: 700, color: '#fff', marginBottom: '14px' } }, 'Change Password'),
+        React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '14px' } },
+          React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'CURRENT PASSWORD'), React.createElement('input', { type: 'password', placeholder: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022', style: inputStyle })),
+          React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'NEW PASSWORD'), React.createElement('input', { type: 'password', placeholder: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022', style: inputStyle })),
+          React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'CONFIRM NEW PASSWORD'), React.createElement('input', { type: 'password', placeholder: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022', style: inputStyle })),
+          React.createElement('button', { style: { padding: '11px 18px', borderRadius: '9px', border: '1px solid #262626', background: 'transparent', color: '#fff', fontSize: '13px', cursor: 'pointer', width: 'fit-content' }, 'style-hover': { background: '#161616' } }, 'Update Password'))),
+      React.createElement('div', {},
+        React.createElement('div', { style: { fontSize: '15px', fontWeight: 700, color: '#fff', marginBottom: '14px' } }, 'Notifications'),
+        React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '14px' } },
+          [['emailUpdates', 'Email updates'], ['newReleases', 'New release alerts'], ['community', 'Community activity']].map(([key, label]) => React.createElement('div', { key, style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+            React.createElement('span', { style: { fontSize: '13.5px', color: '#E4E4E4' } }, label),
+            toggleSwitch(this.state.notifPrefs[key], () => this.toggleNotifPref(key)))))));
+
+    const profileContent = React.createElement('div', {},
+      React.createElement('div', { style: { fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: '#fff', marginBottom: '20px' } }, 'My Account'),
+      profileTabRow,
+      this.state.profileTab === 'overview' ? overviewTab : this.state.profileTab === 'favorites' ? favoritesLoggedIn : this.state.profileTab === 'history' ? historyTab : settingsTab);
+
+    // ---- LOGIN / REGISTER ----
+    const authCard = (title, fields, submitLabel, footerText, footerLinkText, footerLinkAction) => React.createElement('div', { style: { display: 'flex', justifyContent: 'center', paddingTop: isMobile ? '20px' : '50px' } },
+      React.createElement('form', { onSubmit: this.submitAuthForm, style: { width: '100%', maxWidth: '360px', background: '#141414', border: '1px solid #232323', borderRadius: '14px', padding: isMobile ? '26px 22px' : '34px' } },
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '9px', marginBottom: '22px' } },
+          React.createElement('div', { style: { width: '12px', height: '12px', borderRadius: '3px', background: '#FFB700', transform: 'rotate(45deg)' } }),
+          React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '12px', letterSpacing: '0.06em', color: '#fff' } }, 'COLLECTIVE FINITY')),
+        React.createElement('div', { style: { fontSize: '20px', fontWeight: 700, color: '#fff', marginBottom: '20px' } }, title),
+        React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '14px' } }, fields.map((f) => React.createElement('div', { key: f.label }, React.createElement('label', { style: labelStyle }, f.label), React.createElement('input', { type: f.type, placeholder: f.placeholder, style: inputStyle })))),
+        React.createElement('button', { type: 'submit', style: { marginTop: '20px', width: '100%', padding: '12px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13.5px', cursor: 'pointer' }, 'style-hover': { background: '#ffc633' } }, submitLabel),
+        React.createElement('div', { style: { marginTop: '16px', textAlign: 'center', fontSize: '12.5px', color: '#7A7A7A' } }, footerText, ' ', React.createElement('button', { type: 'button', onClick: footerLinkAction, style: { border: 'none', background: 'transparent', color: '#FFB700', cursor: 'pointer', fontSize: '12.5px', padding: 0 }, 'style-hover': { textDecoration: 'underline' } }, footerLinkText))));
+
+    const loginContent = authCard('Log In', [{ label: 'EMAIL', type: 'email', placeholder: 'you@example.com' }, { label: 'PASSWORD', type: 'password', placeholder: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' }], 'Log In', 'New here?', 'Register instead', () => this.goAuthScreen('register'));
+    const registerContent = authCard('Create Account', [{ label: 'NAME', type: 'text', placeholder: 'Your name' }, { label: 'EMAIL', type: 'email', placeholder: 'you@example.com' }, { label: 'PASSWORD', type: 'password', placeholder: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' }, { label: 'CONFIRM PASSWORD', type: 'password', placeholder: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' }], 'Create Account', 'Already a member?', 'Login instead', () => this.goAuthScreen('login'));
+
+    // ---- FOOTER ----
+    const footerLinkStyle = { border: 'none', background: 'transparent', color: '#7A7A7A', fontSize: '13px', cursor: 'pointer', padding: 0, textAlign: 'left', fontFamily: 'Inter,sans-serif' };
+    const footerCol = (title, items) => React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '10px', minWidth: '140px' } },
+      React.createElement('div', { style: { fontFamily: "'Space Mono',monospace", fontSize: '11px', letterSpacing: '0.08em', color: '#FFB700', marginBottom: '4px' } }, title),
+      items.map(([label, action]) => React.createElement('button', { key: label, onClick: action, style: footerLinkStyle, 'style-hover': { color: '#fff' } }, label)));
+    const siteFooter = React.createElement('div', { style: { marginTop: '56px', borderTop: '1px solid #1E1E1E', paddingTop: isMobile ? '28px' : '36px' } },
+      React.createElement('div', { style: { display: 'flex', flexDirection: isMobile || isTablet ? 'column' : 'row', gap: isMobile || isTablet ? '28px' : '48px', justifyContent: 'space-between' } },
+        React.createElement('div', { style: { maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '10px' } },
+          React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '9px' } },
+            React.createElement('div', { style: { width: '12px', height: '12px', borderRadius: '3px', background: '#FFB700', transform: 'rotate(45deg)' } }),
+            React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '13px', letterSpacing: '0.06em', color: '#fff' } }, 'COLLECTIVE FINITY')),
+          React.createElement('div', { style: { fontSize: '13px', color: '#FFB700', fontWeight: 600 } }, 'Experience Music Beyond Imagination'),
+          React.createElement('div', { style: { fontSize: '12.5px', color: '#7A7A7A', lineHeight: 1.6 } }, 'Welcome to Collective Finity \u2014 a cinematic world where emotional sound, visual stories and creativity connect in one immersive universe.')),
+        React.createElement('div', { style: { display: 'flex', flexWrap: 'wrap', gap: isMobile ? '28px' : '48px' } },
+          footerCol('Explore', [['Home', () => this.navigate('home')], ['Albums', () => this.navigate('albums')], ['Music Library', () => this.navigate('library')]]),
+          footerCol('Community', [['About', () => this.navigate('about')], ['Join Community', () => this.navigate('community')], ['Contact', () => this.navigate('contact')]]),
+          footerCol('Legal', [['Privacy Policy', () => {}], ['Terms of Service', () => {}], ['Cookie Policy', () => {}], ['Copyright Policy', () => {}]]))),
+      React.createElement('div', { style: { marginTop: '32px', paddingTop: '20px', borderTop: '1px solid #1E1E1E', display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'space-between', alignItems: 'center' } },
+        React.createElement('span', { style: { fontSize: '12px', color: '#4a4a4a' } }, '\u00A9 2026 Collective Finity. All rights reserved.'),
+        React.createElement('button', { style: footerLinkStyle, 'style-hover': { color: '#fff' } }, 'Cookie Settings')));
+
+    let screenContent;
+    switch (this.state.screen) {
+      case 'home': screenContent = homeContent; break;
+      case 'library': screenContent = libraryContent; break;
+      case 'albums': screenContent = albumsGridContent; break;
+      case 'albumDetail': screenContent = albumDetailContent; break;
+      case 'about': screenContent = aboutContent; break;
+      case 'community': screenContent = communityContent; break;
+      case 'contact': screenContent = contactContent; break;
+      case 'blog': screenContent = blogHubContent; break;
+      case 'blogCategory': screenContent = blogCategoryContent; break;
+      case 'blogPost': screenContent = blogPostContent; break;
+      case 'profile': screenContent = this.state.auth === 'in' ? profileContent : gatedPanel('user', 'Sign in to view your Profile'); break;
+      case 'favorites': screenContent = this.state.auth === 'in' ? favoritesLoggedIn : gatedPanel('heart', 'Sign in to see your Favorites'); break;
+      case 'playlists': screenContent = this.state.auth === 'in' ? playlistsLoggedIn : gatedPanel('playlist', 'Sign in to see your Playlists'); break;
+      case 'login': screenContent = loginContent; break;
+      case 'register': screenContent = registerContent; break;
+      default: screenContent = homeContent;
+    }
+
+    return {
+      isDesktop, isNotDesktop: !isDesktop, playerExpanded: !this.state.playerCollapsed, effectiveBP,
+      frameBadge: `${effectiveBP.toUpperCase()} · ${effectiveWidth}px`,
+      frameOuterStyle, frameChromeStyle, frameRef: this.setFrameRef,
+      bpOptions, jumpOptions,
+      toggleAuth: this.toggleAuth, authToggleLabel, authToggleStyle, authToggleHoverStyle,
+      leftSidebarStyle, showSidebarLabels,
+      sidebarCollapsed_borderStyle: { borderBottom: '1px solid #1E1E1E', marginBottom: '8px' },
+      mainNav, secondaryNav,
+      collapseBtnStyle, collapseBtnHoverStyle, collapseIconEl, toggleSidebarCollapsed: this.toggleSidebarCollapsed,
+      screenContent,
+      accountBtnStyle, iconBtnStyle, iconBtnHoverStyle,
+      userIconEl: this.icon('user', 18), mailIconEl: this.icon('mail', 18), bellIconEl: this.icon('bell', 18),
+      menuIconEl: this.icon('menu', 20), closeIconEl: this.icon('close', 18),
+      toggleDropdown: this.toggleDropdown, closeDropdown: this.closeDropdown, dropdownOpen: this.state.dropdownOpen,
+      dropdownPanelStyleRaw, dropdownContent,
+      toggleMobileNav: this.toggleMobileNav, mobileNavOpen: this.state.mobileNavOpen,
+      contentPadding: isMobile ? '18px 16px' : '26px 24px',
+      playerCard: playerCardToShow, footerPlayerStyle, footerPlayerContent, siteFooter,
+      mainScrollRef: this.mainScrollRef, onMainScroll: this.onMainScroll,
+      rightSidebarStyle, rightIconsRowStyle, rightPlayerWrapStyle, rightCollapseBtnStyle, rightCollapseIconEl,
+      toggleRightCollapsed: this.toggleRightCollapsed, playerCollapsed: this.state.playerCollapsed,
+    };
+  }
+}
+
+</script>
+</body>
+</html>
