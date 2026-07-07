@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $cf_logo_url   = collective_finity_site_logo_url( 'thumbnail' );
 $cf_site_name  = collective_finity_brand_name();
 $favorites_url = is_user_logged_in() ? home_url( '/cf-profile#favorites' ) : home_url( '/cf-login' );
-$playlists_url = is_user_logged_in() ? home_url( '/cf-profile#history' ) : home_url( '/cf-register' );
+$playlists_url = is_user_logged_in() ? home_url( '/cf-playlists/' ) : home_url( '/cf-register' );
 ?>
 <div id="cf-music-sidebar" class="cf-sidebar-panel">
     <div class="cf-sidebar-brand">

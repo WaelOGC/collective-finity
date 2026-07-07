@@ -9,7 +9,7 @@ if ( ! $cf_tracks_url ) {
     $cf_tracks_url = home_url( '/tracks/' );
 }
 
-$cf_logo_url = collective_finity_site_logo_url( 'medium' );
+$cf_hero_portal_url = 'https://collectivefinity.com/wp-content/uploads/2026/06/AI-Music-Creation-Portal-FF-CHRONICLE.png';
 
 $cf_about_pillars = array(
     array(
@@ -91,15 +91,19 @@ get_header();
 
                     <div class="cf-about-hero__visual" aria-hidden="true">
                         <div class="cf-about-hero__visual-frame">
-                            <div class="cf-about-hero__disc">
-                                <img
-                                    class="cf-about-hero__brand"
-                                    src="<?php echo esc_url( $cf_logo_url ); ?>"
-                                    alt=""
-                                    width="88"
-                                    height="88"
-                                    loading="lazy"
-                                >
+                            <div class="cf-about-hero__disc-wrap">
+                                <div class="cf-about-hero__glow"></div>
+                                <div class="cf-about-hero__disc">
+                                    <img
+                                        class="cf-about-hero__portal"
+                                        src="<?php echo esc_url( $cf_hero_portal_url ); ?>"
+                                        alt=""
+                                        width="280"
+                                        height="280"
+                                        loading="lazy"
+                                        decoding="async"
+                                    >
+                                </div>
                             </div>
                             <span class="cf-about-hero__badge cf-about-hero__badge--sound">Original Sound</span>
                             <span class="cf-about-hero__badge cf-about-hero__badge--stories">Cinematic Stories</span>
@@ -132,7 +136,7 @@ get_header();
                 </header>
                 <div class="cf-about-pillars__grid">
                     <?php foreach ( $cf_about_pillars as $pillar ) : ?>
-                        <article class="cf-about-card">
+                        <article class="cf-about-card<?php echo ! empty( $pillar['accent'] ) ? ' is-featured' : ''; ?>">
                             <p class="cf-about-card__number"><?php echo esc_html( $pillar['number'] ); ?></p>
                             <h3 class="cf-about-card__title"><?php echo esc_html( $pillar['title'] ); ?></h3>
                             <span class="cf-about-card__bar<?php echo ! empty( $pillar['accent'] ) ? ' is-accent' : ''; ?>" aria-hidden="true"></span>
@@ -155,7 +159,8 @@ get_header();
                             <li class="cf-about-timeline__stop">
                                 <span class="cf-about-timeline__dot" aria-hidden="true"></span>
                                 <div class="cf-about-timeline__content">
-                                    <p class="cf-about-milestone__label"><?php echo esc_html( $milestone['quarter'] ); ?> — <?php echo esc_html( $milestone['title'] ); ?></p>
+                                    <p class="cf-about-milestone__quarter"><?php echo esc_html( $milestone['quarter'] ); ?></p>
+                                    <h3 class="cf-about-milestone__title"><?php echo esc_html( $milestone['title'] ); ?></h3>
                                     <p class="cf-about-milestone__text"><?php echo esc_html( $milestone['text'] ); ?></p>
                                 </div>
                             </li>
@@ -236,7 +241,7 @@ get_header();
     .cf-about-eyebrow,
     .cf-about-section__label,
     .cf-about-section-head__eyebrow,
-    .cf-about-milestone__label {
+    .cf-about-milestone__quarter {
         margin: 0;
         font-family: 'Space Mono', monospace;
         color: var(--primary-color, #FFB700);
@@ -286,32 +291,65 @@ get_header();
 
     .cf-about-hero__visual-frame {
         position: relative;
-        width: min(100%, 320px);
+        width: min(100%, 340px);
         margin: 0 auto;
-        padding: 12px 0 28px;
+        padding: 16px 0 32px;
+    }
+
+    .cf-about-hero__disc-wrap {
+        position: relative;
+        width: min(100%, 300px);
+        margin: 0 auto;
+    }
+
+    .cf-about-hero__glow {
+        position: absolute;
+        inset: 8%;
+        z-index: 0;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 183, 0, 0.24) 0%, rgba(255, 183, 0, 0.08) 45%, transparent 72%);
+        filter: blur(20px);
+        pointer-events: none;
     }
 
     .cf-about-hero__disc {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: min(100%, 280px);
+        position: relative;
+        z-index: 1;
+        width: 100%;
         aspect-ratio: 1;
         margin: 0 auto;
         border-radius: 50%;
-        background: radial-gradient(circle at 35% 28%, rgba(255, 183, 0, 0.42) 0%, rgba(38, 32, 20, 1) 42%, rgba(12, 10, 8, 1) 100%);
-        box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.6);
+        overflow: hidden;
+        box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.65);
     }
 
-    .cf-about-hero__brand {
-        width: 88px;
-        height: 88px;
-        object-fit: contain;
-        filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
+    .cf-about-hero__portal {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        animation: cf-about-disc-spin 25s linear infinite;
+        transform-origin: center center;
+    }
+
+    @keyframes cf-about-disc-spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .cf-about-hero__portal {
+            animation: none;
+        }
     }
 
     .cf-about-hero__badge {
         position: absolute;
+        z-index: 2;
         padding: 8px 14px;
         border: 1px solid #262626;
         border-radius: 999px;
@@ -444,6 +482,20 @@ get_header();
         border: 1px solid #232323;
         border-radius: 12px;
         background: #141414;
+        transition: box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .cf-about-card:hover {
+        border-color: rgba(255, 183, 0, 0.22);
+        box-shadow: 0 0 28px rgba(255, 183, 0, 0.1), 0 16px 36px -18px rgba(0, 0, 0, 0.55);
+    }
+
+    .cf-about-card.is-featured {
+        box-shadow: 0 0 22px rgba(255, 183, 0, 0.08);
+    }
+
+    .cf-about-card.is-featured:hover {
+        box-shadow: 0 0 34px rgba(255, 183, 0, 0.14), 0 16px 36px -18px rgba(0, 0, 0, 0.55);
     }
 
     .cf-about-card__number {
@@ -472,6 +524,7 @@ get_header();
 
     .cf-about-card__bar.is-accent {
         background: var(--primary-color, #FFB700);
+        box-shadow: 0 0 14px rgba(255, 183, 0, 0.42);
     }
 
     .cf-about-card__text {
@@ -490,10 +543,11 @@ get_header();
         display: none;
         position: absolute;
         top: 23px;
-        right: 16%;
-        left: 16%;
+        right: 10%;
+        left: 10%;
         height: 1px;
-        background: #2a2a2a;
+        background: linear-gradient(90deg, transparent 0%, rgba(255, 183, 0, 0.28) 12%, rgba(255, 183, 0, 0.28) 88%, transparent 100%);
+        box-shadow: 0 0 12px rgba(255, 183, 0, 0.12);
     }
 
     .cf-about-timeline__stops {
@@ -521,13 +575,24 @@ get_header();
         margin-bottom: 16px;
         border-radius: 50%;
         background: var(--primary-color, #FFB700);
-        box-shadow: 0 0 0 4px rgba(255, 183, 0, 0.12);
+        box-shadow:
+            0 0 0 4px rgba(255, 183, 0, 0.12),
+            0 0 16px rgba(255, 183, 0, 0.38),
+            0 0 28px rgba(255, 183, 0, 0.16);
     }
 
-    .cf-about-milestone__label {
-        margin: 0 0 8px;
+    .cf-about-milestone__quarter {
+        margin: 0 0 6px;
         font-size: 12px;
         line-height: 1.4;
+    }
+
+    .cf-about-milestone__title {
+        margin: 0 0 10px;
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.35;
+        color: #fff;
     }
 
     .cf-about-milestone__text {
@@ -603,6 +668,10 @@ get_header();
         .cf-about-hero__visual {
             display: flex;
         }
+
+        .cf-about-timeline__line {
+            display: block;
+        }
     }
 
     @media (min-width: 1024px) {
@@ -610,10 +679,6 @@ get_header();
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 40px;
             align-items: start;
-        }
-
-        .cf-about-timeline__line {
-            display: block;
         }
     }
 

@@ -358,6 +358,35 @@ function collective_finity_scripts() {
     wp_enqueue_style( 'cf-cookie-consent', get_template_directory_uri() . '/assets/css/cookie-consent.css', array( 'main-style' ), $cookie_css_ver );
     wp_enqueue_script( 'cf-cookie-consent', get_template_directory_uri() . '/assets/js/cookie-consent.js', array(), $cookie_js_ver, true );
 
+    $site_pages_css = get_template_directory() . '/assets/css/cf-site-pages.css';
+    $site_pages_js  = get_template_directory() . '/assets/js/cf-site-pages.js';
+    if ( file_exists( $site_pages_css ) ) {
+        wp_enqueue_style(
+            'cf-site-pages',
+            get_template_directory_uri() . '/assets/css/cf-site-pages.css',
+            array( 'main-style' ),
+            filemtime( $site_pages_css )
+        );
+    }
+    if ( file_exists( $site_pages_js ) ) {
+        wp_enqueue_script(
+            'cf-site-pages',
+            get_template_directory_uri() . '/assets/js/cf-site-pages.js',
+            array( 'jquery' ),
+            filemtime( $site_pages_js ),
+            true
+        );
+        wp_localize_script(
+            'cf-site-pages',
+            'cf_ajax',
+            array(
+                'ajax_url'  => admin_url( 'admin-ajax.php' ),
+                'nonce'     => wp_create_nonce( 'cf_interaction_nonce' ),
+                'logged_in' => is_user_logged_in(),
+            )
+        );
+    }
+
     $cookie_policy_page = get_page_by_path( 'cookie-policy', OBJECT, 'page' );
     $cookie_policy_url  = ( $cookie_policy_page && 'publish' === $cookie_policy_page->post_status )
         ? get_permalink( $cookie_policy_page )
@@ -1120,6 +1149,349 @@ function cf_ajax_get_liked_tracks() {
 }
 add_action( 'wp_ajax_cf_get_liked_tracks', 'cf_ajax_get_liked_tracks' );
 
+/**
+ * Toggle like for blog posts.
+ */
+function cf_ajax_toggle_post_like() {
+    check_ajax_referer( 'cf_interaction_nonce', 'security' );
+
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => __( 'Please log in to like this post.', 'collective-finity' ) ) );
+    }
+
+    $post_id = isset( $_POST['post_id'] ) ? intval( $_POST['post_id'] ) : 0;
+    if ( ! $post_id || 'post' !== get_post_type( $post_id ) ) {
+        wp_send_json_error( array( 'message' => __( 'Invalid post.', 'collective-finity' ) ) );
+    }
+
+    $user_id     = get_current_user_id();
+    $liked_posts = get_user_meta( $user_id, '_cf_liked_posts', true );
+    if ( ! is_array( $liked_posts ) ) {
+        $liked_posts = array();
+    }
+
+    $current_likes = (int) get_post_meta( $post_id, '_cf_total_likes_count', true );
+
+    if ( in_array( $post_id, $liked_posts, true ) ) {
+        $liked_posts   = array_values( array_diff( $liked_posts, array( $post_id ) ) );
+        $status        = 'unliked';
+        $current_likes = max( 0, $current_likes - 1 );
+    } else {
+        $liked_posts[] = $post_id;
+        $status        = 'liked';
+        $current_likes++;
+    }
+
+    update_user_meta( $user_id, '_cf_liked_posts', $liked_posts );
+    update_post_meta( $post_id, '_cf_total_likes_count', $current_likes );
+
+    wp_send_json_success(
+        array(
+            'status'      => $status,
+            'likes_count' => $current_likes,
+        )
+    );
+}
+add_action( 'wp_ajax_cf_toggle_post_like', 'cf_ajax_toggle_post_like' );
+
+/**
+ * Fallback login handler when CF Auth plugin action is unavailable.
+ */
+function cf_ajax_theme_login() {
+    check_ajax_referer( 'cf_interaction_nonce', 'security' );
+
+    $email    = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+    $password = isset( $_POST['password'] ) ? (string) wp_unslash( $_POST['password'] ) : '';
+    $login    = $email;
+
+    $user_obj = get_user_by( 'email', $email );
+    if ( $user_obj ) {
+        $login = $user_obj->user_login;
+    }
+
+    $user = wp_signon(
+        array(
+            'user_login'    => $login,
+            'user_password' => $password,
+            'remember'      => true,
+        ),
+        is_ssl()
+    );
+
+    if ( is_wp_error( $user ) ) {
+        wp_send_json_error( array( 'message' => $user->get_error_message() ) );
+    }
+
+    wp_send_json_success(
+        array(
+            'message'  => __( 'Logged in successfully.', 'collective-finity' ),
+            'redirect' => home_url( '/cf-profile/' ),
+        )
+    );
+}
+
+/**
+ * Fallback register handler when CF Auth plugin action is unavailable.
+ */
+function cf_ajax_theme_register() {
+    check_ajax_referer( 'cf_interaction_nonce', 'security' );
+
+    $name     = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+    $email    = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+    $password = isset( $_POST['password'] ) ? (string) wp_unslash( $_POST['password'] ) : '';
+    $confirm  = isset( $_POST['confirm_password'] ) ? (string) wp_unslash( $_POST['confirm_password'] ) : '';
+
+    if ( ! $name || ! $email || ! $password ) {
+        wp_send_json_error( array( 'message' => __( 'Please complete all fields.', 'collective-finity' ) ) );
+    }
+    if ( $password !== $confirm ) {
+        wp_send_json_error( array( 'message' => __( 'Passwords do not match.', 'collective-finity' ) ) );
+    }
+    if ( email_exists( $email ) ) {
+        wp_send_json_error( array( 'message' => __( 'An account with this email already exists.', 'collective-finity' ) ) );
+    }
+
+    $user_id = wp_create_user( $email, $password, $email );
+    if ( is_wp_error( $user_id ) ) {
+        wp_send_json_error( array( 'message' => $user_id->get_error_message() ) );
+    }
+
+    wp_update_user(
+        array(
+            'ID'           => $user_id,
+            'display_name' => $name,
+            'first_name'   => $name,
+        )
+    );
+
+    wp_send_json_success(
+        array(
+            'message'  => __( 'Account created. You can log in now.', 'collective-finity' ),
+            'redirect' => home_url( '/cf-login/' ),
+        )
+    );
+}
+
+function cf_register_theme_auth_ajax_fallbacks() {
+    if ( ! has_action( 'wp_ajax_nopriv_cf_login' ) ) {
+        add_action( 'wp_ajax_nopriv_cf_login', 'cf_ajax_theme_login' );
+    }
+    if ( ! has_action( 'wp_ajax_nopriv_cf_register' ) ) {
+        add_action( 'wp_ajax_nopriv_cf_register', 'cf_ajax_theme_register' );
+    }
+}
+add_action( 'init', 'cf_register_theme_auth_ajax_fallbacks', 20 );
+
+/**
+ * Save star rating with comments on blog posts.
+ *
+ * @param int $comment_id Comment ID.
+ */
+function cf_save_post_review_rating( $comment_id ) {
+    if ( ! isset( $_POST['cf_review_rating'] ) ) {
+        return;
+    }
+
+    $rating = max( 1, min( 5, (int) $_POST['cf_review_rating'] ) );
+    add_comment_meta( $comment_id, '_cf_review_rating', $rating, true );
+}
+add_action( 'comment_post', 'cf_save_post_review_rating' );
+
+/**
+ * Add star rating field to post review comment forms.
+ *
+ * @param array $fields Default comment fields.
+ */
+function cf_post_review_comment_fields( $fields ) {
+    if ( ! is_singular( 'post' ) ) {
+        return $fields;
+    }
+
+    $fields['cf_review_rating'] = '<p class="comment-form-rating"><label for="cf_review_rating">' . esc_html__( 'Rating', 'collective-finity' ) . '</label><select id="cf_review_rating" name="cf_review_rating" class="cf-input" required><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select></p>';
+
+    return $fields;
+}
+add_filter( 'comment_form_default_fields', 'cf_post_review_comment_fields' );
+
+/**
+ * Record a track listen for logged-in users (listening history).
+ *
+ * @param int $track_id Track post ID.
+ */
+function cf_record_listening_history( $track_id ) {
+    if ( ! is_user_logged_in() || 'tracks' !== get_post_type( $track_id ) ) {
+        return;
+    }
+
+    $user_id = get_current_user_id();
+    $history = get_user_meta( $user_id, '_cf_listening_history', true );
+    if ( ! is_array( $history ) ) {
+        $history = array();
+    }
+
+    $history = array_values(
+        array_filter(
+            $history,
+            function ( $entry ) use ( $track_id ) {
+                return isset( $entry['track_id'] ) && (int) $entry['track_id'] !== (int) $track_id;
+            }
+        )
+    );
+
+    array_unshift(
+        $history,
+        array(
+            'track_id'  => (int) $track_id,
+            'played_at' => time(),
+        )
+    );
+
+    $history = array_slice( $history, 0, 50 );
+    update_user_meta( $user_id, '_cf_listening_history', $history );
+}
+
+/**
+ * Append track page views to listening history for logged-in users.
+ */
+function cf_maybe_record_track_listen() {
+    if ( ! is_singular( 'tracks' ) || ! is_user_logged_in() ) {
+        return;
+    }
+
+    cf_record_listening_history( get_queried_object_id() );
+}
+add_action( 'template_redirect', 'cf_maybe_record_track_listen' );
+
+/**
+ * Save profile settings from account page.
+ */
+function cf_handle_profile_update() {
+    if ( ! is_user_logged_in() ) {
+        wp_safe_redirect( home_url( '/cf-login/' ) );
+        exit;
+    }
+
+    if ( ! isset( $_POST['cf_profile_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['cf_profile_nonce'] ) ), 'cf_update_profile' ) ) {
+        wp_die( esc_html__( 'Invalid request.', 'collective-finity' ) );
+    }
+
+    $user_id      = get_current_user_id();
+    $display_name = isset( $_POST['display_name'] ) ? sanitize_text_field( wp_unslash( $_POST['display_name'] ) ) : '';
+    $user_email   = isset( $_POST['user_email'] ) ? sanitize_email( wp_unslash( $_POST['user_email'] ) ) : '';
+
+    $update = array( 'ID' => $user_id );
+    if ( $display_name ) {
+        $update['display_name'] = $display_name;
+    }
+    if ( $user_email && is_email( $user_email ) ) {
+        $update['user_email'] = $user_email;
+    }
+
+    wp_update_user( $update );
+
+    wp_safe_redirect( home_url( '/cf-profile/#settings' ) );
+    exit;
+}
+add_action( 'admin_post_cf_update_profile', 'cf_handle_profile_update' );
+
+/**
+ * Toggle notification preference via AJAX.
+ */
+function cf_ajax_toggle_notification_pref() {
+    check_ajax_referer( 'cf_interaction_nonce', 'security' );
+
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => __( 'You must be logged in.', 'collective-finity' ) ) );
+    }
+
+    $key = isset( $_POST['key'] ) ? sanitize_key( wp_unslash( $_POST['key'] ) ) : '';
+    $allowed = array( 'email_updates', 'new_releases', 'community' );
+    if ( ! in_array( $key, $allowed, true ) ) {
+        wp_send_json_error( array( 'message' => __( 'Invalid preference.', 'collective-finity' ) ) );
+    }
+
+    $user_id = get_current_user_id();
+    $prefs   = get_user_meta( $user_id, '_cf_notif_prefs', true );
+    if ( ! is_array( $prefs ) ) {
+        $prefs = array();
+    }
+
+    $prefs[ $key ] = empty( $prefs[ $key ] ) ? 1 : 0;
+    update_user_meta( $user_id, '_cf_notif_prefs', $prefs );
+
+    wp_send_json_success( array( 'enabled' => (bool) $prefs[ $key ] ) );
+}
+add_action( 'wp_ajax_cf_toggle_notification_pref', 'cf_ajax_toggle_notification_pref' );
+
+/**
+ * Create or update a user playlist.
+ */
+function cf_ajax_save_playlist() {
+    check_ajax_referer( 'cf_interaction_nonce', 'security' );
+
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => __( 'You must be logged in.', 'collective-finity' ) ) );
+    }
+
+    $name = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+    if ( ! $name ) {
+        wp_send_json_error( array( 'message' => __( 'Playlist name is required.', 'collective-finity' ) ) );
+    }
+
+    $user_id   = get_current_user_id();
+    $playlists = cf_get_user_playlists();
+    $playlists[] = array(
+        'name'   => $name,
+        'tracks' => array(),
+    );
+    update_user_meta( $user_id, '_cf_user_playlists', $playlists );
+
+    wp_send_json_success(
+        array(
+            'message'  => __( 'Playlist created.', 'collective-finity' ),
+            'index'    => count( $playlists ) - 1,
+            'redirect' => home_url( '/cf-playlists/' ),
+        )
+    );
+}
+add_action( 'wp_ajax_cf_save_playlist', 'cf_ajax_save_playlist' );
+
+/**
+ * Add a track to a user playlist.
+ */
+function cf_ajax_add_track_to_playlist() {
+    check_ajax_referer( 'cf_interaction_nonce', 'security' );
+
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => __( 'You must be logged in.', 'collective-finity' ) ) );
+    }
+
+    $playlist_index = isset( $_POST['playlist_index'] ) ? (int) $_POST['playlist_index'] : -1;
+    $track_id       = isset( $_POST['track_id'] ) ? (int) $_POST['track_id'] : 0;
+
+    if ( $playlist_index < 0 || ! $track_id || 'tracks' !== get_post_type( $track_id ) ) {
+        wp_send_json_error( array( 'message' => __( 'Invalid playlist or track.', 'collective-finity' ) ) );
+    }
+
+    $user_id   = get_current_user_id();
+    $playlists = cf_get_user_playlists();
+    if ( ! isset( $playlists[ $playlist_index ] ) ) {
+        wp_send_json_error( array( 'message' => __( 'Playlist not found.', 'collective-finity' ) ) );
+    }
+
+    if ( ! isset( $playlists[ $playlist_index ]['tracks'] ) || ! is_array( $playlists[ $playlist_index ]['tracks'] ) ) {
+        $playlists[ $playlist_index ]['tracks'] = array();
+    }
+
+    if ( ! in_array( $track_id, $playlists[ $playlist_index ]['tracks'], true ) ) {
+        $playlists[ $playlist_index ]['tracks'][] = $track_id;
+    }
+
+    update_user_meta( $user_id, '_cf_user_playlists', $playlists );
+    wp_send_json_success( array( 'message' => __( 'Track added to playlist.', 'collective-finity' ) ) );
+}
+add_action( 'wp_ajax_cf_add_track_to_playlist', 'cf_ajax_add_track_to_playlist' );
+
 
 /**
  * 12. FORCE COMMENTS TO BE OPEN FOR TRACKS (Bypasses manual WP database & dashboard toggles)
@@ -1183,4 +1555,5 @@ function collective_finity_extend_search( $query ) {
 }
 add_action( 'pre_get_posts', 'collective_finity_extend_search' );
 
+require get_template_directory() . '/inc/cf-site-page-helpers.php';
 require get_template_directory() . '/inc/cf-music-library-shortcode.php';
