@@ -9,18 +9,26 @@ if ( ! $cf_tracks_url ) {
     $cf_tracks_url = home_url( '/tracks/' );
 }
 
+$cf_logo_url = collective_finity_site_logo_url( 'medium' );
+
 $cf_about_pillars = array(
     array(
-        'title' => 'Cinematic Lyrics',
-        'text'  => 'Every track begins with a pure human spark. Original lyrics written by hand, conceptual storytelling, and profound narratives that establish a deep emotional connection before a single note is synthesized.',
+        'number' => '01',
+        'title'  => 'Cinematic Lyrics',
+        'text'   => 'Every track begins with a pure human spark. Original lyrics written by hand, conceptual storytelling, and profound narratives that establish a deep emotional connection before a single note is synthesized.',
+        'accent' => false,
     ),
     array(
-        'title' => 'Human Artistry',
-        'text'  => 'Strict artistic direction and meticulous human composition guide advanced production instruments. Technology never drives our process; it executes our deep, multi-layered cinematic vision.',
+        'number' => '02',
+        'title'  => 'Human Artistry',
+        'text'   => 'Strict artistic direction and meticulous human composition guide advanced production instruments. Technology never drives our process; it executes our deep, multi-layered cinematic vision.',
+        'accent' => true,
     ),
     array(
-        'title' => 'Sonic Innovation',
-        'text'  => 'Building a limitless digital ecosystem where music and technology evolve together. We push boundaries to craft immersive soundscapes and unforgettable auditory journeys.',
+        'number' => '03',
+        'title'  => 'Sonic Innovation',
+        'text'   => 'Building a limitless digital ecosystem where music and technology evolve together. We push boundaries to craft immersive soundscapes and unforgettable auditory journeys.',
+        'accent' => false,
     ),
 );
 
@@ -69,36 +77,65 @@ get_header();
         <div class="cf-about__inner">
 
             <section class="cf-about-hero" aria-labelledby="cf-about-heading">
-                <p class="cf-about-eyebrow">ABOUT COLLECTIVE FINITY</p>
-                <h1 id="cf-about-heading" class="cf-about-hero__title">About Collective Finity</h1>
-                <p class="cf-about-hero__tagline">Where Human Artistry Meets AI Innovation</p>
-                <p class="cf-about-hero__lead">Collective Finity is a cinematic music universe shaping the future of sound. By combining human emotional lyrics with advanced AI synthesis, we craft immersive sonic journeys.</p>
-                <div class="cf-about-hero__actions">
-                    <a class="cf-about-btn cf-about-btn--primary" href="<?php echo esc_url( $cf_tracks_url ); ?>">Explore Music</a>
-                    <a class="cf-about-btn cf-about-btn--ghost" href="#cf-about-chronicle">Our Story</a>
+                <div class="cf-about-hero__grid">
+                    <div class="cf-about-hero__copy">
+                        <p class="cf-about-eyebrow">ABOUT COLLECTIVE FINITY</p>
+                        <h1 id="cf-about-heading" class="cf-about-hero__title">About Collective Finity</h1>
+                        <p class="cf-about-hero__tagline">Where Human Artistry Meets AI Innovation</p>
+                        <p class="cf-about-hero__lead">Collective Finity is a cinematic music universe shaping the future of sound. By combining human emotional lyrics with advanced AI synthesis, we craft immersive sonic journeys.</p>
+                        <div class="cf-about-hero__actions">
+                            <a class="cf-about-btn cf-about-btn--primary" href="<?php echo esc_url( $cf_tracks_url ); ?>">Explore Music</a>
+                            <a class="cf-about-btn cf-about-btn--ghost" href="#cf-about-chronicle">Our Story</a>
+                        </div>
+                    </div>
+
+                    <div class="cf-about-hero__visual" aria-hidden="true">
+                        <div class="cf-about-hero__visual-frame">
+                            <div class="cf-about-hero__disc">
+                                <img
+                                    class="cf-about-hero__brand"
+                                    src="<?php echo esc_url( $cf_logo_url ); ?>"
+                                    alt=""
+                                    width="88"
+                                    height="88"
+                                    loading="lazy"
+                                >
+                            </div>
+                            <span class="cf-about-hero__badge cf-about-hero__badge--sound">Original Sound</span>
+                            <span class="cf-about-hero__badge cf-about-hero__badge--stories">Cinematic Stories</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            <section id="cf-about-chronicle" class="cf-about-section">
-                <p class="cf-about-section__label">01 / THE CHRONICLE</p>
-                <h2 class="cf-about-section__title">The Story Behind The Sound</h2>
-                <p class="cf-about-section__body">Collective Finity was born from a desire to redefine cinematic music. Every creation begins with a pure human spark—original lyrics written by hand, conceptual themes, and strict artistic direction.</p>
-                <blockquote class="cf-about-quote">“We guide advanced AI technology not as a simple shortcut, but as a complex production instrument to execute deep, multi-layered soundscapes.”</blockquote>
-            </section>
+            <div class="cf-about-story-grid">
+                <section id="cf-about-chronicle" class="cf-about-section">
+                    <p class="cf-about-section__label">01 / THE CHRONICLE</p>
+                    <h2 class="cf-about-section__title">The Story Behind The Sound</h2>
+                    <p class="cf-about-section__body">Collective Finity was born from a desire to redefine cinematic music. Every creation begins with a pure human spark—original lyrics written by hand, conceptual themes, and strict artistic direction.</p>
+                    <blockquote class="cf-about-quote">“We guide advanced AI technology not as a simple shortcut, but as a complex production instrument to execute deep, multi-layered soundscapes.”</blockquote>
+                </section>
 
-            <section id="cf-about-future" class="cf-about-section">
-                <p class="cf-about-section__label">02 / THE FUTURE</p>
-                <h2 class="cf-about-section__title">Our Creative Vision</h2>
-                <p class="cf-about-section__body">Our vision is to build a limitless digital ecosystem where music and technology evolve together. By combining meticulous human composition with AI synthesis, we prove that innovation has no boundaries.</p>
-                <blockquote class="cf-about-quote">“Every track is a curated balance of professional musical direction and modern technology.”</blockquote>
-            </section>
+                <section id="cf-about-future" class="cf-about-section">
+                    <p class="cf-about-section__label">02 / THE FUTURE</p>
+                    <h2 class="cf-about-section__title">Our Creative Vision</h2>
+                    <p class="cf-about-section__body">Our vision is to build a limitless digital ecosystem where music and technology evolve together. By combining meticulous human composition with AI synthesis, we prove that innovation has no boundaries.</p>
+                    <blockquote class="cf-about-quote">“Every track is a curated balance of professional musical direction and modern technology.”</blockquote>
+                </section>
+            </div>
 
             <section class="cf-about-pillars" aria-labelledby="cf-about-pillars-heading">
-                <h2 id="cf-about-pillars-heading" class="cf-about-block-title">Core Pillars</h2>
+                <header class="cf-about-section-head">
+                    <p class="cf-about-section-head__eyebrow">OUR FOUNDATION</p>
+                    <h2 id="cf-about-pillars-heading" class="cf-about-section-head__title">Core Pillars</h2>
+                    <p class="cf-about-section-head__sub">Music with Meaning</p>
+                </header>
                 <div class="cf-about-pillars__grid">
                     <?php foreach ( $cf_about_pillars as $pillar ) : ?>
                         <article class="cf-about-card">
+                            <p class="cf-about-card__number"><?php echo esc_html( $pillar['number'] ); ?></p>
                             <h3 class="cf-about-card__title"><?php echo esc_html( $pillar['title'] ); ?></h3>
+                            <span class="cf-about-card__bar<?php echo ! empty( $pillar['accent'] ) ? ' is-accent' : ''; ?>" aria-hidden="true"></span>
                             <p class="cf-about-card__text"><?php echo esc_html( $pillar['text'] ); ?></p>
                         </article>
                     <?php endforeach; ?>
@@ -106,22 +143,33 @@ get_header();
             </section>
 
             <section class="cf-about-timeline" aria-labelledby="cf-about-timeline-heading">
-                <h2 id="cf-about-timeline-heading" class="cf-about-block-title cf-about-block-title--timeline">Timeline</h2>
-                <ol class="cf-about-timeline__list">
-                    <?php foreach ( $cf_about_timeline as $milestone ) : ?>
-                        <li class="cf-about-timeline__item">
-                            <span class="cf-about-timeline__dot" aria-hidden="true"></span>
-                            <div class="cf-about-timeline__content">
-                                <p class="cf-about-timeline__label"><?php echo esc_html( $milestone['quarter'] ); ?> — <?php echo esc_html( $milestone['title'] ); ?></p>
-                                <p class="cf-about-timeline__text"><?php echo esc_html( $milestone['text'] ); ?></p>
-                            </div>
-                        </li>
-                    <?php endforeach; ?>
-                </ol>
+                <header class="cf-about-section-head">
+                    <p class="cf-about-section-head__eyebrow">THE CHRONOLOGY</p>
+                    <h2 id="cf-about-timeline-heading" class="cf-about-section-head__title">The Universe &amp; Timeline</h2>
+                    <p class="cf-about-section-head__sub">Our Evolutionary Journey</p>
+                </header>
+                <div class="cf-about-timeline__track">
+                    <div class="cf-about-timeline__line" aria-hidden="true"></div>
+                    <ol class="cf-about-timeline__stops">
+                        <?php foreach ( $cf_about_timeline as $milestone ) : ?>
+                            <li class="cf-about-timeline__stop">
+                                <span class="cf-about-timeline__dot" aria-hidden="true"></span>
+                                <div class="cf-about-timeline__content">
+                                    <p class="cf-about-milestone__label"><?php echo esc_html( $milestone['quarter'] ); ?> — <?php echo esc_html( $milestone['title'] ); ?></p>
+                                    <p class="cf-about-milestone__text"><?php echo esc_html( $milestone['text'] ); ?></p>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    </ol>
+                </div>
             </section>
 
             <section class="cf-about-faq" aria-labelledby="cf-about-faq-heading">
-                <h2 id="cf-about-faq-heading" class="cf-about-block-title">FAQ</h2>
+                <header class="cf-about-section-head">
+                    <p class="cf-about-section-head__eyebrow">QUESTIONS</p>
+                    <h2 id="cf-about-faq-heading" class="cf-about-section-head__title">Frequently Asked Questions</h2>
+                    <p class="cf-about-section-head__sub">Everything You Need To Know</p>
+                </header>
                 <div class="cf-about-faq__list" data-cf-about-faq>
                     <?php foreach ( $cf_about_faq as $index => $item ) : ?>
                         <div class="cf-about-faq__item<?php echo 0 === $index ? ' is-open' : ''; ?>">
@@ -169,10 +217,17 @@ get_header();
         display: flex;
         flex-direction: column;
         gap: 54px;
-        max-width: 820px;
+        max-width: 920px;
+        margin: 0 auto;
     }
 
-    .cf-about-hero {
+    .cf-about-hero__grid {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+    }
+
+    .cf-about-hero__copy {
         display: flex;
         flex-direction: column;
         gap: 16px;
@@ -180,15 +235,18 @@ get_header();
 
     .cf-about-eyebrow,
     .cf-about-section__label,
-    .cf-about-timeline__label {
+    .cf-about-section-head__eyebrow,
+    .cf-about-milestone__label {
         margin: 0;
         font-family: 'Space Mono', monospace;
         color: var(--primary-color, #FFB700);
     }
 
-    .cf-about-eyebrow {
+    .cf-about-eyebrow,
+    .cf-about-section-head__eyebrow {
         font-size: 11px;
         letter-spacing: 0.1em;
+        text-transform: uppercase;
     }
 
     .cf-about-hero__title {
@@ -219,6 +277,61 @@ get_header();
         flex-wrap: wrap;
         gap: 10px;
         margin-top: 4px;
+    }
+
+    .cf-about-hero__visual {
+        display: none;
+        justify-content: center;
+    }
+
+    .cf-about-hero__visual-frame {
+        position: relative;
+        width: min(100%, 320px);
+        margin: 0 auto;
+        padding: 12px 0 28px;
+    }
+
+    .cf-about-hero__disc {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: min(100%, 280px);
+        aspect-ratio: 1;
+        margin: 0 auto;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 28%, rgba(255, 183, 0, 0.42) 0%, rgba(38, 32, 20, 1) 42%, rgba(12, 10, 8, 1) 100%);
+        box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.6);
+    }
+
+    .cf-about-hero__brand {
+        width: 88px;
+        height: 88px;
+        object-fit: contain;
+        filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
+    }
+
+    .cf-about-hero__badge {
+        position: absolute;
+        padding: 8px 14px;
+        border: 1px solid #262626;
+        border-radius: 999px;
+        background: rgba(20, 20, 20, 0.94);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.2;
+        white-space: nowrap;
+        box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.55);
+    }
+
+    .cf-about-hero__badge--sound {
+        top: 4%;
+        right: 0;
+    }
+
+    .cf-about-hero__badge--stories {
+        bottom: 8%;
+        left: 0;
     }
 
     .cf-about-btn {
@@ -261,25 +374,22 @@ get_header();
         color: #fff;
     }
 
+    .cf-about-story-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
     .cf-about-section__label {
         margin-bottom: 8px;
         font-size: 12px;
     }
 
-    .cf-about-section__title,
-    .cf-about-block-title {
+    .cf-about-section__title {
         margin: 0 0 12px;
         font-size: 19px;
         font-weight: 700;
         color: #fff;
-    }
-
-    .cf-about-block-title {
-        margin-bottom: 16px;
-    }
-
-    .cf-about-block-title--timeline {
-        margin-bottom: 20px;
     }
 
     .cf-about-section__body {
@@ -299,6 +409,30 @@ get_header();
         color: #E4E4E4;
     }
 
+    .cf-about-section-head {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 28px;
+        text-align: center;
+    }
+
+    .cf-about-section-head__title {
+        margin: 0;
+        font-size: clamp(24px, 3vw, 30px);
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.2;
+    }
+
+    .cf-about-section-head__sub {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--primary-color, #FFB700);
+    }
+
     .cf-about-pillars__grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -312,11 +446,32 @@ get_header();
         background: #141414;
     }
 
+    .cf-about-card__number {
+        margin: 0 0 10px;
+        color: #7A7A7A;
+        font-family: 'Space Mono', monospace;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+    }
+
     .cf-about-card__title {
-        margin: 0 0 8px;
+        margin: 0 0 10px;
         font-size: 14.5px;
         font-weight: 700;
         color: #fff;
+    }
+
+    .cf-about-card__bar {
+        display: block;
+        width: 34px;
+        height: 3px;
+        margin-bottom: 14px;
+        border-radius: 999px;
+        background: #3a3a3a;
+    }
+
+    .cf-about-card__bar.is-accent {
+        background: var(--primary-color, #FFB700);
     }
 
     .cf-about-card__text {
@@ -326,35 +481,56 @@ get_header();
         color: #7A7A7A;
     }
 
-    .cf-about-timeline__list {
-        display: flex;
-        flex-direction: column;
-        gap: 22px;
+    .cf-about-timeline__track {
+        position: relative;
+        padding-top: 18px;
+    }
+
+    .cf-about-timeline__line {
+        display: none;
+        position: absolute;
+        top: 23px;
+        right: 16%;
+        left: 16%;
+        height: 1px;
+        background: #2a2a2a;
+    }
+
+    .cf-about-timeline__stops {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
         margin: 0;
         padding: 0;
         list-style: none;
     }
 
-    .cf-about-timeline__item {
+    .cf-about-timeline__stop {
+        position: relative;
         display: flex;
-        gap: 16px;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
     }
 
     .cf-about-timeline__dot {
-        width: 10px;
-        height: 10px;
-        min-width: 10px;
-        margin-top: 6px;
+        position: relative;
+        z-index: 1;
+        width: 12px;
+        height: 12px;
+        margin-bottom: 16px;
         border-radius: 50%;
         background: var(--primary-color, #FFB700);
+        box-shadow: 0 0 0 4px rgba(255, 183, 0, 0.12);
     }
 
-    .cf-about-timeline__label {
-        margin: 0 0 4px;
+    .cf-about-milestone__label {
+        margin: 0 0 8px;
         font-size: 12px;
+        line-height: 1.4;
     }
 
-    .cf-about-timeline__text {
+    .cf-about-milestone__text {
         margin: 0;
         font-size: 13.5px;
         line-height: 1.6;
@@ -416,6 +592,31 @@ get_header();
         color: #B3B3B3;
     }
 
+    @media (min-width: 768px) {
+        .cf-about-hero__grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(240px, 0.95fr);
+            gap: 32px;
+            align-items: center;
+        }
+
+        .cf-about-hero__visual {
+            display: flex;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .cf-about-story-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 40px;
+            align-items: start;
+        }
+
+        .cf-about-timeline__line {
+            display: block;
+        }
+    }
+
     @media (max-width: 767px) {
         .cf-about__inner {
             gap: 40px;
@@ -429,8 +630,22 @@ get_header();
             font-size: 15px;
         }
 
-        .cf-about-pillars__grid {
+        .cf-about-hero__visual {
+            display: flex;
+        }
+
+        .cf-about-pillars__grid,
+        .cf-about-timeline__stops {
             grid-template-columns: 1fr;
+        }
+
+        .cf-about-timeline__stop {
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        .cf-about-timeline__dot {
+            margin-bottom: 12px;
         }
     }
 </style>
