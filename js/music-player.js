@@ -602,74 +602,28 @@ jQuery(document).ready(function($) {
     });
 
     $(document).on('click', '.cf-playlist-item', function() {
-        var $item = $(this);
-        var playlistIndex = $item.data('playlist-id');
-        var trackId = $('#cf-target-track-id').val();
-        if (!trackId || typeof cf_ajax === 'undefined') {
-            $item.toggleClass('added');
-            var statusIcon = $item.find('.cf-playlist-status');
-            if ($item.hasClass('added')) {
-                statusIcon.removeClass('dashicons-no').addClass('dashicons-yes');
-            } else {
-                statusIcon.removeClass('dashicons-yes').addClass('dashicons-no');
-            }
-            return;
+        $(this).toggleClass('added');
+        var statusIcon = $(this).find('.cf-playlist-status');
+        if ($(this).hasClass('added')) {
+            statusIcon.removeClass('dashicons-no').addClass('dashicons-yes');
+        } else {
+            statusIcon.removeClass('dashicons-yes').addClass('dashicons-no');
         }
-
-        $.post(cf_ajax.ajax_url, {
-            action: 'cf_add_track_to_playlist',
-            security: cf_ajax.nonce,
-            playlist_index: playlistIndex,
-            track_id: trackId
-        }).done(function(response) {
-            if (response && response.success) {
-                $item.addClass('added');
-                $item.find('.cf-playlist-status').removeClass('dashicons-no').addClass('dashicons-yes');
-            } else if (response && response.data && response.data.message) {
-                alert(response.data.message);
-            }
-        });
     });
 
     $(document).on('click', '#cf-create-playlist-btn', function(e) {
         e.preventDefault();
         var playlistName = $('#cf-new-playlist-input').val().trim();
-        if (playlistName === '') {
-            return;
-        }
-
-        if (typeof cf_ajax === 'undefined' || !cf_ajax.logged_in) {
+        if (playlistName !== '') {
             var randomId = Math.floor(Math.random() * 1000);
             var newItem = $('<div class="cf-playlist-item" data-playlist-id="' + randomId + '">' +
                 '<span class="dashicons dashicons-media-text"></span>' +
                 '<span class="cf-playlist-name">' + playlistName + '</span>' +
                 '<span class="cf-playlist-status dashicons dashicons-no"></span>' +
                 '</div>');
-            $('.cf-playlists-list .cf-playlist-empty-note').remove();
             $('.cf-playlists-list').append(newItem);
             $('#cf-new-playlist-input').val('');
-            return;
         }
-
-        $.post(cf_ajax.ajax_url, {
-            action: 'cf_save_playlist',
-            security: cf_ajax.nonce,
-            name: playlistName
-        }).done(function(response) {
-            if (response && response.success) {
-                var index = response.data && typeof response.data.index !== 'undefined' ? response.data.index : 0;
-                var newItem = $('<div class="cf-playlist-item" data-playlist-id="' + index + '">' +
-                    '<span class="dashicons dashicons-media-text"></span>' +
-                    '<span class="cf-playlist-name">' + playlistName + '</span>' +
-                    '<span class="cf-playlist-status dashicons dashicons-no"></span>' +
-                    '</div>');
-                $('.cf-playlists-list .cf-playlist-empty-note').remove();
-                $('.cf-playlists-list').append(newItem);
-                $('#cf-new-playlist-input').val('');
-            } else if (response && response.data && response.data.message) {
-                alert(response.data.message);
-            }
-        });
     });
 
     $(document).on('click', '.cf-share-copy-btn', function() {

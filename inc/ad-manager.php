@@ -37,10 +37,6 @@ function collective_finity_default_ad_zones() {
             'code'      => '',
             'frequency' => 8,
         ),
-        'post_incontent'             => array(
-            'enabled' => 0,
-            'code'    => '',
-        ),
     );
 }
 
@@ -56,7 +52,6 @@ function collective_finity_ad_zone_labels() {
         'track_sidebar'            => __( 'Track Sidebar', 'collective-finity' ),
         'album_sidebar'            => __( 'Album Sidebar', 'collective-finity' ),
         'archive_native'           => __( 'Archive Native', 'collective-finity' ),
-        'post_incontent'           => __( 'Post In-Content', 'collective-finity' ),
     );
 }
 
@@ -72,7 +67,6 @@ function collective_finity_ad_zone_descriptions() {
         'track_sidebar'            => __( 'Appears on single track pages near streaming platform links.', 'collective-finity' ),
         'album_sidebar'            => __( 'Appears on single album pages in the hero sidebar area.', 'collective-finity' ),
         'archive_native'           => __( 'Inserted every Nth card in the tracks archive grid.', 'collective-finity' ),
-        'post_incontent'           => __( 'Injected after every few H2 sections on single blog posts.', 'collective-finity' ),
     );
 }
 
