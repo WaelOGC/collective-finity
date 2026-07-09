@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</helmet>
+<dc-import name="Shell" active-screen="contact" content="{{ pageContent }}" hint-size="100%,100%"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { loaded: false, width: typeof window !== 'undefined' ? window.innerWidth : 1440, contactSent: false };
+  }
+  async componentDidMount() {
+    const [uiMod] = await Promise.all([import('./shared-ui.js')]);
+    this._ui = uiMod;
+    this.setState({ loaded: true });
+    this._onResize = () => this.setState({ width: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+  }
+  componentWillUnmount() { if (this._onResize) window.removeEventListener('resize', this._onResize); }
+  submitContact = (e) => { e.preventDefault(); this.setState({ contactSent: true }); };
+
+  renderVals() {
+    if (!this.state.loaded) return { pageContent: null };
+    const icon = (name, size) => this._ui.buildIcon(React, name, size);
+    const isMobile = this.state.width < 768;
+    const MONO = "'Space Mono',monospace";
+    const inputStyle = { width: '100%', padding: '13px 15px', borderRadius: '9px', border: '1px solid #262626', background: '#0D0D0D', color: '#fff', fontSize: '13.5px', fontFamily: MONO };
+    const labelStyle = { fontSize: '11px', color: '#B3B3B3', marginBottom: '8px', display: 'block', fontFamily: MONO, letterSpacing: '0.06em' };
+    const dotBg = { backgroundImage: 'radial-gradient(circle, rgba(255,183,0,0.35) 1px, transparent 1.4px)', backgroundSize: '26px 26px' };
+
+    const hero = React.createElement('div', { style: { position: 'relative', textAlign: 'center', padding: isMobile ? '40px 16px' : '64px 24px', borderRadius: '18px', background: 'radial-gradient(ellipse at 50% 0%, rgba(255,183,0,0.12), transparent 60%), #0B0B0B', overflow: 'hidden', border: '1px solid #1E1E1E' } },
+      React.createElement('div', { style: { position: 'absolute', inset: 0, ...dotBg, opacity: 0.5, pointerEvents: 'none' } }),
+      React.createElement('div', { style: { position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' } },
+        React.createElement('span', { style: { fontFamily: MONO, fontSize: '11px', letterSpacing: '0.1em', color: '#FFB700', border: '1px solid rgba(255,183,0,0.35)', borderRadius: '999px', padding: '7px 16px', background: 'rgba(255,183,0,0.08)' } }, '\u2726 MUSIC BEYOND IMAGINATION'),
+        React.createElement('div', { style: { fontFamily: MONO, fontSize: isMobile ? '30px' : '46px', fontWeight: 700, color: '#fff', lineHeight: 1.2, maxWidth: '820px' } }, 'Where Music Meets ', React.createElement('span', { style: { color: '#FFB700' } }, 'Infinite Imagination')),
+        React.createElement('div', { style: { fontFamily: MONO, fontSize: '14.5px', color: '#B3B3B3', lineHeight: 1.8, maxWidth: '640px' } }, 'A vibrant global community for music producers, creators, and sonic artists. Connect, collaborate, and push the boundaries of sound with infinite possibilities.'),
+        React.createElement('div', { style: { display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '6px' } },
+          React.createElement('a', { href: 'Join-Community.dc.html', style: { padding: '13px 26px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13px', fontFamily: MONO, letterSpacing: '0.05em', textDecoration: 'none' }, 'style-hover': { background: '#ffde99' } }, 'JOIN COLLECTIVE'),
+          React.createElement('a', { href: 'Blog-Hub.dc.html', style: { padding: '13px 26px', borderRadius: '9px', border: '1px solid #333', background: 'transparent', color: '#fff', fontWeight: 700, fontSize: '13px', fontFamily: MONO, letterSpacing: '0.05em', textDecoration: 'none' }, 'style-hover': { background: '#161616' } }, 'EXPLORE MUSIC'))));
+
+    const methodsData = [
+      { icon: 'mail', title: 'Email Us', desc: 'Got questions? We\u2019re here to help.', value: 'contact@collectivefinity.com' },
+      { icon: 'pin', title: 'Our Location', desc: 'Based in the heart of Europe.', value: 'Netherlands' },
+      { icon: 'chat', title: 'Discord Server', desc: 'Join our vibrant community of creators.', btn: 'Join Official Server', badge: 'JOIN COMMUNITY' },
+      { icon: 'community', title: 'Facebook Group', desc: 'Connect with fellow music lovers.', btn: 'Join The Group' },
+      { icon: 'community', title: 'Facebook Page', desc: 'Follow us for latest updates.', btn: 'Follow Our Page', full: true },
+    ];
+    const methodCard = (c) => React.createElement('div', { key: c.title, style: { position: 'relative', display: 'flex', flexDirection: 'column', gap: '10px', padding: '20px', borderRadius: '12px', background: '#141414', border: c.badge ? '1px solid #FFB700' : '1px solid #232323', gridColumn: c.full ? '1 / -1' : undefined } },
+      c.badge ? React.createElement('span', { style: { position: 'absolute', top: '14px', right: '14px', fontFamily: MONO, fontSize: '9.5px', fontWeight: 700, letterSpacing: '0.04em', color: '#0D0D0D', background: '#FFB700', padding: '4px 9px', borderRadius: '999px' } }, c.badge) : null,
+      React.createElement('div', { style: { width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(255,183,0,0.12)', color: '#FFB700', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, icon(c.icon, 20)),
+      React.createElement('div', { style: { fontSize: '14.5px', fontWeight: 700, color: '#fff', fontFamily: MONO } }, c.title),
+      React.createElement('div', { style: { fontSize: '12.5px', color: '#7A7A7A', lineHeight: 1.5, fontFamily: MONO } }, c.desc),
+      c.value ? React.createElement('div', { style: { fontSize: '13px', color: '#FFB700', fontFamily: MONO } }, c.value) : null,
+      c.btn ? React.createElement('a', { href: '#', style: { fontSize: '12.5px', color: '#FFB700', fontFamily: MONO, textDecoration: 'none', width: 'fit-content' }, 'style-hover': { color: '#ffde99' } }, c.btn) : null);
+
+    const getInTouch = React.createElement('div', { style: { display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '40px' } },
+      React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', minWidth: 0 } },
+        React.createElement('div', {},
+          React.createElement('span', { style: { fontFamily: MONO, fontSize: '10.5px', letterSpacing: '0.1em', color: '#FFB700', border: '1px solid rgba(255,183,0,0.35)', borderRadius: '999px', padding: '6px 14px', background: 'rgba(255,183,0,0.08)', display: 'inline-block', marginBottom: '16px' } }, '\u2726 GET IN TOUCH'),
+          React.createElement('div', { style: { fontFamily: MONO, fontSize: isMobile ? '26px' : '32px', fontWeight: 700, color: '#fff', lineHeight: 1.2 } }, 'Let\u2019s Create ', React.createElement('span', { style: { color: '#FFB700' } }, 'Together')),
+          React.createElement('div', { style: { fontFamily: MONO, fontSize: '13.5px', color: '#B3B3B3', lineHeight: 1.7, marginTop: '10px' } }, 'Have a question or want to join the collective? Reach out directly through our official channels.')),
+        React.createElement('div', { style: { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '16px' } },
+          methodsData.map((c) => methodCard(c)))),
+      React.createElement('form', { onSubmit: this.submitContact, style: { flex: 1, display: 'flex', flexDirection: 'column', gap: '18px', minWidth: 0 } },
+        this.state.contactSent ? React.createElement('div', { style: { padding: '14px 16px', borderRadius: '9px', background: 'rgba(255,183,0,0.12)', border: '1px solid rgba(255,183,0,0.3)', color: '#FFB700', fontSize: '13px', fontFamily: MONO } }, 'Message sent \u2014 we\u2019ll get back to you soon.') : null,
+        React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'YOUR NAME'), React.createElement('input', { type: 'text', placeholder: 'Enter your name', style: inputStyle })),
+        React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'EMAIL ADDRESS'), React.createElement('input', { type: 'email', placeholder: 'Enter your email', style: inputStyle })),
+        React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'SUBJECT'), React.createElement('input', { type: 'text', placeholder: 'What\u2019s this about?', style: inputStyle })),
+        React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'YOUR MESSAGE'), React.createElement('textarea', { rows: 7, placeholder: 'Write your message...', style: { ...inputStyle, resize: 'vertical' } })),
+        React.createElement('button', { type: 'submit', style: { padding: '14px 20px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13px', fontFamily: MONO, letterSpacing: '0.05em', cursor: 'pointer' }, 'style-hover': { background: '#ffde99' } }, 'SEND MESSAGE'),
+        React.createElement('span', { style: { fontFamily: MONO, fontSize: '9.5px', color: 'rgba(255,183,0,0.35)' } }, 'Visual only \u2014 CF7 shortcode 04d6245 wires up here at build time')));
+
+    const releasesData = [
+      { t: 'Night Circuits', a: 'Nova Wraith', type: 'Album', seed: 11 },
+      { t: 'Afterglow Station', a: 'Kilo Static', type: 'Single', seed: 22 },
+      { t: 'Amber Frequency', a: 'Glass Horizon', type: 'Album', seed: 33 },
+      { t: 'Grey Hour', a: 'Ember Choir', type: 'EP', seed: 44 },
+      { t: 'Second Skyline', a: 'Vantage Low', type: 'Single', seed: 55 },
+    ];
+    const gradientFor = (seed) => {
+      const px = 15 + (seed * 31) % 65; const py = 10 + (seed * 53) % 70;
+      const light1 = (0.30 + ((seed * 13) % 18) / 100).toFixed(2); const chroma1 = (0.10 + ((seed * 7) % 5) / 100).toFixed(2);
+      return `radial-gradient(circle at ${px}% ${py}%, oklch(${light1} ${chroma1} 85) 0%, oklch(0.15 0.025 60) 45%, oklch(0.06 0.01 40) 100%)`;
+    };
+    const latestReleases = React.createElement('div', {},
+      React.createElement('div', { style: { fontFamily: MONO, fontSize: '19px', fontWeight: 700, color: '#fff', marginBottom: '16px' } }, 'Latest Releases'),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '130px' : '160px'}, 1fr))`, gap: '18px' } },
+        releasesData.map((r) => React.createElement('div', { key: r.t },
+          React.createElement('div', { style: { width: '100%', aspectRatio: '1', borderRadius: '12px', background: gradientFor(r.seed), marginBottom: '10px' } }),
+          React.createElement('div', { style: { fontSize: '14px', fontWeight: 600, color: '#fff', fontFamily: MONO } }, r.t),
+          React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A', marginTop: '2px', fontFamily: MONO } }, r.a),
+          React.createElement('span', { style: { display: 'inline-block', marginTop: '6px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(255,183,0,0.12)', color: '#FFB700', fontSize: '10.5px', fontFamily: MONO } }, r.type)))));
+
+    const pageContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: isMobile ? '40px' : '56px' } },
+      hero, getInTouch, latestReleases);
+
+    return { pageContent };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: #050505; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: #262626; border-radius: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    @keyframes cfFadeDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes cfDrawerIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+    @keyframes cfOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+    a { color: #FFB700; }
+    a:hover { color: #ffde99; }
+  </style>
+</helmet>
+
+<div style="background:#050505; min-height:100vh; width:100%; font-family:'Inter',-apple-system,sans-serif; color:#FFFFFF;">
+
+  <!-- ============ DESKTOP LAYOUT ============ -->
+  <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+    <div style="{{ leftSidebarStyle }}">
+      <div style="display:flex; align-items:center; gap:10px; padding:4px 8px 18px; border-bottom:1px solid #1E1E1E; margin-bottom:8px;">
+        <a href="Home.dc.html" style="display:flex; align-items:center; gap:10px; text-decoration:none;">
+          <div style="width:14px; height:14px; min-width:14px; border-radius:3px; background:#FFB700; transform:rotate(45deg);"></div>
+          <sc-if value="{{ showSidebarLabels }}" hint-placeholder-val="{{ true }}">
+            <span style="font-family:'Space Mono',monospace; font-size:13px; letter-spacing:0.06em; color:#FFFFFF; white-space:nowrap;">COLLECTIVE FINITY</span>
+          </sc-if>
+        </a>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:3px;">
+        <sc-for list="{{ mainNav }}" as="item" hint-placeholder-count="4">
+          <a href="{{ item.href }}" style="{{ item.rowStyle }}" style-hover="{{ item.rowHoverStyle }}">
+            {{ item.iconEl }}
+            <sc-if value="{{ showSidebarLabels }}" hint-placeholder-val="{{ true }}">
+              <span style="white-space:nowrap; overflow:hidden;">{{ item.label }}</span>
+            </sc-if>
+          </a>
+        </sc-for>
+      </div>
+      <div style="height:1px; background:#1E1E1E; margin:12px 4px;"></div>
+      <div style="display:flex; flex-direction:column; gap:3px;">
+        <sc-for list="{{ secondaryNav }}" as="item" hint-placeholder-count="2">
+          <a href="{{ item.href }}" style="{{ item.rowStyle }}" style-hover="{{ item.rowHoverStyle }}">
+            {{ item.iconEl }}
+            <sc-if value="{{ showSidebarLabels }}" hint-placeholder-val="{{ true }}">
+              <span style="white-space:nowrap; overflow:hidden;">{{ item.label }}</span>
+            </sc-if>
+          </a>
+        </sc-for>
+      </div>
+      <div style="flex:1;"></div>
+      <button onClick="{{ toggleSidebarCollapsed }}" style="{{ collapseBtnStyle }}" style-hover="{{ collapseBtnHoverStyle }}">
+        {{ collapseIconEl }}
+        <sc-if value="{{ showSidebarLabels }}" hint-placeholder-val="{{ true }}">
+          <span>Collapse</span>
+        </sc-if>
+      </button>
+    </div>
+
+    <div style="{{ desktopMainStyle }}">
+      <div style="flex:1; padding:30px 34px;">
+        {{ content }}
+        {{ siteFooter }}
+      </div>
+    </div>
+
+    <div style="{{ rightSidebarStyle }}">
+      <div style="{{ rightIconsRowStyle }}">
+        <button onClick="{{ toggleDropdown }}" style="{{ accountBtnStyle }}" style-hover="{{ iconBtnHoverStyle }}">{{ userIconEl }}</button>
+        <button style="{{ iconBtnStyle }}" style-hover="{{ iconBtnHoverStyle }}">{{ mailIconEl }}</button>
+        <button style="{{ iconBtnStyle }}" style-hover="{{ iconBtnHoverStyle }}">{{ bellIconEl }}</button>
+      </div>
+      <sc-if value="{{ dropdownOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closeDropdown }}" style="position:fixed; inset:0; z-index:59;"></div>
+        <div style="position:absolute; top:60px; right:18px; z-index:60; {{ dropdownPanelStyleRaw }}">
+          {{ dropdownContent }}
+        </div>
+      </sc-if>
+      <div style="{{ rightPlayerWrapStyle }}">
+        {{ playerCard }}
+      </div>
+      <div style="flex:1;"></div>
+      <button onClick="{{ toggleRightCollapsed }}" style="{{ rightCollapseBtnStyle }}" style-hover="{{ collapseBtnHoverStyle }}">
+        {{ rightCollapseIconEl }}
+        <sc-if value="{{ playerExpanded }}" hint-placeholder-val="{{ true }}">
+          <span>Collapse</span>
+        </sc-if>
+      </button>
+    </div>
+  </sc-if>
+
+  <!-- ============ TABLET / MOBILE LAYOUT ============ -->
+  <sc-if value="{{ isNotDesktop }}" hint-placeholder-val="{{ false }}">
+    <div style="position:sticky; top:0; height:60px; min-height:60px; border-bottom:1px solid #1E1E1E; background:#0B0B0B; display:flex; align-items:center; justify-content:space-between; padding:0 16px; z-index:20;">
+      <button onClick="{{ toggleMobileNav }}" style="{{ iconBtnStyle }}" style-hover="{{ iconBtnHoverStyle }}">{{ menuIconEl }}</button>
+      <a href="Home.dc.html" style="font-family:'Space Mono',monospace; font-size:13px; letter-spacing:0.06em; color:#FFFFFF; text-decoration:none;">COLLECTIVE FINITY</a>
+      <button onClick="{{ toggleDropdown }}" style="{{ iconBtnStyle }}" style-hover="{{ iconBtnHoverStyle }}">{{ userIconEl }}</button>
+    </div>
+
+    <sc-if value="{{ dropdownOpen }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeDropdown }}" style="position:fixed; inset:0; z-index:59;"></div>
+      <div style="position:fixed; top:66px; right:14px; z-index:60; {{ dropdownPanelStyleRaw }}">
+        {{ dropdownContent }}
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ mobileNavOpen }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ toggleMobileNav }}" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:39; animation:cfOverlayIn 0.18s ease;"></div>
+      <div style="position:fixed; top:0; left:0; bottom:0; width:250px; background:#0B0B0B; border-right:1px solid #1E1E1E; z-index:40; padding:18px 14px; display:flex; flex-direction:column; animation:cfDrawerIn 0.22s ease; overflow-y:auto;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:4px 6px 18px;">
+          <span style="font-family:'Space Mono',monospace; font-size:13px; letter-spacing:0.06em; color:#FFFFFF;">MENU</span>
+          <button onClick="{{ toggleMobileNav }}" style="{{ iconBtnStyle }}" style-hover="{{ iconBtnHoverStyle }}">{{ closeIconEl }}</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:3px;">
+          <sc-for list="{{ mainNav }}" as="item" hint-placeholder-count="4">
+            <a href="{{ item.href }}" style="{{ item.rowStyleExpanded }}" style-hover="{{ item.rowHoverStyle }}">
+              {{ item.iconEl }}<span>{{ item.label }}</span>
+            </a>
+          </sc-for>
+        </div>
+        <div style="height:1px; background:#1E1E1E; margin:12px 4px;"></div>
+        <div style="display:flex; flex-direction:column; gap:3px;">
+          <sc-for list="{{ secondaryNav }}" as="item" hint-placeholder-count="2">
+            <a href="{{ item.href }}" style="{{ item.rowStyleExpanded }}" style-hover="{{ item.rowHoverStyle }}">
+              {{ item.iconEl }}<span>{{ item.label }}</span>
+            </a>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <div style="{{ mobileMainStyle }}">
+      {{ content }}
+      {{ siteFooter }}
+    </div>
+
+    <div style="{{ footerPlayerStyle }}">
+      {{ footerPlayerContent }}
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;activeScreen&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;content&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;ReactNode&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this._mod = null;
+    this._ui = null;
+    this._ro = null;
+    this.state = {
+      loaded: false,
+      width: typeof window !== 'undefined' ? window.innerWidth : 1440,
+      auth: 'out',
+      sidebarCollapsed: false,
+      playerCollapsed: false,
+      mobileNavOpen: false,
+      dropdownOpen: false,
+      player: { title: 'Select a track', artist: '\u2014', playing: false, progress: 0.2, volume: 0.7, liked: false, shuffle: false, repeat: false, seed: 1, trackIndex: 0 },
+    };
+  }
+
+  async componentDidMount() {
+    const [dataMod, uiMod, tokMod] = await Promise.all([
+      import('./shared-data.js'),
+      import('./shared-ui.js'),
+      import('./shared-tokens.js'),
+    ]);
+    this._mod = dataMod;
+    this._ui = uiMod;
+    this._tok = tokMod;
+    const saved = tokMod.loadSharedState();
+    this.setState({
+      loaded: true,
+      auth: saved.auth || 'out',
+      player: saved.player ? { ...this.state.player, ...saved.player } : this.state.player,
+      sidebarCollapsed: !!saved.sidebarCollapsed,
+      playerCollapsed: !!saved.playerCollapsed,
+    });
+    this._onResize = () => this.setState({ width: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+    this._onPlayerSync = () => {
+      const fresh = tokMod.loadSharedState();
+      if (fresh.player) this.setState({ player: { ...this.state.player, ...fresh.player } });
+    };
+    window.addEventListener('cf-player-sync', this._onPlayerSync);
+  }
+
+  componentWillUnmount() {
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this._onPlayerSync) window.removeEventListener('cf-player-sync', this._onPlayerSync);
+  }
+
+  persist = (partial) => {
+    if (this._tok) this._tok.saveSharedState(partial);
+  };
+
+  toggleAuth = () => {
+    this.setState((s) => {
+      const auth = s.auth === 'out' ? 'in' : 'out';
+      this.persist({ auth });
+      return { auth, dropdownOpen: false };
+    });
+  };
+  logout = () => {
+    this.persist({ auth: 'out' });
+    window.location.href = 'Home.dc.html';
+  };
+  toggleSidebarCollapsed = () => this.setState((s) => { const v = !s.sidebarCollapsed; this.persist({ sidebarCollapsed: v }); return { sidebarCollapsed: v }; });
+  toggleRightCollapsed = () => this.setState((s) => { const v = !s.playerCollapsed; this.persist({ playerCollapsed: v }); return { playerCollapsed: v }; });
+  toggleMobileNav = () => this.setState((s) => ({ mobileNavOpen: !s.mobileNavOpen, dropdownOpen: false }));
+  toggleDropdown = () => this.setState((s) => ({ dropdownOpen: !s.dropdownOpen, mobileNavOpen: false }));
+  closeDropdown = () => this.setState({ dropdownOpen: false });
+
+  updatePlayer = (patch) => {
+    this.setState((s) => {
+      const player = { ...s.player, ...(typeof patch === 'function' ? patch(s.player) : patch) };
+      this.persist({ player });
+      window.dispatchEvent(new Event('cf-player-sync'));
+      return { player };
+    });
+  };
+  togglePlay = () => this.updatePlayer((p) => ({ playing: !p.playing }));
+  toggleLike = () => this.updatePlayer((p) => ({ liked: !p.liked }));
+  toggleShuffle = () => this.updatePlayer((p) => ({ shuffle: !p.shuffle }));
+  toggleRepeat = () => this.updatePlayer((p) => ({ repeat: !p.repeat }));
+  seekProgress = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    this.updatePlayer({ progress: ratio });
+  };
+  seekVolume = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    this.updatePlayer({ volume: ratio });
+  };
+  stepTrack = (dir) => {
+    if (!this._mod) return;
+    const albums = this._mod.buildAlbums();
+    const album = albums[0];
+    this.setState((s) => {
+      const nextIndex = (s.player.trackIndex + dir + album.tracks.length) % album.tracks.length;
+      const t = album.tracks[nextIndex];
+      const player = { ...s.player, title: t.title, artist: album.artist, trackIndex: nextIndex, seed: album.seed, playing: true, progress: 0.04, liked: false };
+      this.persist({ player });
+      return { player };
+    });
+  };
+
+  renderVals() {
+    if (!this.state.loaded || !this._ui || !this._mod || !this._tok) {
+      return { isDesktop: true, isNotDesktop: false, content: this.props.content, siteFooter: null, mainNav: [], secondaryNav: [] };
+    }
+    const icon = (name, size, filled) => this._ui.buildIcon(React, name, size, filled);
+    const isDesktop = this.state.width >= 1024;
+    const isTablet = this.state.width >= 768 && this.state.width < 1024;
+    const isMobile = this.state.width < 768;
+    const active = this.props.activeScreen || '';
+
+    const navRow = (id, label, iconName, href, collapsed) => {
+      const isActive = active === id;
+      const base = { display: 'flex', alignItems: 'center', gap: '12px', padding: collapsed ? '11px 0' : '10px 12px', borderRadius: '10px', textDecoration: 'none', width: '100%', boxSizing: 'border-box', background: isActive ? 'rgba(255,183,0,0.14)' : 'transparent', color: isActive ? '#FFB700' : '#B3B3B3', fontFamily: 'Inter,sans-serif', fontSize: '14px', fontWeight: isActive ? 600 : 500, justifyContent: collapsed ? 'center' : 'flex-start' };
+      return { id, label, href, iconEl: icon(iconName, 18), rowStyle: base, rowStyleExpanded: { ...base, padding: '11px 12px' }, rowHoverStyle: isActive ? {} : { background: '#161616', color: '#fff' } };
+    };
+
+    const mainNav = [
+      navRow('home', 'Home', 'home', 'Home.dc.html', this.state.sidebarCollapsed),
+      navRow('library', 'Music Library', 'library', 'Music-Library.dc.html', this.state.sidebarCollapsed),
+      navRow('blog', 'Blog', 'blog', 'Blog-Hub.dc.html', this.state.sidebarCollapsed),
+      navRow('albums', 'Albums & Collections', 'albums', 'Albums.dc.html', this.state.sidebarCollapsed),
+      navRow('about', 'About', 'about', 'About.dc.html', this.state.sidebarCollapsed),
+      navRow('community', 'Join Community', 'community', 'Join-Community.dc.html', this.state.sidebarCollapsed),
+    ];
+    const secondaryNav = [
+      navRow('favorites', 'Favorites & Liked', 'heart', 'Favorites.dc.html', this.state.sidebarCollapsed),
+      navRow('playlists', 'Personal Playlists', 'playlist', 'Playlists.dc.html', this.state.sidebarCollapsed),
+    ];
+
+    const showSidebarLabels = !this.state.sidebarCollapsed;
+    const leftSidebarStyle = { position: 'fixed', left: 0, top: 0, bottom: 0, width: this.state.sidebarCollapsed ? '72px' : '236px', transition: 'width 0.2s ease', background: '#0B0B0B', borderRight: '1px solid #1E1E1E', display: 'flex', flexDirection: 'column', padding: '18px 12px', zIndex: 30, overflowY: 'auto' };
+    const desktopMainStyle = { marginLeft: this.state.sidebarCollapsed ? '72px' : '236px', marginRight: this.state.playerCollapsed ? '76px' : '296px', minHeight: '100vh', display: 'flex', flexDirection: 'column', transition: 'margin 0.2s ease' };
+
+    const collapseBtnStyle = { display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '10px', border: '1px solid #1E1E1E', background: 'transparent', color: '#7A7A7A', cursor: 'pointer', fontSize: '13px', justifyContent: showSidebarLabels ? 'flex-start' : 'center' };
+    const collapseBtnHoverStyle = { background: '#161616', color: '#fff' };
+    const collapseIconEl = React.createElement('span', { style: { display: 'flex', transform: this.state.sidebarCollapsed ? 'rotate(180deg)' : 'none', transition: 'transform .2s' } }, icon('chevronLeft', 16));
+    const rightCollapseIconEl = React.createElement('span', { style: { display: 'flex', transform: this.state.playerCollapsed ? 'none' : 'rotate(180deg)', transition: 'transform .2s' } }, icon('chevronLeft', 16));
+
+    const iconBtnStyle = { width: '36px', height: '36px', minWidth: '36px', borderRadius: '9px', border: 'none', background: 'transparent', color: '#B3B3B3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' };
+    const iconBtnHoverStyle = { background: '#1a1a1a', color: '#fff' };
+    const accountBtnStyle = { ...iconBtnStyle, background: this.state.dropdownOpen ? '#1a1a1a' : 'transparent', color: this.state.dropdownOpen ? '#FFB700' : '#B3B3B3' };
+
+    const rightSidebarStyle = { position: 'fixed', right: 0, top: 0, bottom: 0, width: this.state.playerCollapsed ? '76px' : '296px', transition: 'width 0.2s ease', borderLeft: '1px solid #1E1E1E', background: '#0B0B0B', display: 'flex', flexDirection: 'column', zIndex: 30, overflowY: 'auto' };
+    const rightIconsRowStyle = { display: 'flex', alignItems: 'center', gap: '10px', padding: this.state.playerCollapsed ? '18px 8px 12px' : '18px 18px 14px', justifyContent: this.state.playerCollapsed ? 'center' : 'flex-end', flexDirection: this.state.playerCollapsed ? 'column' : 'row', flexShrink: 0 };
+    const rightPlayerWrapStyle = { padding: this.state.playerCollapsed ? '4px 10px' : '8px 20px 22px', display: 'flex', flexDirection: 'column', minHeight: 0, flex: '0 1 auto' };
+    const rightCollapseBtnStyle = { display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', margin: '0 12px 14px', borderRadius: '10px', border: '1px solid #1E1E1E', background: 'transparent', color: '#7A7A7A', cursor: 'pointer', fontSize: '13px', justifyContent: this.state.playerCollapsed ? 'center' : 'flex-start' };
+
+    // ---- dropdown ----
+    const ddItemStyle = { display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', color: '#E4E4E4', borderRadius: '8px', cursor: 'pointer', fontSize: '13.5px', textAlign: 'left', textDecoration: 'none', boxSizing: 'border-box' };
+    const ddItemHover = { background: '#232323' };
+    const dropdownPanelStyleRaw = 'background:#161616; border:1px solid #262626; border-radius:12px; min-width:210px; padding:8px; box-shadow:0 24px 48px -12px rgba(0,0,0,0.6); animation:cfFadeDown 0.16s ease;';
+    let dropdownContent;
+    if (this.state.auth === 'in') {
+      dropdownContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '2px' } },
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px 12px', borderBottom: '1px solid #262626', marginBottom: '4px' } },
+          React.createElement('div', { style: { width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg,#FFB700,#8a6200)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D0D0D', fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: '13px' } }, 'S'),
+          React.createElement('div', {},
+            React.createElement('div', { style: { fontSize: '13px', color: '#fff', fontWeight: 600 } }, 'Sasha Reyes'),
+            React.createElement('div', { style: { fontSize: '11px', color: '#7A7A7A' } }, 'sasha@collectivefinity.co'))),
+        React.createElement('a', { href: 'Profile.dc.html', style: ddItemStyle, 'style-hover': ddItemHover }, icon('user', 16), 'Profile'),
+        React.createElement('a', { href: 'Profile.dc.html?tab=settings', style: ddItemStyle, 'style-hover': ddItemHover }, icon('lock', 16), 'Settings'),
+        React.createElement('button', { onClick: this.logout, style: { ...ddItemStyle, color: '#FF8A65' }, 'style-hover': { background: '#2a1a16' } }, icon('close', 16), 'Logout'));
+    } else {
+      dropdownContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '2px' } },
+        React.createElement('a', { href: 'Login.dc.html', style: { ...ddItemStyle, background: 'rgba(255,183,0,0.14)', color: '#FFB700', fontWeight: 600 }, 'style-hover': { background: 'rgba(255,183,0,0.22)' } }, icon('user', 16), 'Login'),
+        React.createElement('a', { href: 'Register.dc.html', style: ddItemStyle, 'style-hover': ddItemHover }, icon('community', 16), 'Register'));
+    }
+
+    // ---- player ----
+    const albums = this._mod.buildAlbums();
+    const currentAlbum = albums.find((a) => a.seed === this.state.player.seed) || albums[0];
+    const ctrlBtn = (big) => ({ width: big ? '52px' : '38px', height: big ? '52px' : '38px', borderRadius: '50%', border: 'none', background: big ? '#FFB700' : 'transparent', color: big ? '#0D0D0D' : '#B3B3B3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' });
+    const fullPlayerCard = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '16px' } },
+      React.createElement('div', { style: { width: '100%', aspectRatio: '1', borderRadius: '12px', background: currentAlbum.gradient, boxShadow: '0 20px 40px -14px rgba(0,0,0,0.6)' } }),
+      React.createElement('div', { style: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' } },
+        React.createElement('div', { style: { minWidth: 0 } },
+          React.createElement('div', { style: { fontSize: '15px', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, this.state.player.title),
+          React.createElement('div', { style: { fontSize: '13px', color: '#7A7A7A', marginTop: '2px' } }, this.state.player.artist)),
+        React.createElement('button', { onClick: this.toggleLike, style: { width: '30px', height: '30px', minWidth: '30px', borderRadius: '50%', border: 'none', background: 'transparent', color: this.state.player.liked ? '#FFB700' : '#7A7A7A', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }, 'style-hover': { color: '#FFB700' } }, icon('heart', 17, this.state.player.liked))),
+      React.createElement('div', {},
+        React.createElement('div', { onClick: this.seekProgress, style: { height: '4px', borderRadius: '2px', background: '#232323', cursor: 'pointer', position: 'relative' } },
+          React.createElement('div', { style: { position: 'absolute', left: 0, top: 0, bottom: 0, width: (this.state.player.progress * 100) + '%', background: '#FFB700', borderRadius: '2px' } }))),
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' } },
+        React.createElement('button', { onClick: this.toggleShuffle, style: { ...ctrlBtn(), color: this.state.player.shuffle ? '#FFB700' : '#B3B3B3' }, 'style-hover': { color: '#fff' } }, icon('shuffle', 16)),
+        React.createElement('button', { onClick: () => this.stepTrack(-1), style: ctrlBtn(), 'style-hover': { color: '#fff' } }, icon('skipBack', 20)),
+        React.createElement('button', { onClick: this.togglePlay, style: ctrlBtn(true), 'style-hover': { background: '#ffc633' } }, icon(this.state.player.playing ? 'pause' : 'play', 20)),
+        React.createElement('button', { onClick: () => this.stepTrack(1), style: ctrlBtn(), 'style-hover': { color: '#fff' } }, icon('skipFwd', 20)),
+        React.createElement('button', { onClick: this.toggleRepeat, style: { ...ctrlBtn(), color: this.state.player.repeat ? '#FFB700' : '#B3B3B3' }, 'style-hover': { color: '#fff' } }, icon('repeat', 16))),
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
+        icon('volume', 16),
+        React.createElement('div', { onClick: this.seekVolume, style: { flex: 1, height: '3px', borderRadius: '2px', background: '#232323', cursor: 'pointer', position: 'relative' } },
+          React.createElement('div', { style: { position: 'absolute', left: 0, top: 0, bottom: 0, width: (this.state.player.volume * 100) + '%', background: '#7A7A7A', borderRadius: '2px' } }))));
+
+    const miniPlayerCard = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' } },
+      React.createElement('div', { style: { width: '44px', height: '44px', borderRadius: '9px', background: currentAlbum.gradient } }),
+      React.createElement('button', { onClick: this.togglePlay, style: ctrlBtn(true), 'style-hover': { background: '#ffc633' } }, icon(this.state.player.playing ? 'pause' : 'play', 18)),
+      React.createElement('button', { onClick: () => this.stepTrack(-1), style: { width: '30px', height: '30px', borderRadius: '50%', border: 'none', background: 'transparent', color: '#B3B3B3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }, 'style-hover': { color: '#fff' } }, icon('skipBack', 16)),
+      React.createElement('button', { onClick: () => this.stepTrack(1), style: { width: '30px', height: '30px', borderRadius: '50%', border: 'none', background: 'transparent', color: '#B3B3B3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }, 'style-hover': { color: '#fff' } }, icon('skipFwd', 16)),
+      React.createElement('button', { onClick: this.toggleLike, style: { width: '30px', height: '30px', borderRadius: '50%', border: 'none', background: 'transparent', color: this.state.player.liked ? '#FFB700' : '#7A7A7A', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }, 'style-hover': { color: '#FFB700' } }, icon('heart', 16, this.state.player.liked)));
+
+    const playerCard = this.state.playerCollapsed ? miniPlayerCard : fullPlayerCard;
+
+    const footerPlayerStyle = { position: 'fixed', left: 0, right: 0, bottom: 0, height: '74px', borderTop: '1px solid #1E1E1E', background: '#0B0B0B', display: 'flex', alignItems: 'center', gap: '8px', padding: '0 14px', zIndex: 20 };
+    const footerCtrlBtn = (big) => ({ width: big ? '38px' : '28px', height: big ? '38px' : '28px', minWidth: big ? '38px' : '28px', borderRadius: '50%', border: 'none', background: big ? '#FFB700' : 'transparent', color: big ? '#0D0D0D' : '#B3B3B3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 });
+    const footerPlayerContent = React.createElement(React.Fragment, {},
+      React.createElement('div', { style: { width: '40px', height: '40px', minWidth: '40px', borderRadius: '8px', background: currentAlbum.gradient } }),
+      React.createElement('div', { style: { flex: 1, minWidth: 0 } },
+        React.createElement('div', { style: { fontSize: '12.5px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, this.state.player.title),
+        React.createElement('div', { style: { height: '3px', borderRadius: '2px', background: '#232323', marginTop: '5px', position: 'relative' } },
+          React.createElement('div', { style: { position: 'absolute', left: 0, top: 0, bottom: 0, width: (this.state.player.progress * 100) + '%', background: '#FFB700', borderRadius: '2px' } }))),
+      React.createElement('button', { onClick: () => this.stepTrack(-1), style: footerCtrlBtn(), 'style-active': { transform: 'scale(0.9)' } }, icon('skipBack', 16)),
+      React.createElement('button', { onClick: this.togglePlay, style: footerCtrlBtn(true), 'style-active': { transform: 'scale(0.94)' } }, icon(this.state.player.playing ? 'pause' : 'play', 17)),
+      React.createElement('button', { onClick: () => this.stepTrack(1), style: footerCtrlBtn(), 'style-active': { transform: 'scale(0.9)' } }, icon('skipFwd', 16)),
+      React.createElement('button', { onClick: this.toggleLike, style: { ...footerCtrlBtn(), color: this.state.player.liked ? '#FFB700' : '#7A7A7A' }, 'style-active': { transform: 'scale(0.9)' } }, icon('heart', 15, this.state.player.liked)));
+
+    // ---- footer ----
+    const footerLinkStyle = { border: 'none', background: 'transparent', color: '#FFB700', fontSize: '13px', cursor: 'pointer', padding: 0, textAlign: 'left', fontFamily: 'Inter,sans-serif', textDecoration: 'none' };
+    const footerCol = (title, items) => React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '10px', minWidth: '140px' } },
+      React.createElement('div', { style: { fontFamily: "'Space Mono',monospace", fontSize: '11px', letterSpacing: '0.08em', color: '#7A7A7A', marginBottom: '4px' } }, title),
+      items.map(([label, href]) => React.createElement('a', { key: label, href, style: footerLinkStyle, 'style-hover': { color: '#ffde99' } }, label)));
+    const siteFooter = React.createElement('div', { style: { marginTop: '56px', borderTop: '1px solid #1E1E1E', paddingTop: isMobile ? '28px' : '36px' } },
+      React.createElement('div', { style: { display: 'flex', flexDirection: isMobile || isTablet ? 'column' : 'row', gap: isMobile || isTablet ? '28px' : '48px', justifyContent: 'space-between' } },
+        React.createElement('div', { style: { maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '10px' } },
+          React.createElement('a', { href: 'Home.dc.html', style: { display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none' } },
+            React.createElement('div', { style: { width: '12px', height: '12px', borderRadius: '3px', background: '#FFB700', transform: 'rotate(45deg)' } }),
+            React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '13px', letterSpacing: '0.06em', color: '#fff' } }, 'COLLECTIVE FINITY')),
+          React.createElement('div', { style: { fontSize: '13px', color: '#FFB700', fontWeight: 600 } }, 'Experience Music Beyond Imagination'),
+          React.createElement('div', { style: { fontSize: '12.5px', color: '#7A7A7A', lineHeight: 1.6 } }, 'Welcome to Collective Finity \u2014 a cinematic world where emotional sound, visual stories and creativity connect in one immersive universe.')),
+        React.createElement('div', { style: { display: 'flex', flexWrap: 'wrap', gap: isMobile ? '28px' : '48px' } },
+          footerCol('Explore', [['Home', 'Home.dc.html'], ['Blog', 'Blog-Hub.dc.html']]),
+          footerCol('Community', [['About', 'About.dc.html'], ['Join Community', 'Join-Community.dc.html'], ['Contact', 'Contact.dc.html']]),
+          footerCol('Legal', [['Privacy Policy', '#'], ['Terms of Service', '#'], ['Cookie Policy', '#'], ['Copyright Policy', '#']]))),
+      React.createElement('div', { style: { marginTop: '32px', paddingTop: '20px', borderTop: '1px solid #1E1E1E', display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'space-between', alignItems: 'center' } },
+        React.createElement('span', { style: { fontSize: '12px', color: '#4a4a4a' } }, '\u00A9 2026 Collective Finity. All rights reserved.'),
+        React.createElement('button', { style: footerLinkStyle, 'style-hover': { color: '#fff' } }, 'Cookie Settings')));
+
+    const mobileMainStyle = { minHeight: 'calc(100vh - 60px - 74px)', padding: isMobile ? '18px 16px 90px' : '26px 24px 90px' };
+
+    return {
+      isDesktop, isNotDesktop: !isDesktop, playerExpanded: !this.state.playerCollapsed,
+      content: this.props.content,
+      mainNav, secondaryNav, showSidebarLabels,
+      leftSidebarStyle, desktopMainStyle,
+      collapseBtnStyle, collapseBtnHoverStyle, collapseIconEl, rightCollapseIconEl, toggleSidebarCollapsed: this.toggleSidebarCollapsed,
+      accountBtnStyle, iconBtnStyle, iconBtnHoverStyle,
+      userIconEl: icon('user', 18), mailIconEl: icon('mail', 18), bellIconEl: icon('bell', 18),
+      menuIconEl: icon('menu', 20), closeIconEl: icon('close', 18),
+      toggleDropdown: this.toggleDropdown, closeDropdown: this.closeDropdown, dropdownOpen: this.state.dropdownOpen,
+      dropdownPanelStyleRaw, dropdownContent,
+      toggleMobileNav: this.toggleMobileNav, mobileNavOpen: this.state.mobileNavOpen,
+      rightSidebarStyle, rightIconsRowStyle, rightPlayerWrapStyle, rightCollapseBtnStyle,
+      toggleRightCollapsed: this.toggleRightCollapsed, playerCard,
+      footerPlayerStyle, footerPlayerContent, mobileMainStyle,
+      siteFooter,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -4,6 +4,9 @@
  *
  * @package Collective_Finity
  */
+?>
+</div><!-- #cf-app-content -->
+<?php
 
 collective_finity_render_theme_part(
     'footer',
@@ -13,6 +16,7 @@ collective_finity_render_theme_part(
 );
 
 get_template_part( 'template-parts/playlist', 'modal' );
+get_template_part( 'template-parts/search', 'overlay' );
 
 wp_footer();
 ?>

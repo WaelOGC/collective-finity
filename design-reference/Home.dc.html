@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    @keyframes cfFadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</helmet>
+<dc-import name="Shell" active-screen="home" content="{{ pageContent }}" hint-size="100%,100%"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { loaded: false, width: typeof window !== 'undefined' ? window.innerWidth : 1440 };
+    this._articlesEl = null;
+  }
+  async componentDidMount() {
+    const [dataMod, uiMod] = await Promise.all([import('./shared-data.js'), import('./shared-ui.js')]);
+    this._mod = dataMod;
+    this._ui = uiMod;
+    this.setState({ loaded: true });
+    this._onResize = () => this.setState({ width: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+  }
+  componentWillUnmount() { if (this._onResize) window.removeEventListener('resize', this._onResize); }
+  setArticlesRef = (el) => { this._articlesEl = el; };
+  scrollArticles = (dir) => { if (this._articlesEl) this._articlesEl.scrollBy({ left: dir * 320, behavior: 'smooth' }); };
+
+  renderVals() {
+    if (!this.state.loaded) return { pageContent: null };
+    const icon = (name, size, filled) => this._ui.buildIcon(React, name, size, filled);
+    const isMobile = this.state.width < 768;
+    const MONO = "'Space Mono',monospace";
+    const albums = this._mod.buildAlbums();
+    const { blogPosts, gradientFor } = this._mod;
+    const dotBg = { backgroundImage: 'radial-gradient(circle, rgba(255,183,0,0.3) 1px, transparent 1.4px)', backgroundSize: '26px 26px' };
+    const fadeUp = (delay) => ({ animation: 'cfFadeUp 0.6s ease both', animationDelay: (delay || 0) + 's' });
+
+    // ---- 1. HERO ----
+    const hero = React.createElement('div', { style: { position: 'relative', textAlign: 'center', padding: isMobile ? '44px 20px' : '76px 24px', borderRadius: '20px', background: 'radial-gradient(ellipse at 50% 0%, rgba(255,183,0,0.16), transparent 62%), #0B0B0B', overflow: 'hidden', border: '1px solid #1E1E1E' } },
+      React.createElement('div', { style: { position: 'absolute', inset: 0, ...dotBg, opacity: 0.5, pointerEvents: 'none' } }),
+      React.createElement('div', { style: { position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '22px' } },
+        React.createElement('span', { style: { ...fadeUp(0), fontFamily: MONO, fontSize: '11px', letterSpacing: '0.1em', color: '#FFB700', border: '1px solid rgba(255,183,0,0.35)', borderRadius: '999px', padding: '7px 16px', background: 'rgba(255,183,0,0.08)' } }, '\u2726 MUSIC BEYOND IMAGINATION'),
+        React.createElement('div', { style: { ...fadeUp(0.08), fontSize: isMobile ? '30px' : '52px', fontWeight: 700, color: '#fff', lineHeight: 1.15, maxWidth: '820px' } }, 'Where Sound Becomes ', React.createElement('span', { style: { color: '#FFB700' } }, 'Cinema')),
+        React.createElement('div', { style: { ...fadeUp(0.16), fontSize: '15px', color: '#B3B3B3', lineHeight: 1.8, maxWidth: '620px' } }, 'Collective Finity is a cinematic music universe pairing human songwriting with AI-assisted production \u2014 new releases, deep-dive articles, and a growing catalog built for late-night listening.'),
+        React.createElement('div', { style: { ...fadeUp(0.24), display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '6px' } },
+          React.createElement('a', { href: 'Music-Library.dc.html', style: { padding: '13px 26px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13.5px', textDecoration: 'none' }, 'style-hover': { background: '#ffde99' } }, 'Explore Music'),
+          React.createElement('a', { href: 'Join-Community.dc.html', style: { padding: '13px 26px', borderRadius: '9px', border: '1px solid #333', background: 'transparent', color: '#fff', fontWeight: 600, fontSize: '13.5px', textDecoration: 'none' }, 'style-hover': { background: '#161616' } }, 'Join Community'))));
+
+    // ---- 2. LATEST MUSIC RELEASES ----
+    const releaseCard = (a) => React.createElement('a', { key: a.id, href: 'Album-Detail.dc.html?id=' + a.id, style: { textDecoration: 'none', color: '#fff', display: 'block', transition: 'transform 0.2s ease' }, 'style-hover': { transform: 'translateY(-4px)' } },
+      React.createElement('div', { style: { width: '100%', aspectRatio: '1', borderRadius: '12px', background: a.gradient, marginBottom: '10px', boxShadow: '0 14px 28px -12px rgba(0,0,0,0.55)' } }),
+      React.createElement('div', { style: { fontSize: '14px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, a.title),
+      React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A', fontFamily: MONO, marginTop: '2px' } }, a.artist));
+    const latestReleases = React.createElement('div', {},
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' } },
+        React.createElement('div', { style: { fontSize: isMobile ? '19px' : '22px', fontWeight: 700, color: '#fff' } }, 'Latest Music Releases'),
+        !isMobile ? React.createElement('a', { href: 'Albums.dc.html', style: { fontSize: '13px', color: '#FFB700', textDecoration: 'none' }, 'style-hover': { color: '#ffde99' } }, 'View All \u2192') : null),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: '18px' } }, albums.slice(0, 8).map((a) => releaseCard(a))),
+      isMobile ? React.createElement('a', { href: 'Albums.dc.html', style: { display: 'block', textAlign: 'center', marginTop: '18px', padding: '11px', borderRadius: '9px', border: '1px solid #262626', color: '#FFB700', fontSize: '13px', textDecoration: 'none' }, 'style-hover': { background: '#161616' } }, 'View All') : null);
+
+    // ---- 3. ARTICLES ----
+    const articleCard = (p) => React.createElement('a', { key: p.id, href: 'Blog-Post.dc.html?id=' + p.id, style: { textDecoration: 'none', color: '#fff', display: 'flex', flexDirection: 'column', minWidth: '260px', maxWidth: '260px', border: '1px solid #232323', background: '#141414', borderRadius: '12px', overflow: 'hidden', scrollSnapAlign: 'start', transition: 'border-color 0.2s ease' }, 'style-hover': { borderColor: '#2c2c2c' } },
+      React.createElement('div', { style: { width: '100%', aspectRatio: '16/9', background: gradientFor(p.seed) } }),
+      React.createElement('div', { style: { padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' } },
+        React.createElement('span', { style: { fontFamily: MONO, fontSize: '10.5px', color: '#FFB700' } }, p.category.toUpperCase()),
+        React.createElement('div', { style: { fontSize: '14.5px', fontWeight: 700, lineHeight: 1.35 } }, p.title),
+        React.createElement('div', { style: { fontSize: '11.5px', color: '#4a4a4a', fontFamily: MONO } }, p.date + ' \u00B7 ' + p.readTime)));
+    const navBtnStyle = { width: '36px', height: '36px', minWidth: '36px', borderRadius: '50%', border: '1px solid #262626', background: '#141414', color: '#B3B3B3', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' };
+    const articles = React.createElement('div', {},
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', gap: '12px', flexWrap: 'wrap' } },
+        React.createElement('div', { style: { fontSize: isMobile ? '19px' : '22px', fontWeight: 700, color: '#fff' } }, 'From the Blog'),
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
+          !isMobile ? React.createElement('button', { onClick: () => this.scrollArticles(-1), style: navBtnStyle, 'style-hover': { color: '#fff', borderColor: '#333' } }, icon('chevronLeft', 16)) : null,
+          !isMobile ? React.createElement('button', { onClick: () => this.scrollArticles(1), style: navBtnStyle, 'style-hover': { color: '#fff', borderColor: '#333' } }, React.createElement('span', { style: { display: 'flex', transform: 'rotate(180deg)' } }, icon('chevronLeft', 16))) : null,
+          React.createElement('a', { href: 'Blog-Hub.dc.html', style: { fontSize: '13px', color: '#FFB700', textDecoration: 'none', whiteSpace: 'nowrap' }, 'style-hover': { color: '#ffde99' } }, 'View All \u2192'))),
+      React.createElement('div', { ref: this.setArticlesRef, style: { display: 'flex', gap: '18px', overflowX: 'auto', paddingBottom: '8px', scrollSnapType: 'x mandatory' } }, blogPosts.slice(0, 8).map((p) => articleCard(p))));
+
+    // ---- 4. WHY COLLECTIVE FINITY ----
+    const pillars = [
+      { t: 'Cinematic Lyrics', d: 'Original lyrics, written by hand, before a single note is synthesized.' },
+      { t: 'Human Artistry', d: 'Strict creative direction guiding every production instrument we use.' },
+      { t: 'Sonic Innovation', d: 'A limitless digital ecosystem where music and technology evolve together.' },
+    ];
+    const why = React.createElement('div', {},
+      React.createElement('div', { style: { textAlign: 'center', marginBottom: '24px' } },
+        React.createElement('span', { style: { fontFamily: MONO, fontSize: '11px', letterSpacing: '0.1em', color: '#7A7A7A' } }, 'OUR FOUNDATION'),
+        React.createElement('div', { style: { fontSize: isMobile ? '20px' : '24px', fontWeight: 700, color: '#fff', marginTop: '8px' } }, 'Why Collective Finity')),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '16px' } },
+        pillars.map((p) => React.createElement('div', { key: p.t, style: { background: '#141414', border: '1px solid #232323', borderRadius: '12px', padding: '22px', transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease' }, 'style-hover': { transform: 'translateY(-4px)', boxShadow: '0 16px 32px -12px rgba(255,183,0,0.25)', borderColor: 'rgba(255,183,0,0.5)' } },
+          React.createElement('div', { style: { fontSize: '14.5px', fontWeight: 700, color: '#fff', marginBottom: '8px', borderBottom: '2px solid #FFB700', paddingBottom: '8px', display: 'inline-block' } }, p.t),
+          React.createElement('div', { style: { fontSize: '13px', color: '#7A7A7A', lineHeight: 1.6, marginTop: '6px' } }, p.d)))),
+      React.createElement('div', { style: { textAlign: 'center', marginTop: '20px' } },
+        React.createElement('a', { href: 'About.dc.html', style: { fontSize: '13px', color: '#FFB700', textDecoration: 'none' }, 'style-hover': { color: '#ffde99' } }, 'Learn more about us \u2192')));
+
+    // ---- 5. CTA BANNER ----
+    const cta = React.createElement('div', { style: { position: 'relative', borderRadius: '18px', padding: isMobile ? '32px 22px' : '48px', background: 'linear-gradient(135deg, rgba(255,183,0,0.16), rgba(255,183,0,0.02))', border: '1px solid rgba(255,183,0,0.25)', overflow: 'hidden', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: '20px' } },
+      React.createElement('div', { style: { position: 'absolute', inset: 0, ...dotBg, opacity: 0.3, pointerEvents: 'none' } }),
+      React.createElement('div', { style: { position: 'relative' } },
+        React.createElement('div', { style: { fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: '#fff' } }, 'Ready to join the collective?'),
+        React.createElement('div', { style: { fontSize: '13.5px', color: '#B3B3B3', marginTop: '6px', maxWidth: '440px' } }, 'Get involved with a community of producers, creators, and sonic artists pushing the boundaries of sound.')),
+      React.createElement('div', { style: { position: 'relative', display: 'flex', gap: '10px', flexWrap: 'wrap' } },
+        React.createElement('a', { href: 'Join-Community.dc.html', style: { padding: '13px 24px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13.5px', textDecoration: 'none', whiteSpace: 'nowrap' }, 'style-hover': { background: '#ffde99' } }, 'Join Community'),
+        React.createElement('a', { href: 'Contact.dc.html', style: { padding: '13px 24px', borderRadius: '9px', border: '1px solid #3a2f10', background: 'rgba(0,0,0,0.2)', color: '#fff', fontWeight: 600, fontSize: '13.5px', textDecoration: 'none', whiteSpace: 'nowrap' }, 'style-hover': { background: 'rgba(0,0,0,0.35)' } }, 'Contact Us')));
+
+    const pageContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: isMobile ? '46px' : '60px' } },
+      hero, latestReleases, articles, why, cta);
+
+    return { pageContent };
+  }
+}
+
+</script>
+</body>
+</html>

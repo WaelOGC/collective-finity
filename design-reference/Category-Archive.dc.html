@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</helmet>
+<dc-import name="Shell" active-screen="blog" content="{{ pageContent }}" hint-size="100%,100%"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { loaded: false, width: typeof window !== 'undefined' ? window.innerWidth : 1440 };
+  }
+  async componentDidMount() {
+    const [dataMod] = await Promise.all([import('./shared-data.js')]);
+    this._mod = dataMod;
+    this.setState({ loaded: true });
+    this._onResize = () => this.setState({ width: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+  }
+  componentWillUnmount() { if (this._onResize) window.removeEventListener('resize', this._onResize); }
+
+  renderVals() {
+    if (!this.state.loaded) return { pageContent: null };
+    const isMobile = this.state.width < 768;
+    const { blogPosts, categoryDescriptions, gradientFor } = this._mod;
+    const params = new URLSearchParams(window.location.search);
+    const category = params.get('cat') || 'AI Music Production';
+
+    const postCard = (post) => React.createElement('a', { key: post.id, href: 'Blog-Post.dc.html?id=' + post.id, style: { display: 'flex', flexDirection: 'column', textDecoration: 'none', border: '1px solid #232323', background: '#141414', borderRadius: '12px', overflow: 'hidden', color: '#fff' }, 'style-hover': { border: '1px solid #2c2c2c' } },
+      React.createElement('div', { style: { width: '100%', aspectRatio: '16/9', background: gradientFor(post.seed) } }),
+      React.createElement('div', { style: { padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' } },
+        React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '10.5px', color: '#FFB700' } }, post.category.toUpperCase()),
+        React.createElement('div', { style: { fontSize: '15px', fontWeight: 700, lineHeight: 1.35 } }, post.title),
+        React.createElement('div', { style: { fontSize: '12.5px', color: '#7A7A7A', lineHeight: 1.5 } }, post.excerpt),
+        React.createElement('div', { style: { fontSize: '11.5px', color: '#4a4a4a', fontFamily: "'Space Mono',monospace", marginTop: '2px' } }, post.date + ' \u00B7 ' + post.readTime)));
+
+    const filtered = blogPosts.filter((p) => p.category === category);
+
+    const pageContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '20px' } },
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', color: '#7A7A7A' } },
+        React.createElement('a', { href: 'Blog-Hub.dc.html', style: { color: '#7A7A7A', textDecoration: 'none', fontSize: '12.5px' }, 'style-hover': { color: '#FFB700' } }, 'Blog'),
+        React.createElement('span', {}, '/'),
+        React.createElement('span', { style: { color: '#FFB700' } }, category)),
+      React.createElement('div', {},
+        React.createElement('div', { style: { fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: '#fff', marginBottom: '8px' } }, category),
+        React.createElement('div', { style: { fontSize: '13.5px', color: '#B3B3B3', maxWidth: '560px', lineHeight: 1.6 } }, categoryDescriptions[category] || '')),
+      filtered.length
+        ? React.createElement('div', { style: { display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '100%' : '260px'}, 1fr))`, gap: '18px' } }, filtered.map((p) => postCard(p)))
+        : React.createElement('div', { style: { color: '#7A7A7A', fontSize: '13.5px' } }, 'No posts in this category yet.'));
+
+    return { pageContent };
+  }
+}
+
+</script>
+</body>
+</html>

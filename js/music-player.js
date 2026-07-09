@@ -398,15 +398,73 @@ jQuery(document).ready(function($) {
             return;
         }
 
-        window.cfPlayerQueue = [normalizeTrack({
+        var singleTrack = normalizeTrack({
             url: fileUrl,
             title: title,
             artist: artist,
             art: artUrl,
             id: trackId
-        })];
-        window.cfPlayerQueueIndex = 0;
-        playQueueIndex(0);
+        });
+
+        function playWithLibrary(library) {
+            var normalized = (library || []).map(normalizeTrack).filter(function(item) {
+                return !!item.url;
+            });
+
+            if (!normalized.length) {
+                window.cfPlayerQueue = [singleTrack];
+                window.cfPlayerQueueIndex = 0;
+                playQueueIndex(0);
+                return;
+            }
+
+            var idx = 0;
+            if (trackId) {
+                for (var i = 0; i < normalized.length; i++) {
+                    if (normalized[i].id != null && String(normalized[i].id) === String(trackId)) {
+                        idx = i;
+                        break;
+                    }
+                }
+            } else {
+                for (var j = 0; j < normalized.length; j++) {
+                    if (normalized[j].url === fileUrl) {
+                        idx = j;
+                        break;
+                    }
+                }
+            }
+
+            window.cfPlayerQueue = normalized;
+            window.cfPlayerQueueIndex = idx;
+            playQueueIndex(idx);
+        }
+
+        if (window.cfTrackLibraryCache && window.cfTrackLibraryCache.length) {
+            playWithLibrary(window.cfTrackLibraryCache);
+            return;
+        }
+
+        if (!window.cfTrackLibraryCachePromise) {
+            window.cfTrackLibraryCachePromise = $.ajax({
+                url: cf_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'cf_get_track_library',
+                    security: cf_ajax.nonce
+                }
+            }).then(function(response) {
+                if (response.success && response.data && response.data.tracks) {
+                    window.cfTrackLibraryCache = response.data.tracks;
+                    return response.data.tracks;
+                }
+                return [];
+            }).catch(function() {
+                return [];
+            });
+        }
+
+        window.cfTrackLibraryCachePromise.then(playWithLibrary);
     };
 
     window.playAlbumQueue = function(queue, startIndex) {
@@ -466,6 +524,30 @@ jQuery(document).ready(function($) {
     playBtn.html('<span class="cf-icon cf-icon-play" aria-hidden="true"></span>');
     updateSpeedLabel();
     updateVolumeUI();
+
+    // Cold load / hard refresh: never autoplay when the queue is empty (browser policy + idle player).
+    if (!window.cfPlayerQueue.length && !audio.src) {
+        updatePlayState();
+    }
+
+    window.cfOnPageSwap = function() {
+        updateAlbumPlayBtnState();
+        highlightQueueRow(
+            playBtn.attr('data-track-id') || null,
+            window.cfPlayerQueueIndex
+        );
+        if (window.cfPageTrackId) {
+            updatePlayerTrackActions(window.cfPageTrackId);
+        } else if (playBtn.attr('data-track-id')) {
+            updatePlayerTrackActions(playBtn.attr('data-track-id'));
+        }
+        $('.cf-like-btn').each(function() {
+            var tid = $(this).data('track-id');
+            if (tid && window.likedTracksArray.indexOf(parseInt(tid, 10)) !== -1) {
+                $(this).addClass('active');
+            }
+        });
+    };
 
     $(document).on('click', '#cf-sidebar-toggle-btn', function(e) {
         e.preventDefault();

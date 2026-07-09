@@ -17,25 +17,40 @@ if ( ! defined( 'ABSPATH' ) ) {
 function collective_finity_default_ad_zones() {
     return array(
         'library_top'              => array(
-            'enabled' => 0,
-            'code'    => '',
+            'enabled'         => 0,
+            'code'            => '',
+            'adsense_slot_id' => '',
         ),
         'library_between_sections' => array(
-            'enabled' => 0,
-            'code'    => '',
+            'enabled'         => 0,
+            'code'            => '',
+            'adsense_slot_id' => '',
         ),
         'track_sidebar'            => array(
-            'enabled' => 0,
-            'code'    => '',
+            'enabled'         => 0,
+            'code'            => '',
+            'adsense_slot_id' => '',
         ),
         'album_sidebar'            => array(
-            'enabled' => 0,
-            'code'    => '',
+            'enabled'         => 0,
+            'code'            => '',
+            'adsense_slot_id' => '',
         ),
         'archive_native'             => array(
-            'enabled'   => 0,
-            'code'      => '',
-            'frequency' => 8,
+            'enabled'         => 0,
+            'code'            => '',
+            'adsense_slot_id' => '',
+            'frequency'       => 8,
+        ),
+        'blog_listing'               => array(
+            'enabled'         => 0,
+            'code'            => '',
+            'adsense_slot_id' => '',
+        ),
+        'single_post'                => array(
+            'enabled'         => 0,
+            'code'            => '',
+            'adsense_slot_id' => '',
         ),
     );
 }
@@ -52,6 +67,8 @@ function collective_finity_ad_zone_labels() {
         'track_sidebar'            => __( 'Track Sidebar', 'collective-finity' ),
         'album_sidebar'            => __( 'Album Sidebar', 'collective-finity' ),
         'archive_native'           => __( 'Archive Native', 'collective-finity' ),
+        'blog_listing'             => __( 'Blog Listing Top', 'collective-finity' ),
+        'single_post'              => __( 'Single Post In-Content', 'collective-finity' ),
     );
 }
 
@@ -67,8 +84,26 @@ function collective_finity_ad_zone_descriptions() {
         'track_sidebar'            => __( 'Appears on single track pages near streaming platform links.', 'collective-finity' ),
         'album_sidebar'            => __( 'Appears on single album pages in the hero sidebar area.', 'collective-finity' ),
         'archive_native'           => __( 'Inserted every Nth card in the tracks archive grid.', 'collective-finity' ),
+        'blog_listing'             => __( 'Appears above the post grid on the Blog Hub page.', 'collective-finity' ),
+        'single_post'              => __( 'Appears after the article body, before Related Articles, on single blog posts.', 'collective-finity' ),
     );
 }
+
+/**
+ * Output the AdSense loader script when a Publisher ID is configured.
+ */
+function collective_finity_adsense_head_script() {
+    $publisher_id = collective_finity_get_theme_option( 'adsense_publisher_id', '' );
+    if ( empty( $publisher_id ) ) {
+        return;
+    }
+
+    printf(
+        '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=%s" crossorigin="anonymous"></script>' . "\n",
+        esc_attr( $publisher_id )
+    );
+}
+add_action( 'wp_head', 'collective_finity_adsense_head_script' );
 
 /**
  * Render an ad slot on the frontend.
@@ -103,6 +138,21 @@ function collective_finity_ad_slot( $zone_id ) {
             esc_attr( $zone_id ),
             esc_html( sprintf( __( 'Ad Zone: %s', 'collective-finity' ), $zone_label ) )
         );
+        return;
+    }
+
+    $publisher_id = $options['adsense_publisher_id'] ?? '';
+    $slot_id      = $zones[ $zone_id ]['adsense_slot_id'] ?? '';
+
+    if ( $publisher_id && $slot_id ) {
+        echo '<div class="cf-ad-slot" data-zone="' . esc_attr( $zone_id ) . '">';
+        printf(
+            '<ins class="adsbygoogle" style="display:block" data-ad-client="%1$s" data-ad-slot="%2$s" data-ad-format="auto" data-full-width-responsive="true"></ins>',
+            esc_attr( $publisher_id ),
+            esc_attr( $slot_id )
+        );
+        echo '<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>';
+        echo '</div>';
         return;
     }
 

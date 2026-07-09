@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</helmet>
+<dc-import name="Shell" active-screen="register" content="{{ pageContent }}" hint-size="100%,100%"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { loaded: false, width: typeof window !== 'undefined' ? window.innerWidth : 1440 };
+  }
+  async componentDidMount() {
+    const [tokMod] = await Promise.all([import('./shared-tokens.js')]);
+    this._tok = tokMod;
+    this.setState({ loaded: true });
+    this._onResize = () => this.setState({ width: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+  }
+  componentWillUnmount() { if (this._onResize) window.removeEventListener('resize', this._onResize); }
+  submit = (e) => {
+    e.preventDefault();
+    this._tok.saveSharedState({ auth: 'in' });
+    window.location.href = 'Home.dc.html';
+  };
+
+  renderVals() {
+    if (!this.state.loaded) return { pageContent: null };
+    const isMobile = this.state.width < 768;
+    const inputStyle = { width: '100%', padding: '11px 13px', borderRadius: '9px', border: '1px solid #262626', background: '#141414', color: '#fff', fontSize: '13.5px', fontFamily: 'Inter,sans-serif' };
+    const labelStyle = { fontSize: '12px', color: '#B3B3B3', marginBottom: '6px', display: 'block', fontFamily: "'Space Mono',monospace" };
+    const fields = [
+      { label: 'NAME', type: 'text', placeholder: 'Your name' },
+      { label: 'EMAIL', type: 'email', placeholder: 'you@example.com' },
+      { label: 'PASSWORD', type: 'password', placeholder: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' },
+      { label: 'CONFIRM PASSWORD', type: 'password', placeholder: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' },
+    ];
+
+    const pageContent = React.createElement('div', { style: { display: 'flex', justifyContent: 'center', paddingTop: isMobile ? '20px' : '50px' } },
+      React.createElement('form', { onSubmit: this.submit, style: { width: '100%', maxWidth: '360px', background: '#141414', border: '1px solid #232323', borderRadius: '14px', padding: isMobile ? '26px 22px' : '34px' } },
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '9px', marginBottom: '22px' } },
+          React.createElement('div', { style: { width: '12px', height: '12px', borderRadius: '3px', background: '#FFB700', transform: 'rotate(45deg)' } }),
+          React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '12px', letterSpacing: '0.06em', color: '#fff' } }, 'COLLECTIVE FINITY')),
+        React.createElement('div', { style: { fontSize: '20px', fontWeight: 700, color: '#fff', marginBottom: '20px' } }, 'Create Account'),
+        React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '14px' } },
+          fields.map((f) => React.createElement('div', { key: f.label }, React.createElement('label', { style: labelStyle }, f.label), React.createElement('input', { type: f.type, placeholder: f.placeholder, style: inputStyle })))),
+        React.createElement('button', { type: 'submit', style: { marginTop: '20px', width: '100%', padding: '12px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13.5px', cursor: 'pointer' }, 'style-hover': { background: '#ffc633' } }, 'Create Account'),
+        React.createElement('div', { style: { marginTop: '16px', textAlign: 'center', fontSize: '12.5px', color: '#7A7A7A' } }, 'Already a member? ', React.createElement('a', { href: 'Login.dc.html', style: { color: '#FFB700', fontSize: '12.5px', textDecoration: 'none' }, 'style-hover': { textDecoration: 'underline' } }, 'Login instead'))));
+
+    return { pageContent };
+  }
+}
+
+</script>
+</body>
+</html>

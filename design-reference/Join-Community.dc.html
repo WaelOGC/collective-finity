@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</helmet>
+<dc-import name="Shell" active-screen="community" content="{{ pageContent }}" hint-size="100%,100%"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { loaded: false, width: typeof window !== 'undefined' ? window.innerWidth : 1440 };
+  }
+  async componentDidMount() {
+    const [uiMod] = await Promise.all([import('./shared-ui.js')]);
+    this._ui = uiMod;
+    this.setState({ loaded: true });
+    this._onResize = () => this.setState({ width: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+  }
+  componentWillUnmount() { if (this._onResize) window.removeEventListener('resize', this._onResize); }
+
+  renderVals() {
+    if (!this.state.loaded) return { pageContent: null };
+    const icon = (name, size) => this._ui.buildIcon(React, name, size);
+    const isMobile = this.state.width < 768;
+    const channels = [
+      { icon: 'chat', name: 'Discord', desc: 'Voice channels and daily drops with the crew.' },
+      { icon: 'community', name: 'Facebook Group', desc: 'Community discussions and event announcements.' },
+      { icon: 'video', name: 'TikTok', desc: 'Behind-the-scenes clips and track teasers.' },
+      { icon: 'camera', name: 'Instagram \u2014 Music', desc: 'Cover art, visuals, and release announcements.' },
+      { icon: 'camera', name: 'Instagram \u2014 Community', desc: 'Fan features and community spotlights.' },
+      { icon: 'video', name: 'YouTube', desc: 'Full releases, visualizers, and session videos.' },
+      { icon: 'cart', name: 'Amazon Music', desc: 'Stream the full catalog and curated playlists.' },
+      { icon: 'waveform', name: 'SoundCloud', desc: 'Early demos, remixes, and DJ sets.' },
+      { icon: 'musicNote', name: 'Spotify', desc: 'Official playlists and new releases.' },
+    ];
+    const dotBg = { backgroundImage: 'radial-gradient(circle, rgba(255,183,0,0.3) 1px, transparent 1.4px)', backgroundSize: '26px 26px' };
+    const hero = React.createElement('div', { style: { position: 'relative', padding: isMobile ? '28px 22px' : '44px 40px', borderRadius: '16px', background: 'radial-gradient(ellipse at 50% 20%, rgba(255,183,0,0.14), transparent 60%), #0B0B0B', border: '1px solid #1E1E1E', overflow: 'hidden', marginBottom: '28px', textAlign: isMobile ? 'left' : 'center' } },
+      React.createElement('div', { style: { position: 'absolute', inset: 0, ...dotBg, opacity: 0.4, pointerEvents: 'none' } }),
+      React.createElement('div', { style: { position: 'relative', display: 'flex', flexDirection: 'column', alignItems: isMobile ? 'flex-start' : 'center', gap: '10px' } },
+        React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '11px', letterSpacing: '0.1em', color: '#FFB700' } }, 'THE COLLECTIVE'),
+        React.createElement('div', { style: { fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: '#fff', lineHeight: 1.2 } }, 'Find Your Sound Family'),
+        React.createElement('div', { style: { fontSize: '13.5px', color: '#B3B3B3', maxWidth: '520px', lineHeight: 1.6 } }, 'Every channel we run, in one place \u2014 pick your favorite and say hello.')));
+
+    const pageContent = React.createElement('div', {},
+      hero,
+      React.createElement('div', { style: { fontSize: isMobile ? '19px' : '22px', fontWeight: 700, color: '#fff', marginBottom: '20px' } }, 'All Channels'),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' } },
+        channels.map((c) => React.createElement('button', { key: c.name, style: { display: 'flex', alignItems: 'flex-start', gap: '14px', textAlign: 'left', padding: '18px', borderRadius: '12px', background: '#141414', border: '1px solid #232323', cursor: 'pointer', color: '#fff' }, 'style-hover': { background: '#181818', border: '1px solid #2c2c2c' } },
+          React.createElement('div', { style: { width: '42px', height: '42px', minWidth: '42px', borderRadius: '10px', background: 'rgba(255,183,0,0.12)', color: '#FFB700', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, icon(c.icon, 20)),
+          React.createElement('div', {},
+            React.createElement('div', { style: { fontSize: '14.5px', fontWeight: 700 } }, c.name),
+            React.createElement('div', { style: { fontSize: '12.5px', color: '#7A7A7A', marginTop: '4px', lineHeight: 1.5 } }, c.desc))))));
+
+    return { pageContent };
+  }
+}
+
+</script>
+</body>
+</html>

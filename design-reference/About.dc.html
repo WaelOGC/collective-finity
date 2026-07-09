@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    @keyframes cfFadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes cfRingSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes cfGlowPulse { 0%, 100% { box-shadow: 0 30px 70px -20px rgba(255,183,0,0.35); } 50% { box-shadow: 0 30px 90px -16px rgba(255,183,0,0.6); } }
+  </style>
+</helmet>
+<dc-import name="Shell" active-screen="about" content="{{ pageContent }}" hint-size="100%,100%"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { loaded: false, width: typeof window !== 'undefined' ? window.innerWidth : 1440, openFaqIndex: 0 };
+  }
+  async componentDidMount() {
+    const [uiMod] = await Promise.all([import('./shared-ui.js')]);
+    this._ui = uiMod;
+    this.setState({ loaded: true });
+    this._onResize = () => this.setState({ width: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+  }
+  componentWillUnmount() { if (this._onResize) window.removeEventListener('resize', this._onResize); }
+  toggleFaq = (i) => this.setState((s) => ({ openFaqIndex: s.openFaqIndex === i ? null : i }));
+
+  renderVals() {
+    if (!this.state.loaded) return { pageContent: null };
+    const icon = (name, size) => this._ui.buildIcon(React, name, size);
+    const isMobile = this.state.width < 768;
+    const quoteStyle = { borderLeft: '3px solid #FFB700', paddingLeft: '18px', fontSize: '15px', fontStyle: 'italic', color: '#E4E4E4', lineHeight: 1.6 };
+    const cardStyle = { background: '#141414', border: '1px solid #232323', borderRadius: '12px', padding: '22px', transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease', cursor: 'default' };
+    const cardHoverStyle = { transform: 'translateY(-6px) scale(1.015)', boxShadow: '0 20px 40px -12px rgba(255,183,0,0.3)', borderColor: 'rgba(255,183,0,0.55)' };
+    const fadeUp = (delay) => ({ animation: 'cfFadeUp 0.7s ease both', animationDelay: (delay || 0) + 's' });
+    const primaryBtn = { padding: '11px 20px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13.5px', textDecoration: 'none', display: 'inline-block', transition: 'transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease' };
+    const primaryBtnHover = { background: '#ffde99', transform: 'translateY(-2px)', boxShadow: '0 12px 24px -8px rgba(255,183,0,0.5)' };
+    const secondaryBtn = { padding: '11px 20px', borderRadius: '9px', border: '1px solid #262626', background: 'transparent', color: '#fff', fontWeight: 600, fontSize: '13.5px', cursor: 'pointer', transition: 'transform 0.2s ease, border-color 0.2s ease, background 0.2s ease' };
+    const secondaryBtnHover = { background: '#161616', transform: 'translateY(-2px)', borderColor: '#3a3a3a' };
+    const sectionTitle = (kicker, title, sub) => React.createElement('div', { style: { textAlign: 'center', marginBottom: '24px' } },
+      React.createElement('span', { style: { ...fadeUp(0), fontFamily: "'Space Mono',monospace", fontSize: '11px', letterSpacing: '0.1em', color: '#7A7A7A', display: 'inline-block' } }, kicker),
+      React.createElement('div', { style: { ...fadeUp(0.06), fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: '#fff', marginTop: '8px' } }, title),
+      sub ? React.createElement('div', { style: { ...fadeUp(0.1), fontSize: '13.5px', color: '#FFB700', marginTop: '4px' } }, sub) : null);
+
+    const hero = React.createElement('div', { style: { display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: isMobile ? '28px' : '48px' } },
+      React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0 } },
+        React.createElement('span', { style: { ...fadeUp(0), fontFamily: "'Space Mono',monospace", fontSize: '11px', letterSpacing: '0.1em', color: '#FFB700' } }, 'ABOUT COLLECTIVE FINITY'),
+        React.createElement('div', { style: { ...fadeUp(0.06), fontSize: isMobile ? '26px' : '36px', fontWeight: 700, color: '#fff', lineHeight: 1.15 } }, 'About Collective Finity'),
+        React.createElement('div', { style: { ...fadeUp(0.1), fontSize: isMobile ? '15px' : '17px', fontWeight: 600, color: '#FFB700' } }, 'Where Human Artistry Meets AI Innovation'),
+        React.createElement('div', { style: { ...fadeUp(0.14), fontSize: '14.5px', color: '#B3B3B3', lineHeight: 1.7, maxWidth: '520px' } }, 'Collective Finity is a cinematic music universe shaping the future of sound. By combining human emotional lyrics with advanced AI synthesis, we craft immersive sonic journeys.'),
+        React.createElement('div', { style: { ...fadeUp(0.18), display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '4px' } },
+          React.createElement('a', { href: 'Blog-Hub.dc.html', style: primaryBtn, 'style-hover': primaryBtnHover }, 'Explore Music'),
+          React.createElement('button', { style: secondaryBtn, 'style-hover': secondaryBtnHover }, 'Our Story'))),
+      React.createElement('div', { style: { ...fadeUp(0.12), position: 'relative', width: isMobile ? '220px' : '300px', height: isMobile ? '220px' : '300px', flexShrink: 0 } },
+        React.createElement('div', { style: { width: '100%', height: '100%', borderRadius: '50%', backgroundImage: 'url(assets/about-hero-art.png)', backgroundSize: 'cover', backgroundPosition: 'center', animation: 'cfGlowPulse 4s ease-in-out infinite' } }),
+        React.createElement('span', { style: { position: 'absolute', top: '4px', right: isMobile ? '-6px' : '-14px', fontFamily: "'Space Mono',monospace", fontSize: '11px', color: '#fff', background: '#161616', border: '1px solid #262626', borderRadius: '999px', padding: '7px 14px', boxShadow: '0 10px 20px -8px rgba(0,0,0,0.6)' } }, 'Original Sound'),
+        React.createElement('span', { style: { position: 'absolute', bottom: '10px', left: isMobile ? '-6px' : '-18px', fontFamily: "'Space Mono',monospace", fontSize: '11px', color: '#fff', background: '#161616', border: '1px solid #262626', borderRadius: '999px', padding: '7px 14px', boxShadow: '0 10px 20px -8px rgba(0,0,0,0.6)' } }, 'Cinematic Stories')));
+
+    const chronicle = React.createElement('div', {},
+      React.createElement('div', { style: { fontFamily: "'Space Mono',monospace", fontSize: '12px', color: '#FFB700', marginBottom: '8px' } }, '01 / THE CHRONICLE'),
+      React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff', marginBottom: '12px' } }, 'The Story Behind The Sound'),
+      React.createElement('div', { style: { fontSize: '14.5px', color: '#B3B3B3', lineHeight: 1.7, marginBottom: '16px' } }, 'Collective Finity was born from a desire to redefine cinematic music. Every creation begins with a pure human spark\u2014original lyrics written by hand, conceptual themes, and strict artistic direction.'),
+      React.createElement('div', { style: quoteStyle }, '\u201CWe guide advanced AI technology not as a simple shortcut, but as a complex production instrument to execute deep, multi-layered soundscapes.\u201D'));
+
+    const future = React.createElement('div', {},
+      React.createElement('div', { style: { fontFamily: "'Space Mono',monospace", fontSize: '12px', color: '#FFB700', marginBottom: '8px' } }, '02 / THE FUTURE'),
+      React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff', marginBottom: '12px' } }, 'Our Creative Vision'),
+      React.createElement('div', { style: { fontSize: '14.5px', color: '#B3B3B3', lineHeight: 1.7, marginBottom: '16px' } }, 'Our vision is to build a limitless digital ecosystem where music and technology evolve together. By combining meticulous human composition with AI synthesis, we prove that innovation has no boundaries.'),
+      React.createElement('div', { style: quoteStyle }, '\u201CEvery track is a curated balance of professional musical direction and modern technology.\u201D'));
+
+    const pillarsData = [
+      { n: '01', t: 'Cinematic Lyrics', d: 'Every track begins with a pure human spark. Original lyrics written by hand, conceptual storytelling, and profound narratives that establish a deep emotional connection before a single note is synthesized.' },
+      { n: '02', t: 'Human Artistry', d: 'Strict artistic direction and meticulous human composition guide advanced production instruments. Technology never drives our process; it executes our deep, multi-layered cinematic vision.' },
+      { n: '03', t: 'Sonic Innovation', d: 'Building a limitless digital ecosystem where music and technology evolve together. We push boundaries to craft immersive soundscapes and unforgettable auditory journeys.' },
+    ];
+    const pillars = React.createElement('div', {},
+      sectionTitle('OUR FOUNDATION', 'Core Pillars', 'Music with Meaning'),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '16px' } },
+        pillarsData.map((p, i) => React.createElement('div', { key: p.t, style: { ...cardStyle, ...fadeUp(0.05 * i) }, 'style-hover': cardHoverStyle },
+          React.createElement('div', { style: { fontFamily: "'Space Mono',monospace", fontSize: '12px', color: '#4a4a4a', marginBottom: '10px' } }, p.n),
+          React.createElement('div', { style: { fontSize: '14.5px', fontWeight: 700, color: '#fff', marginBottom: '8px', borderBottom: '2px solid #FFB700', paddingBottom: '8px', display: 'inline-block' } }, p.t),
+          React.createElement('div', { style: { fontSize: '13px', color: '#7A7A7A', lineHeight: 1.6, marginTop: '6px' } }, p.d)))));
+
+    const timelineData = [
+      { q: 'Q1 2025', t: 'The Genesis', d: 'The human spark is ignited. Collective Finity began as a conceptual movement to challenge standard digital music production, focusing entirely on original, handwritten lyrics and deep cinematic themes.' },
+      { q: 'Q3 2025', t: 'Synthesis Protocol', d: 'Integrating advanced production instruments. We developed our proprietary creative methodology, proving that modern tech can amplify raw human artistry without destroying its emotional core.' },
+      { q: 'Q1 2026', t: 'The Infinite Expansion', d: 'Launching a limitless digital universe where immersive orchestration, dark-themed visual design, and multi-layered soundscapes evolve continuously beyond imagination.' },
+    ];
+    const timeline = React.createElement('div', {},
+      sectionTitle('THE CHRONOLOGY', 'The Universe & Timeline', 'Our Evolutionary Journey'),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '26px' } },
+        timelineData.map((mi, i) => React.createElement('div', { key: mi.q, style: { ...fadeUp(0.05 * i), textAlign: isMobile ? 'left' : 'center', display: 'flex', flexDirection: 'column', alignItems: isMobile ? 'flex-start' : 'center', gap: '6px' } },
+          React.createElement('div', { style: { width: '10px', height: '10px', borderRadius: '50%', background: '#FFB700', animation: 'cfGlowPulse 2.4s ease-in-out infinite' } }),
+          React.createElement('div', { style: { fontFamily: "'Space Mono',monospace", fontSize: '12px', color: '#FFB700' } }, mi.q),
+          React.createElement('div', { style: { fontSize: '15px', fontWeight: 700, color: '#fff' } }, mi.t),
+          React.createElement('div', { style: { fontSize: '13px', color: '#7A7A7A', lineHeight: 1.6, maxWidth: '260px' } }, mi.d)))));
+
+    const faqData = [
+      { q: 'What makes Collective Finity different from other music platforms?', a: 'Unlike traditional automated platforms, Collective Finity bridges raw human artistry with advanced technology. Every project begins with handcrafted, original lyrics and structured cinematic concepts, ensuring that the emotional core of independent music remains entirely authentic and deeply impactful.' },
+      { q: 'Are the lyrics and musical themes fully original?', a: 'Yes, completely. We follow a strict creative protocol where all lyrical narratives, poetic structures, and thematic concepts are generated directly from genuine human inspiration. Technology is utilized strictly as an advanced production tool to execute and scale this cinematic vision.' },
+      { q: 'How does this platform support independent digital artists?', a: 'We provide an immersive, limitless ecosystem tailored for independent audio creators. By offering high-tier multi-layered soundscapes, persistent web players, and sophisticated visual frameworks, we empower artists to showcase their work within a premium, high-fidelity environment.' },
+      { q: 'Can I integrate these cinematic tracks into my own external projects?', a: 'Absolutely. Our digital compositions and orchestration parameters are designed to seamlessly integrate with modern technical agencies, web architectures, and multimedia productions looking for elite, atmospheric, and continuous sound design.' },
+    ];
+    const faq = React.createElement('div', {},
+      sectionTitle('QUESTIONS', 'Frequently Asked Questions', 'Everything You Need To Know'),
+      React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '10px' } },
+        faqData.map((f, i) => React.createElement('div', { key: f.q, style: { border: '1px solid #232323', borderRadius: '10px', background: '#141414', overflow: 'hidden', transition: 'border-color 0.2s ease' }, 'style-hover': { borderColor: 'rgba(255,183,0,0.4)' } },
+          React.createElement('button', { onClick: () => this.toggleFaq(i), style: { width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '16px 18px', border: 'none', background: 'transparent', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer', textAlign: 'left' }, 'style-hover': { background: '#181818' } },
+            React.createElement('span', {}, f.q),
+            React.createElement('span', { style: { display: 'flex', flexShrink: 0, transform: this.state.openFaqIndex === i ? 'rotate(180deg)' : 'none', transition: 'transform .15s' } }, icon('chevronDown', 16))),
+          this.state.openFaqIndex === i ? React.createElement('div', { style: { padding: '0 18px 18px', fontSize: '13.5px', color: '#B3B3B3', lineHeight: 1.6 } }, f.a) : null))));
+
+    const pageContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: isMobile ? '48px' : '64px', maxWidth: '1040px' } },
+      hero, chronicle, future, pillars, timeline, faq);
+
+    return { pageContent };
+  }
+}
+
+</script>
+</body>
+</html>

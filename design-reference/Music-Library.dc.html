@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</helmet>
+<dc-import name="Shell" active-screen="library" content="{{ pageContent }}" hint-size="100%,100%"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { loaded: false, width: typeof window !== 'undefined' ? window.innerWidth : 1440, likedTracks: {} };
+  }
+  async componentDidMount() {
+    const [dataMod, uiMod, tokMod] = await Promise.all([import('./shared-data.js'), import('./shared-ui.js'), import('./shared-tokens.js')]);
+    this._mod = dataMod;
+    this._ui = uiMod;
+    this._tok = tokMod;
+    this.setState({ loaded: true });
+    this._onResize = () => this.setState({ width: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+  }
+  componentWillUnmount() { if (this._onResize) window.removeEventListener('resize', this._onResize); }
+  toggleTrackLike = (id) => this.setState((s) => ({ likedTracks: { ...s.likedTracks, [id]: !s.likedTracks[id] } }));
+
+  playTrack = (album, track, index) => {
+    const current = this._tok.loadSharedState();
+    const player = { ...(current.player || {}), title: track.title, artist: album.artist, seed: album.seed, trackIndex: index, playing: true, progress: 0.04, liked: false };
+    this._tok.saveSharedState({ player });
+    window.dispatchEvent(new Event('cf-player-sync'));
+  };
+
+  renderVals() {
+    if (!this.state.loaded) return { pageContent: null };
+    const icon = (name, size, filled) => this._ui.buildIcon(React, name, size, filled);
+    const isMobile = this.state.width < 768;
+    const albums = this._mod.buildAlbums();
+    const allTracks = [];
+    albums.forEach((a) => a.tracks.forEach((t, i) => allTracks.push({ ...t, artist: a.artist, albumId: a.id, albumSeed: a.seed, indexInAlbum: i })));
+
+    const dotBg = { backgroundImage: 'radial-gradient(circle, rgba(255,183,0,0.3) 1px, transparent 1.4px)', backgroundSize: '26px 26px' };
+    const hero = React.createElement('div', { style: { position: 'relative', padding: isMobile ? '28px 22px' : '44px 40px', borderRadius: '16px', background: 'radial-gradient(ellipse at 20% 20%, rgba(255,183,0,0.14), transparent 60%), #0B0B0B', border: '1px solid #1E1E1E', overflow: 'hidden' } },
+      React.createElement('div', { style: { position: 'absolute', inset: 0, ...dotBg, opacity: 0.4, pointerEvents: 'none' } }),
+      React.createElement('div', { style: { position: 'relative' } },
+        React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '11px', letterSpacing: '0.1em', color: '#FFB700' } }, 'THE FULL CATALOG'),
+        React.createElement('div', { style: { fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: '#fff', marginTop: '8px', lineHeight: 1.2 } }, 'Music Library'),
+        React.createElement('div', { style: { fontSize: '13.5px', color: '#B3B3B3', marginTop: '8px', maxWidth: '520px', lineHeight: 1.6 } }, 'Every track from every release across the collective, searchable in one place.')));
+
+    const headerRow = !isMobile ? React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '28px 1fr 90px 100px 34px 34px 70px', gap: '10px', padding: '0 10px 10px', fontSize: '11px', color: '#7A7A7A', fontFamily: "'Space Mono',monospace", borderBottom: '1px solid #1E1E1E' } },
+      React.createElement('span', {}, '#'), React.createElement('span', {}, 'TITLE'), React.createElement('span', {}, 'VIEWS'), React.createElement('span', {}, 'COMMENTS'), React.createElement('span', {}, ''), React.createElement('span', {}, ''), React.createElement('span', {}, 'VIEW')) : null;
+
+    const row = (t, i) => {
+      const album = albums.find((a) => a.id === t.albumId);
+      return React.createElement('div', { key: t.id, style: { display: 'grid', gridTemplateColumns: isMobile ? '28px 1fr 34px 34px' : '28px 1fr 90px 100px 34px 34px 70px', alignItems: 'center', gap: '10px', padding: '11px 10px', borderRadius: '9px' }, 'style-hover': { background: '#151515' } },
+        React.createElement('button', { onClick: () => this.playTrack(album, t, t.indexInAlbum), style: { border: 'none', background: 'transparent', color: '#7A7A7A', cursor: 'pointer', fontFamily: "'Space Mono',monospace", fontSize: '12px', padding: 0, textAlign: 'left' }, 'style-hover': { color: '#FFB700' } }, String(i + 1).padStart(2, '0')),
+        React.createElement('button', { onClick: () => this.playTrack(album, t, t.indexInAlbum), style: { border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: 0 } },
+          React.createElement('div', { style: { fontSize: '13.5px', fontWeight: 600, color: '#fff' } }, t.title),
+          React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A' } }, t.artist)),
+        !isMobile ? React.createElement('span', { style: { fontSize: '12px', color: '#7A7A7A', fontFamily: "'Space Mono',monospace" } }, (900 + i * 63) % 5000) : null,
+        !isMobile ? React.createElement('span', { style: { fontSize: '12px', color: '#7A7A7A', fontFamily: "'Space Mono',monospace" } }, (3 + i) % 40) : null,
+        React.createElement('button', { onClick: () => this.toggleTrackLike(t.id), style: { border: 'none', background: 'transparent', color: this.state.likedTracks[t.id] ? '#FFB700' : '#7A7A7A', cursor: 'pointer', display: 'flex' }, 'style-hover': { color: '#FFB700' } }, icon('heart', 15, this.state.likedTracks[t.id])),
+        React.createElement('button', { style: { border: 'none', background: 'transparent', color: '#7A7A7A', cursor: 'pointer', display: 'flex' }, 'style-hover': { color: '#fff' } }, icon('plus', 15)),
+        !isMobile ? React.createElement('a', { href: 'Album-Detail.dc.html?id=' + t.albumId, style: { fontSize: '12px', color: '#7A7A7A', textDecoration: 'none' }, 'style-hover': { color: '#FFB700' } }, 'View') : null);
+    };
+
+    const pageContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '28px' } },
+      hero,
+      React.createElement('div', { style: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '14px' } },
+        React.createElement('div', { style: { fontSize: isMobile ? '20px' : '22px', fontWeight: 700, color: '#fff' } }, 'Music Library'),
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', background: '#141414', border: '1px solid #232323', borderRadius: '9px', padding: '9px 12px', minWidth: '220px', flex: isMobile ? '1 1 100%' : undefined } },
+          icon('search', 15), React.createElement('span', { style: { fontSize: '13px', color: '#7A7A7A' } }, 'Search tracks, artists, albums'))),
+      React.createElement('div', {}, headerRow, allTracks.map((t, i) => row(t, i))));
+
+    return { pageContent };
+  }
+}
+
+</script>
+</body>
+</html>

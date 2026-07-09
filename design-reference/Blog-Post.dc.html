@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</helmet>
+<div style="position:fixed; top:0; left:0; right:0; height:3px; background:#1E1E1E; z-index:100;">
+  <div style="height:100%; background:#FFB700; transition:width 0.1s linear; width:{{ readProgressPct }};"></div>
+</div>
+<dc-import name="Shell" active-screen="blog" content="{{ pageContent }}" hint-size="100%,100%"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      loaded: false, width: typeof window !== 'undefined' ? window.innerWidth : 1440,
+      auth: 'out', openPostFaqIndex: null, shareMenuOpen: false, postLiked: false, postLikeCount: 24,
+      draftRating: 0, draftReviewText: '', extraReviews: [], readProgress: 0, blogTocOpen: false,
+    };
+  }
+
+  async componentDidMount() {
+    const [dataMod, uiMod, tokMod] = await Promise.all([import('./shared-data.js'), import('./shared-ui.js'), import('./shared-tokens.js')]);
+    this._mod = dataMod;
+    this._ui = uiMod;
+    this._tok = tokMod;
+    const saved = tokMod.loadSharedState();
+    this.setState({ loaded: true, auth: saved.auth || 'out' });
+    this._onResize = () => this.setState({ width: window.innerWidth });
+    this._onScroll = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+      this.setState({ readProgress: progress });
+    };
+    window.addEventListener('resize', this._onResize);
+    window.addEventListener('scroll', this._onScroll);
+  }
+  componentWillUnmount() {
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this._onScroll) window.removeEventListener('scroll', this._onScroll);
+  }
+
+  togglePostFaq = (i) => this.setState((s) => ({ openPostFaqIndex: s.openPostFaqIndex === i ? null : i }));
+  toggleShareMenu = () => this.setState((s) => ({ shareMenuOpen: !s.shareMenuOpen }));
+  closeShareMenu = () => this.setState({ shareMenuOpen: false });
+  togglePostLike = () => this.setState((s) => ({ postLiked: !s.postLiked, postLikeCount: s.postLiked ? s.postLikeCount - 1 : s.postLikeCount + 1 }));
+  setDraftRating = (n) => this.setState({ draftRating: n });
+  setDraftReviewText = (v) => this.setState({ draftReviewText: v });
+  toggleBlogToc = () => this.setState((s) => ({ blogTocOpen: !s.blogTocOpen }));
+  submitReview = (e) => {
+    e.preventDefault();
+    if (!this.state.draftRating || !this.state.draftReviewText.trim()) return;
+    this.setState((s) => ({
+      extraReviews: [{ id: 'r' + Date.now(), name: 'Sasha Reyes', avatar: 'S', rating: s.draftRating, text: s.draftReviewText, date: 'Just now' }, ...s.extraReviews],
+      draftRating: 0, draftReviewText: '',
+    }));
+  };
+
+  renderVals() {
+    if (!this.state.loaded) return { pageContent: null, readProgressPct: '0%' };
+    const icon = (name, size, filled) => this._ui.buildIcon(React, name, size, filled);
+    const isMobile = this.state.width < 768;
+    const isTablet = this.state.width >= 768 && this.state.width < 1024;
+    const { getPost, blogPosts, gradientFor } = this._mod;
+    const params = new URLSearchParams(window.location.search);
+    const activePost = getPost(params.get('id') || 'p1');
+
+    const inputStyle = { width: '100%', padding: '11px 13px', borderRadius: '9px', border: '1px solid #262626', background: '#141414', color: '#fff', fontSize: '13.5px', fontFamily: 'Inter,sans-serif' };
+
+    const shareMenuItems = [
+      { label: 'Facebook', icon: 'community' }, { label: 'X', icon: 'chat' }, { label: 'LinkedIn', icon: 'community' },
+      { label: 'WhatsApp', icon: 'chat' }, { label: 'Copy Link', icon: 'link' },
+    ];
+    const shareMenuPanel = this.state.shareMenuOpen ? React.createElement(React.Fragment, {},
+      React.createElement('div', { onClick: this.closeShareMenu, style: { position: 'fixed', inset: 0, zIndex: 59 } }),
+      React.createElement('div', { style: { position: 'absolute', top: '46px', right: 0, zIndex: 60, background: '#161616', border: '1px solid #262626', borderRadius: '12px', padding: '8px', minWidth: '190px', boxShadow: '0 24px 48px -12px rgba(0,0,0,0.6)' } },
+        shareMenuItems.map((item) => React.createElement('button', { key: item.label, onClick: this.closeShareMenu, style: { display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', color: '#E4E4E4', borderRadius: '8px', cursor: 'pointer', fontSize: '13.5px', textAlign: 'left' }, 'style-hover': { background: '#232323' } }, icon(item.icon, 16), item.label)))) : null;
+
+    const engagementBar = React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
+      React.createElement('button', { onClick: this.togglePostLike, style: { display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 16px', borderRadius: '9px', border: this.state.postLiked ? '1px solid #FFB700' : '1px solid #262626', background: this.state.postLiked ? 'rgba(255,183,0,0.14)' : 'transparent', color: this.state.postLiked ? '#FFB700' : '#B3B3B3', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }, 'style-hover': { color: '#FFB700' } }, icon('heart', 16, this.state.postLiked), this.state.postLikeCount),
+      React.createElement('div', { style: { position: 'relative' } },
+        React.createElement('button', { onClick: this.toggleShareMenu, style: { display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 16px', borderRadius: '9px', border: '1px solid #262626', background: 'transparent', color: '#B3B3B3', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }, 'style-hover': { color: '#fff' } }, icon('share', 16), 'Share'),
+        shareMenuPanel));
+
+    const adZone = React.createElement('div', { style: { border: '1px dashed #333', borderRadius: '10px', padding: '18px', textAlign: 'center', color: '#5a5a5a', fontFamily: "'Space Mono',monospace", fontSize: '11px', letterSpacing: '0.06em' } }, 'AD ZONE \u2014 728\u00D790');
+    const calloutBox = (text) => React.createElement('div', { style: { border: '1px solid rgba(255,183,0,0.3)', borderLeft: '3px solid #FFB700', borderRadius: '8px', background: '#141414', padding: '18px 20px', fontFamily: "'Space Mono',monospace", fontSize: '13px', color: '#E4E4E4', lineHeight: 1.7, overflowX: 'auto' } }, text);
+    const pullQuote = (text) => React.createElement('div', { style: { borderLeft: '3px solid #FFB700', paddingLeft: '20px', fontSize: '19px', fontStyle: 'italic', color: '#fff', lineHeight: 1.5, margin: '8px 0' } }, text);
+    const h2 = (id, text) => React.createElement('h2', { key: id, id, style: { fontSize: '22px', fontWeight: 700, color: '#fff', marginTop: '8px', marginBottom: '4px', scrollMarginTop: '20px' } }, text);
+    const p = (text) => React.createElement('p', { style: { fontSize: '18px', color: '#C7C7C7', lineHeight: 1.8, margin: 0 } }, text);
+
+    const compareTable = React.createElement('div', { style: { overflowX: 'auto', border: '1px solid #232323', borderRadius: '10px' } },
+      React.createElement('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: '14.5px', minWidth: '480px' } },
+        React.createElement('thead', {}, React.createElement('tr', {},
+          React.createElement('th', { style: { textAlign: 'left', padding: '12px 16px', background: 'rgba(255,183,0,0.14)', color: '#FFB700', fontFamily: "'Space Mono',monospace", fontSize: '11.5px' } }, 'FEATURE'),
+          React.createElement('th', { style: { textAlign: 'left', padding: '12px 16px', background: 'rgba(255,183,0,0.14)', color: '#FFB700', fontFamily: "'Space Mono',monospace", fontSize: '11.5px' } }, 'TRADITIONAL PRODUCTION'),
+          React.createElement('th', { style: { textAlign: 'left', padding: '12px 16px', background: 'rgba(255,183,0,0.14)', color: '#FFB700', fontFamily: "'Space Mono',monospace", fontSize: '11.5px' } }, 'AI-DRIVEN PRODUCTION'))),
+        React.createElement('tbody', {},
+          React.createElement('tr', { style: { background: '#141414' } },
+            React.createElement('td', { style: { padding: '14px 16px', color: '#fff', fontWeight: 600 } }, 'Skill Curve'),
+            React.createElement('td', { style: { padding: '14px 16px', color: '#B3B3B3' } }, 'Years of learning music theory, synthesis, and software'),
+            React.createElement('td', { style: { padding: '14px 16px', color: '#B3B3B3' } }, 'High focus on creative direction, conceptualization, and prompt engineering')),
+          React.createElement('tr', { style: { background: '#181818' } },
+            React.createElement('td', { style: { padding: '14px 16px', color: '#fff', fontWeight: 600 } }, 'Time Investment'),
+            React.createElement('td', { style: { padding: '14px 16px', color: '#B3B3B3' } }, 'Hours to weeks per track'),
+            React.createElement('td', { style: { padding: '14px 16px', color: '#B3B3B3' } }, 'Seconds to minutes for core generation')))));
+
+    const postFaqData = [
+      { q: 'Do I need musical training to start with AI music production?', a: 'No. A working ear and a clear creative direction matter more than formal theory \u2014 you can learn theory alongside the process as your projects demand it.' },
+      { q: 'Will AI-generated stems hold up next to a professionally mixed track?', a: 'With the right mixing and mastering pass, yes. AI handles generation; the finishing work that makes a track feel professional is still a human skill worth learning.' },
+      { q: 'Is it fair to call AI-assisted music \u201Creal\u201D music?', a: 'The creative direction, lyrics, and editorial choices are entirely human \u2014 AI is a production instrument, the same way a synthesizer or a DAW is.' },
+    ];
+
+    const tocSections = [
+      ['sec-1', 'What Is AI Music Production?'], ['sec-2', 'How AI Is Changing Music Creation'], ['sec-3', 'How AI Music Production Works'],
+      ['sec-4', 'Benefits of AI Music Production'], ['sec-5', 'Traditional vs. AI Production'], ['sec-6', 'Common Misconceptions'],
+      ['sec-7', 'Can AI Replace Human Musicians?'], ['sec-8', 'Popular AI Music Tools'], ['sec-9', 'Who Can Benefit'],
+      ['sec-10', 'Getting Started'], ['sec-11', 'Frequently Asked Questions'], ['sec-12', 'Conclusion'],
+    ];
+    const tocList = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '2px' } },
+      tocSections.map(([id, label]) => React.createElement('a', { key: id, href: '#' + id, onClick: () => this.setState({ blogTocOpen: false }), style: { textDecoration: 'none', color: '#7A7A7A', fontSize: '12.5px', padding: '7px 10px', borderRadius: '7px', lineHeight: 1.4, display: 'block' }, 'style-hover': { background: '#181818', color: '#fff' } }, label)));
+
+    const postBody = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '22px' } },
+      p('The global landscape of AI music production is undergoing its most profound transformation since the invention of the digital audio workstation (DAW) and the synthesizer. For decades, creative radio-ready or cinematic-grade music required thousands of dollars in high-end hardware, extensive years of highly specialized technical training, and a traditional paradigm where innovation was often gated behind expensive studio access. Today, we live in an independent future where anyone can transform raw musical inspiration into a professional soundscape.'),
+      h2('sec-1', 'What Is AI Music Production?'),
+      p('AI music production is the practice of using machine learning models \u2014 for composition, sound design, stem separation, or mastering \u2014 as part of an otherwise human-directed creative process. It sits alongside the DAW and the synthesizer as another instrument in the producer\u2019s toolkit, not a replacement for the producer.'),
+      h2('sec-2', 'How AI Is Changing Music Creation'),
+      p('Where a first draft once took a full studio session to rough out, AI tools now let a producer iterate on arrangement, instrumentation, and tone in minutes. That speed changes the creative loop itself: more ideas get auditioned, and the ones that survive are chosen on feel rather than sunk cost.'),
+      adZone,
+      h2('sec-3', 'How AI Music Production Works (The Tech Made Simple)'),
+      p('Most tools follow the same basic shape: a model trained on large amounts of audio learns the statistical relationships between sounds, then generates new audio conditioned on a prompt, a melody, or a reference track. The output is raw material \u2014 it still needs a producer\u2019s ear to arrange, mix, and finish.'),
+      calloutBox('[Human Creative Vision + Textual Intent] \u2192 [AI Generative Synthesis] \u2192 [High-Fidelity Sonic Output]'),
+      h2('sec-4', 'Benefits of AI Music Production'),
+      p('Faster iteration, lower upfront cost, and access for creators who never had a home studio budget top the list. It also lowers the cost of experimentation \u2014 trying a genre or arrangement you\u2019d otherwise never attempt becomes nearly free.'),
+      h2('sec-5', 'Traditional Music Production vs. AI Music Production'),
+      compareTable,
+      h2('sec-6', 'Common Misconceptions About AI Music'),
+      pullQuote('We guide advanced AI technology not as a simple shortcut, but as a complex production instrument to execute deep, multi-layered soundscapes.'),
+      p('The most common misconception is that AI removes the need for taste. In practice, the opposite is true \u2014 with generation this cheap, editorial judgment becomes the scarce, valuable skill.'),
+      adZone,
+      h2('sec-7', 'Can AI Replace Human Musicians? (The Collaborative Reality)'),
+      p('No tool we\u2019ve used replaces the decisions a human makes about what a song is actually about. AI accelerates execution; the creative direction, lyrics, and emotional throughline remain entirely human.'),
+      h2('sec-8', 'Popular AI Music Tools (An Overview)'),
+      p('The landscape spans full-track generators, stem-level assistants, AI-powered mastering chains, and vocal modeling tools \u2014 most producers end up combining several rather than relying on one end-to-end platform.'),
+      h2('sec-9', 'Who Can Benefit From AI Music Production?'),
+      p('Independent artists without studio access, songwriters who don\u2019t produce, and established producers looking to prototype faster all get real value \u2014 the common thread is a clear creative vision looking for a faster path to execution.'),
+      h2('sec-10', 'Getting Started: Your First AI Music Workflow'),
+      p('Start with a clear reference and a short, specific prompt describing mood, instrumentation, and tempo. Generate several variations, pick the one closest to your vision, then treat it as a stem to arrange, mix, and master by hand.'),
+      adZone,
+      h2('sec-11', 'Frequently Asked Questions'),
+      React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '10px' } },
+        postFaqData.map((f, i) => React.createElement('div', { key: f.q, style: { border: '1px solid #232323', borderRadius: '10px', background: '#141414', overflow: 'hidden' } },
+          React.createElement('button', { onClick: () => this.togglePostFaq(i), style: { width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '16px 18px', border: 'none', background: 'transparent', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer', textAlign: 'left' }, 'style-hover': { background: '#181818' } },
+            React.createElement('span', {}, f.q),
+            React.createElement('span', { style: { display: 'flex', flexShrink: 0, transform: this.state.openPostFaqIndex === i ? 'rotate(180deg)' : 'none', transition: 'transform .15s' } }, icon('chevronDown', 16))),
+          this.state.openPostFaqIndex === i ? React.createElement('div', { style: { padding: '0 18px 18px', fontSize: '13.5px', color: '#B3B3B3', lineHeight: 1.6 } }, f.a) : null))),
+      h2('sec-12', 'Conclusion'),
+      p('AI music production doesn\u2019t remove craft from the equation \u2014 it redistributes where the craft happens, from operating hardware toward creative direction and editorial judgment. The artists who benefit most treat it as an instrument, not an autopilot.'));
+
+    const authorBio = React.createElement('div', { style: { display: 'flex', gap: '14px', padding: '20px', borderRadius: '12px', background: '#141414', border: '1px solid #232323', alignItems: 'flex-start' } },
+      React.createElement('div', { style: { width: '48px', height: '48px', minWidth: '48px', borderRadius: '12px', background: 'linear-gradient(135deg,#FFB700,#8a6200)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D0D0D', fontFamily: "'Space Mono',monospace", fontWeight: 700 } }, 'S'),
+      React.createElement('div', {},
+        React.createElement('div', { style: { fontSize: '14.5px', fontWeight: 700, color: '#fff' } }, 'Sasha Reyes'),
+        React.createElement('div', { style: { fontSize: '12.5px', color: '#7A7A7A', marginTop: '4px', lineHeight: 1.6 } }, 'Producer and writer on the Collective Finity team, covering the intersection of AI tools and independent music production.')));
+
+    const newsletterBox = React.createElement('div', { style: { padding: '24px', borderRadius: '14px', background: 'linear-gradient(135deg, rgba(255,183,0,0.14), rgba(255,183,0,0.03))', border: '1px solid rgba(255,183,0,0.25)', display: 'flex', flexDirection: 'column', gap: '14px' } },
+      React.createElement('div', { style: { fontSize: '17px', fontWeight: 700, color: '#fff' } }, 'Get notified about new courses and tutorials'),
+      React.createElement('div', { style: { display: 'flex', gap: '10px', flexWrap: 'wrap' } },
+        React.createElement('input', { type: 'email', placeholder: 'you@example.com', style: { flex: 1, minWidth: '200px', ...inputStyle } }),
+        React.createElement('button', { style: { padding: '11px 20px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13.5px', cursor: 'pointer', whiteSpace: 'nowrap' }, 'style-hover': { background: '#ffc633' } }, 'Subscribe')),
+      React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '10px', color: 'rgba(255,183,0,0.4)' } }, 'Visual only \u2014 CF7 shortcode a1d896d wires up here at build time'));
+
+    const relatedPosts = blogPosts.filter((p2) => p2.id !== activePost.id).slice(0, 3);
+    const relatedArticles = React.createElement('div', {},
+      React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff', marginBottom: '16px' } }, 'Related Articles'),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '100%' : '220px'}, 1fr))`, gap: '16px' } },
+        relatedPosts.map((rp) => React.createElement('a', { key: rp.id, href: 'Blog-Post.dc.html?id=' + rp.id, style: { display: 'flex', flexDirection: 'column', textDecoration: 'none', border: '1px solid #232323', background: '#141414', borderRadius: '12px', overflow: 'hidden', color: '#fff' }, 'style-hover': { border: '1px solid #2c2c2c' } },
+          React.createElement('div', { style: { width: '100%', aspectRatio: '16/9', background: gradientFor(rp.seed) } }),
+          React.createElement('div', { style: { padding: '14px', display: 'flex', flexDirection: 'column', gap: '6px' } },
+            React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '10px', color: '#FFB700' } }, rp.category.toUpperCase()),
+            React.createElement('div', { style: { fontSize: '13.5px', fontWeight: 700, lineHeight: 1.3 } }, rp.title))))));
+
+    const reviewsData = [
+      { id: 'rv1', name: 'Marcus Webb', avatar: 'M', rating: 5, text: 'Finally a clear breakdown that doesn\u2019t oversell or dismiss the tech. The workflow section alone saved me a weekend.', date: '3 days ago' },
+      { id: 'rv2', name: 'Priya Nandan', avatar: 'P', rating: 5, text: 'The traditional vs. AI comparison table is exactly the framing I needed to explain this to my bandmates.', date: '1 week ago' },
+      { id: 'rv3', name: 'Theo Ricci', avatar: 'T', rating: 4, text: 'Solid overview. Would love a follow-up that goes deeper into mixing AI-generated stems.', date: '2 weeks ago' },
+      { id: 'rv4', name: 'Ana Kowalski', avatar: 'A', rating: 5, text: 'The misconceptions section is what got me to actually try this instead of dismissing it.', date: '3 weeks ago' },
+    ];
+    const allReviews = [...this.state.extraReviews, ...reviewsData];
+    const avgRating = (allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length).toFixed(1);
+    const starRow = (rating, size, onStarClick) => React.createElement('div', { style: { display: 'flex', gap: '3px' } },
+      [1, 2, 3, 4, 5].map((n) => React.createElement(onStarClick ? 'button' : 'span', { key: n, onClick: onStarClick ? () => onStarClick(n) : undefined, style: { border: 'none', background: 'transparent', padding: 0, cursor: onStarClick ? 'pointer' : 'default', color: n <= rating ? '#FFB700' : '#3a3a3a', display: 'flex' } }, icon('star', size || 16, n <= rating))));
+
+    const reviewForm = this.state.auth === 'in'
+      ? React.createElement('form', { onSubmit: this.submitReview, style: { display: 'flex', gap: '14px', alignItems: 'flex-start', padding: '20px', borderRadius: '12px', background: '#141414', border: '1px solid #232323' } },
+          React.createElement('div', { style: { width: '38px', height: '38px', minWidth: '38px', borderRadius: '10px', background: 'linear-gradient(135deg,#FFB700,#8a6200)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D0D0D', fontFamily: "'Space Mono',monospace", fontWeight: 700 } }, 'S'),
+          React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0 } },
+            React.createElement('div', { style: { fontSize: '13.5px', fontWeight: 700, color: '#fff' } }, 'Sasha Reyes'),
+            starRow(this.state.draftRating, 20, this.setDraftRating),
+            React.createElement('textarea', { rows: 3, value: this.state.draftReviewText, onChange: (e) => this.setDraftReviewText(e.target.value), placeholder: 'Share your thoughts on this article...', style: { ...inputStyle, background: '#0D0D0D', resize: 'vertical' } }),
+            React.createElement('button', { type: 'submit', style: { padding: '10px 18px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13px', cursor: 'pointer', width: 'fit-content' }, 'style-hover': { background: '#ffc633' } }, 'Submit Review')))
+      : React.createElement('div', { style: { position: 'relative', borderRadius: '12px', overflow: 'hidden' } },
+          React.createElement('div', { style: { display: 'flex', gap: '14px', alignItems: 'flex-start', padding: '20px', borderRadius: '12px', background: '#141414', border: '1px solid #232323', opacity: 0.35, filter: 'grayscale(0.4)', pointerEvents: 'none' } },
+            React.createElement('div', { style: { width: '38px', height: '38px', minWidth: '38px', borderRadius: '10px', background: '#333' } }),
+            React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' } },
+              starRow(0, 20, null),
+              React.createElement('div', { style: { width: '100%', height: '72px', borderRadius: '9px', border: '1px solid #262626', background: '#0D0D0D' } }))),
+          React.createElement('div', { style: { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '10px', background: 'rgba(13,13,13,0.55)' } },
+            React.createElement('div', { style: { fontSize: '13.5px', color: '#fff', fontWeight: 600 } }, 'Sign in to leave a review'),
+            React.createElement('a', { href: 'Login.dc.html', style: { padding: '9px 18px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '12.5px', textDecoration: 'none' }, 'style-hover': { background: '#ffc633' } }, 'Log In')));
+
+    const reviewsSection = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '20px' } },
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' } },
+        React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff' } }, 'Ratings & Comments'),
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#B3B3B3' } },
+          icon('star', 15, true), React.createElement('span', { style: { color: '#fff', fontWeight: 700 } }, avgRating), React.createElement('span', {}, '(' + allReviews.length + ' reviews)'))),
+      reviewForm,
+      React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '14px' } },
+        allReviews.map((r) => React.createElement('div', { key: r.id, style: { display: 'flex', gap: '14px', alignItems: 'flex-start', paddingBottom: '14px', borderBottom: '1px solid #1E1E1E' } },
+          React.createElement('div', { style: { width: '36px', height: '36px', minWidth: '36px', borderRadius: '10px', background: 'linear-gradient(135deg,#FFB700,#8a6200)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D0D0D', fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: '13px' } }, r.avatar),
+          React.createElement('div', { style: { flex: 1, minWidth: 0 } },
+            React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' } },
+              React.createElement('span', { style: { fontSize: '13.5px', fontWeight: 700, color: '#fff' } }, r.name),
+              starRow(r.rating, 13, null),
+              React.createElement('span', { style: { fontSize: '11.5px', color: '#4a4a4a', fontFamily: "'Space Mono',monospace" } }, r.date)),
+            React.createElement('div', { style: { fontSize: '13px', color: '#B3B3B3', lineHeight: 1.6, marginTop: '6px' } }, r.text))))));
+
+    const mainColumn = React.createElement('div', { style: { flex: '1 1 auto', maxWidth: '720px', display: 'flex', flexDirection: 'column', gap: '28px', minWidth: 0 } },
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', color: '#7A7A7A', flexWrap: 'wrap' } },
+        React.createElement('a', { href: 'Blog-Hub.dc.html', style: { color: '#7A7A7A', textDecoration: 'none', fontSize: '12.5px' }, 'style-hover': { color: '#FFB700' } }, 'Blog'),
+        React.createElement('span', {}, '/'),
+        React.createElement('a', { href: 'Category-Archive.dc.html?cat=' + encodeURIComponent(activePost.category), style: { color: '#7A7A7A', textDecoration: 'none', fontSize: '12.5px' }, 'style-hover': { color: '#FFB700' } }, activePost.category),
+        React.createElement('span', {}, '/'),
+        React.createElement('span', { style: { color: '#FFB700' } }, activePost.title)),
+      React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '14px' } },
+        React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '11px', color: '#FFB700', width: 'fit-content', padding: '4px 10px', borderRadius: '999px', background: 'rgba(255,183,0,0.12)' } }, activePost.category),
+        React.createElement('h1', { style: { fontSize: isMobile ? '26px' : '34px', fontWeight: 700, color: '#fff', lineHeight: 1.2, margin: 0 } }, activePost.title),
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' } },
+          React.createElement('div', { style: { width: '30px', height: '30px', borderRadius: '9px', background: 'linear-gradient(135deg,#FFB700,#8a6200)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D0D0D', fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: '12px' } }, 'S'),
+          React.createElement('span', { style: { fontSize: '13px', color: '#B3B3B3' } }, 'Sasha Reyes'),
+          React.createElement('span', { style: { color: '#4a4a4a' } }, '\u00B7'),
+          React.createElement('span', { style: { fontSize: '13px', color: '#7A7A7A', fontFamily: "'Space Mono',monospace" } }, activePost.date + ' \u00B7 ' + activePost.readTime)),
+        engagementBar),
+      (isMobile || isTablet) ? React.createElement('div', { style: { border: '1px solid #232323', borderRadius: '10px', background: '#141414', overflow: 'hidden' } },
+        React.createElement('button', { onClick: this.toggleBlogToc, style: { width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', border: 'none', background: 'transparent', color: '#fff', fontWeight: 600, fontSize: '13.5px', cursor: 'pointer' }, 'style-hover': { background: '#181818' } },
+          React.createElement('span', {}, 'Contents'),
+          React.createElement('span', { style: { display: 'flex', transform: this.state.blogTocOpen ? 'rotate(180deg)' : 'none', transition: 'transform .15s' } }, icon('chevronDown', 16))),
+        this.state.blogTocOpen ? React.createElement('div', { style: { padding: '4px 10px 14px' } }, tocList) : null) : null,
+      React.createElement('div', { style: { width: '100%', aspectRatio: '16/9', borderRadius: '14px', background: gradientFor(activePost.seed) } }),
+      postBody, authorBio, newsletterBox, relatedArticles, reviewsSection);
+
+    const tocColumn = (!isMobile && !isTablet) ? React.createElement('div', { style: { flex: '0 0 200px', width: '200px', position: 'sticky', top: '20px' } },
+      React.createElement('div', { style: { fontFamily: "'Space Mono',monospace", fontSize: '11px', color: '#7A7A7A', letterSpacing: '0.06em', marginBottom: '10px', padding: '0 10px' } }, 'CONTENTS'),
+      tocList) : null;
+
+    const pageContent = React.createElement('div', { style: { display: 'flex', gap: '32px', alignItems: 'flex-start', width: '100%' } }, mainColumn, tocColumn);
+
+    return { pageContent, readProgressPct: (this.state.readProgress * 100) + '%' };
+  }
+}
+
+</script>
+</body>
+</html>

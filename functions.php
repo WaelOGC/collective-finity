@@ -16,6 +16,7 @@ require_once get_template_directory() . '/inc/theme-options.php';
 require_once get_template_directory() . '/inc/admin-theme-builder.php';
 require_once get_template_directory() . '/inc/customizer-theme-parts.php';
 require_once get_template_directory() . '/inc/legal-pages.php';
+require_once get_template_directory() . '/inc/blog.php';
 
 /**
  * 1. BASIC THEME SUPPORT & MENUS
@@ -42,6 +43,9 @@ add_action( 'after_setup_theme', 'collective_finity_setup' );
  */
 function collective_finity_body_classes( $classes ) {
     $classes[] = 'cf-has-right-player';
+    if ( ! collective_finity_get_theme_option( 'enable_glow_effects', 1 ) ) {
+        $classes[] = 'cf-glow-disabled';
+    }
     return $classes;
 }
 add_filter( 'body_class', 'collective_finity_body_classes' );
@@ -95,6 +99,58 @@ function collective_finity_track_comments_count( $track_id ) {
 }
 
 /**
+ * Build a normalized playable queue from all published tracks (newest first).
+ * Used by the player for continuous library playback and the track-library AJAX endpoint.
+ *
+ * @return array<int, array{url:string,title:string,artist:string,art:string,id:int}>
+ */
+function collective_finity_get_published_track_queue() {
+    $tracks = get_posts(
+        array(
+            'post_type'      => 'tracks',
+            'posts_per_page' => -1,
+            'post_status'    => 'publish',
+            'orderby'        => 'date',
+            'order'          => 'DESC',
+        )
+    );
+
+    $queue = array();
+
+    foreach ( $tracks as $track ) {
+        $track_id = $track->ID;
+        $url      = get_post_meta( $track_id, 'track_preview_url', true );
+        if ( ! $url ) {
+            $url = get_post_meta( $track_id, 'track_audio_url', true );
+        }
+        if ( ! $url ) {
+            continue;
+        }
+
+        $cover = get_post_meta( $track_id, 'track_cover_url', true );
+        if ( ! $cover ) {
+            $cover = get_the_post_thumbnail_url( $track_id, 'medium' );
+        }
+        if ( ! $cover ) {
+            $cover = collective_finity_default_art_url();
+        }
+
+        $artists = wp_get_post_terms( $track_id, 'track_artist', array( 'fields' => 'names' ) );
+        $artist  = ! empty( $artists ) ? $artists[0] : 'Collective Finity';
+
+        $queue[] = array(
+            'url'    => $url,
+            'title'  => $track->post_title,
+            'artist' => $artist,
+            'art'    => $cover,
+            'id'     => $track_id,
+        );
+    }
+
+    return $queue;
+}
+
+/**
  * Render social share buttons.
  *
  * @param string $url   Share URL.
@@ -140,6 +196,282 @@ function collective_finity_brand_name() {
 }
 
 /**
+ * Brand mark markup for the shell (left sidebar + mobile header).
+ *
+ * Returns a custom uploaded logo image when the matching Theme Option is set,
+ * otherwise falls back to the default CSS diamond mark. Mobile falls back to the
+ * sidebar logo, then to the diamond.
+ *
+ * @param string $context 'sidebar' or 'mobile'.
+ * @return string
+ */
+function collective_finity_brand_logo_markup( $context = 'sidebar' ) {
+    $sidebar_id = absint( collective_finity_get_theme_option( 'sidebar_logo' ) );
+    $mobile_id  = absint( collective_finity_get_theme_option( 'mobile_logo' ) );
+
+    if ( 'mobile' === $context ) {
+        $logo_id = $mobile_id ? $mobile_id : $sidebar_id;
+    } else {
+        $logo_id = $sidebar_id;
+    }
+
+    if ( $logo_id ) {
+        $src = wp_get_attachment_image_url( $logo_id, 'thumbnail' );
+        if ( $src ) {
+            return sprintf(
+                '<img class="cf-brand-logo-img" src="%s" alt="" aria-hidden="true">',
+                esc_url( $src )
+            );
+        }
+    }
+
+    return '<span class="cf-brand-mark" aria-hidden="true"></span>';
+}
+
+/**
+ * Build the Google Fonts stylesheet URL for the selected body + heading fonts.
+ *
+ * @return string Empty string when both selections are system fonts.
+ */
+function collective_finity_google_fonts_url() {
+    $fonts   = collective_finity_get_font_choices();
+    $body    = collective_finity_get_theme_option( 'body_font' );
+    $heading = collective_finity_get_theme_option( 'heading_font' );
+
+    $body    = isset( $fonts[ $body ] ) ? $body : 'inter';
+    $heading = isset( $fonts[ $heading ] ) ? $heading : 'space-mono';
+
+    $families = array();
+    foreach ( array( $body, $heading ) as $key ) {
+        $family = $fonts[ $key ]['google'];
+        if ( $family && ! in_array( $family, $families, true ) ) {
+            $families[] = $family;
+        }
+    }
+
+    if ( empty( $families ) ) {
+        return '';
+    }
+
+    $url = 'https://fonts.googleapis.com/css2';
+    foreach ( $families as $index => $family ) {
+        $url .= ( 0 === $index ? '?' : '&' ) . 'family=' . $family;
+    }
+    $url .= '&display=swap';
+
+    return $url;
+}
+
+/**
+ * Enqueue the dynamic Google Fonts stylesheet based on Theme Options.
+ */
+function collective_finity_enqueue_google_fonts() {
+    $url = collective_finity_google_fonts_url();
+    if ( $url ) {
+        wp_enqueue_style( 'cf-google-fonts', $url, array(), null );
+    }
+}
+add_action( 'wp_enqueue_scripts', 'collective_finity_enqueue_google_fonts' );
+
+/**
+ * Inline SVG icon set (ported from the design system in design-reference/shared-ui.js).
+ *
+ * Returns line-based SVG markup so the shell matches the multi-page design export
+ * instead of relying on dashicons.
+ *
+ * @param string $name   Icon slug.
+ * @param int    $size   Pixel size.
+ * @param bool   $filled Whether fillable icons (heart/star) render filled.
+ * @return string
+ */
+function collective_finity_icon( $name, $size = 18, $filled = false ) {
+    $icons = array(
+        'home'        => '<path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/>',
+        'library'     => '<rect x="4" y="4" width="6" height="16" rx="1"/><rect x="14" y="4" width="6" height="16" rx="1"/>',
+        'blog'        => '<rect x="4" y="4" width="16" height="16" rx="2"/><line x1="7.5" y1="9" x2="16.5" y2="9"/><line x1="7.5" y1="12.5" x2="16.5" y2="12.5"/><line x1="7.5" y1="16" x2="13" y2="16"/>',
+        'albums'      => '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/>',
+        'about'       => '<circle cx="12" cy="12" r="8.5"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.5" r="0.6" fill="currentColor"/>',
+        'community'   => '<circle cx="9" cy="9" r="3"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2c2.4.3 4.2 2.1 4.2 4.8"/>',
+        'heart'       => '<path d="M12 20s-7-4.35-9.5-8.8C.8 8 2 4.5 5.5 4.5c2 0 3.3 1.2 6.5 3.9C15.2 5.7 16.5 4.5 18.5 4.5 22 4.5 23.2 8 21.5 11.2 19 15.65 12 20 12 20z"/>',
+        'playlist'    => '<line x1="4" y1="6" x2="16" y2="6"/><line x1="4" y1="12" x2="16" y2="12"/><line x1="4" y1="18" x2="11" y2="18"/><circle cx="19" cy="15" r="2.4"/><line x1="21.4" y1="15" x2="21.4" y2="8"/>',
+        'user'        => '<circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1-4 4-6 7.5-6s6.5 2 7.5 6"/>',
+        'bell'        => '<path d="M6 16v-4.5A6 6 0 0 1 12 5.5v0a6 6 0 0 1 6 6V16l1.6 2.2H4.4z"/><path d="M9.5 19.5a2.5 2.5 0 0 0 5 0"/>',
+        'mail'        => '<rect x="3" y="5.5" width="18" height="13" rx="1.5"/><path d="M3.5 6.5 12 13l8.5-6.5"/>',
+        'menu'        => '<line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/>',
+        'close'       => '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>',
+        'chevronLeft' => '<polyline points="15 6 9 12 15 18"/>',
+        'chevronDown' => '<polyline points="6 9 12 15 18 9"/>',
+        'star'        => '<path d="M12 3.5 14.5 9l6 .6-4.5 4 1.3 5.9-5.3-3.1-5.3 3.1 1.3-5.9-4.5-4 6-.6z"/>',
+        'share'       => '<circle cx="18" cy="5" r="2.2"/><circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="19" r="2.2"/><line x1="8.2" y1="10.8" x2="15.8" y2="6.2"/><line x1="8.2" y1="13.2" x2="15.8" y2="17.8"/>',
+        'play'        => '<path d="M7 5.5v13l11-6.5z" fill="currentColor" stroke="none"/>',
+        'pause'       => '<rect x="6.5" y="5" width="4" height="14" fill="currentColor" stroke="none"/><rect x="13.5" y="5" width="4" height="14" fill="currentColor" stroke="none"/>',
+        'skipBack'    => '<polygon points="18 5 8 12 18 19" fill="currentColor" stroke="none"/><line x1="6" y1="5" x2="6" y2="19" stroke-width="2.4"/>',
+        'skipFwd'     => '<polygon points="6 5 16 12 6 19" fill="currentColor" stroke="none"/><line x1="18" y1="5" x2="18" y2="19" stroke-width="2.4"/>',
+        'shuffle'     => '<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',
+        'repeat'      => '<polyline points="17 2 21 6 17 10"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 22 3 18 7 14"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
+        'volume'      => '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 8.5a5 5 0 0 1 0 7"/><path d="M19.5 6a8.5 8.5 0 0 1 0 12"/>',
+        'lock'        => '<rect x="5.5" y="10.5" width="13" height="9" rx="1.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>',
+        'search'      => '<circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/>',
+    );
+
+    if ( ! isset( $icons[ $name ] ) ) {
+        return '';
+    }
+
+    $inner = $icons[ $name ];
+    if ( $filled && in_array( $name, array( 'heart', 'star' ), true ) ) {
+        $inner = str_replace( '<path d=', '<path fill="currentColor" d=', $inner );
+    }
+
+    return sprintf(
+        '<svg width="%1$d" height="%1$d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">%2$s</svg>',
+        (int) $size,
+        $inner
+    );
+}
+
+/**
+ * Deterministic gradient fallback for album art (mirrors design-reference/shared-data.js gradientFor()).
+ *
+ * @param int $seed Numeric seed (e.g. post ID).
+ * @return string CSS gradient value.
+ */
+function collective_finity_gradient_for( $seed ) {
+    $seed    = (int) $seed;
+    $px      = 15 + ( $seed * 31 ) % 65;
+    $py      = 10 + ( $seed * 53 ) % 70;
+    $light1  = number_format( 0.30 + ( ( $seed * 13 ) % 18 ) / 100, 2 );
+    $chroma1 = number_format( 0.10 + ( ( $seed * 7 ) % 5 ) / 100, 2 );
+
+    return sprintf(
+        'radial-gradient(circle at %1$d%% %2$d%%, oklch(%3$s %4$s 85) 0%%, oklch(0.15 0.025 60) 45%%, oklch(0.06 0.01 40) 100%%)',
+        $px,
+        $py,
+        $light1,
+        $chroma1
+    );
+}
+
+/**
+ * Shell navigation model (left sidebar + mobile drawer share this single source).
+ *
+ * Mirrors the nav/secondaryNav lists in design-reference/Shell.dc.html, scoped to the
+ * real theme routes. Each item: id, label, url, icon, active.
+ *
+ * @return array{main: array<int, array<string, mixed>>, secondary: array<int, array<string, mixed>>}
+ */
+function collective_finity_get_shell_nav() {
+    $tracks_url = get_post_type_archive_link( 'tracks' );
+    $albums_url = get_post_type_archive_link( 'albums' );
+
+    $is_library = is_post_type_archive( 'tracks' ) || is_singular( 'tracks' )
+        || is_tax( 'music_genre' ) || is_tax( 'track_artist' );
+    $is_albums = is_post_type_archive( 'albums' ) || is_singular( 'albums' );
+
+    $favorites_url = is_user_logged_in() ? home_url( '/cf-profile#favorites' ) : home_url( '/cf-login' );
+    $playlists_url = is_user_logged_in() ? home_url( '/cf-profile#history' ) : home_url( '/cf-register' );
+
+    $main = array(
+        array(
+            'id'     => 'home',
+            'label'  => __( 'Home', 'collective-finity' ),
+            'url'    => home_url( '/' ),
+            'icon'   => 'home',
+            'active' => is_front_page(),
+        ),
+        array(
+            'id'     => 'library',
+            'label'  => __( 'Music Library', 'collective-finity' ),
+            'url'    => $tracks_url ? $tracks_url : home_url( '/tracks/' ),
+            'icon'   => 'library',
+            'active' => $is_library,
+        ),
+        array(
+            'id'     => 'blog',
+            'label'  => __( 'Blog', 'collective-finity' ),
+            'url'    => collective_finity_get_page_link( 'blog', '/blog/' ),
+            'icon'   => 'blog',
+            'active' => is_home() || is_singular( 'post' ) || is_category() || is_tag() || is_page( 'blog' ),
+        ),
+        array(
+            'id'     => 'albums',
+            'label'  => __( 'Albums & Collections', 'collective-finity' ),
+            'url'    => $albums_url ? $albums_url : home_url( '/albums/' ),
+            'icon'   => 'albums',
+            'active' => $is_albums,
+        ),
+        array(
+            'id'     => 'community',
+            'label'  => __( 'Join Community', 'collective-finity' ),
+            'url'    => collective_finity_get_page_link( 'join-community', '/join-community/' ),
+            'icon'   => 'community',
+            'active' => is_page( 'join-community' ),
+        ),
+        array(
+            'id'     => 'about',
+            'label'  => __( 'About', 'collective-finity' ),
+            'url'    => collective_finity_get_page_link( 'about', '/about/' ),
+            'icon'   => 'about',
+            'active' => is_page( 'about' ),
+        ),
+    );
+
+    $secondary = array(
+        array(
+            'id'     => 'favorites',
+            'label'  => __( 'Favorites & Liked', 'collective-finity' ),
+            'url'    => $favorites_url,
+            'icon'   => 'heart',
+            'active' => false,
+        ),
+        array(
+            'id'     => 'playlists',
+            'label'  => __( 'Personal Playlists', 'collective-finity' ),
+            'url'    => $playlists_url,
+            'icon'   => 'playlist',
+            'active' => false,
+        ),
+    );
+
+    return array( 'main' => $main, 'secondary' => $secondary );
+}
+
+/**
+ * Render the shared search trigger button (desktop right rail + mobile topbar).
+ *
+ * @param string $extra_class Optional class names appended to the button.
+ */
+function collective_finity_render_search_trigger( $extra_class = '' ) {
+    $class = 'cf-icon-btn cf-search-trigger';
+    if ( $extra_class ) {
+        $class .= ' ' . $extra_class;
+    }
+
+    printf(
+        '<button type="button" class="%1$s" aria-label="%2$s" aria-controls="cf-search-overlay" aria-expanded="false" aria-haspopup="dialog">%3$s</button>',
+        esc_attr( $class ),
+        esc_attr__( 'Search', 'collective-finity' ),
+        collective_finity_icon( 'search', 18 ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    );
+}
+
+/**
+ * Render a single shell nav row.
+ *
+ * @param array $item Nav item from collective_finity_get_shell_nav().
+ */
+function collective_finity_render_nav_row( $item ) {
+    printf(
+        '<a href="%1$s" class="cf-nav-row%2$s"%3$s>%4$s<span class="cf-nav-label">%5$s</span></a>',
+        esc_url( $item['url'] ),
+        ! empty( $item['active'] ) ? ' is-active' : '',
+        ! empty( $item['active'] ) ? ' aria-current="page"' : '',
+        collective_finity_icon( $item['icon'], 18 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        esc_html( $item['label'] )
+    );
+}
+
+/**
  * Resolve a published page URL by slug (tries multiple slugs).
  *
  * @param string|array $slugs     Page slug or list of slugs to try.
@@ -171,6 +503,7 @@ function collective_finity_get_footer_menu_sections() {
             'title' => __( 'Explore', 'collective-finity' ),
             'links' => array(
                 array( 'label' => __( 'Home', 'collective-finity' ), 'url' => home_url( '/' ) ),
+                array( 'label' => __( 'Blog', 'collective-finity' ), 'url' => collective_finity_get_page_link( 'blog', '/blog/' ) ),
                 array( 'label' => __( 'Albums', 'collective-finity' ), 'url' => $albums_url ? $albums_url : home_url( '/albums/' ) ),
                 array( 'label' => __( 'Music Library', 'collective-finity' ), 'url' => $tracks_url ? $tracks_url : home_url( '/tracks/' ) ),
             ),
@@ -343,12 +676,26 @@ function collective_finity_scripts() {
     $player_ver    = file_exists( $player_path ) ? filemtime( $player_path ) : $theme_version;
 
     wp_enqueue_style( 'main-style', get_stylesheet_uri(), array(), $theme_version );
-    $footer_css_path = get_template_directory() . '/assets/css/footer.css';
-    $footer_css_ver  = file_exists( $footer_css_path ) ? filemtime( $footer_css_path ) : $theme_version;
-    wp_enqueue_style( 'cf-footer', get_template_directory_uri() . '/assets/css/footer.css', array( 'main-style' ), $footer_css_ver );
+
+    $shell_css_path = get_template_directory() . '/assets/css/cf-shell.css';
+    $shell_css_ver  = file_exists( $shell_css_path ) ? filemtime( $shell_css_path ) : $theme_version;
+    wp_enqueue_style( 'cf-shell', get_template_directory_uri() . '/assets/css/cf-shell.css', array( 'main-style' ), $shell_css_ver );
+
+    $layout_css_path = get_template_directory() . '/assets/css/cf-content-layout.css';
+    $layout_css_ver  = file_exists( $layout_css_path ) ? filemtime( $layout_css_path ) : $theme_version;
+    wp_enqueue_style( 'cf-content-layout', get_template_directory_uri() . '/assets/css/cf-content-layout.css', array( 'cf-shell' ), $layout_css_ver );
+
     wp_enqueue_style( 'dashicons' );
     wp_enqueue_script( 'jquery' );
     wp_enqueue_script( 'music-player-js', get_template_directory_uri() . '/js/music-player.js', array( 'jquery' ), $player_ver, true );
+
+    $shell_js_path = get_template_directory() . '/assets/js/cf-shell.js';
+    $shell_js_ver  = file_exists( $shell_js_path ) ? filemtime( $shell_js_path ) : $theme_version;
+    wp_enqueue_script( 'cf-shell-js', get_template_directory_uri() . '/assets/js/cf-shell.js', array(), $shell_js_ver, true );
+
+    $soft_nav_path = get_template_directory() . '/js/cf-soft-nav.js';
+    $soft_nav_ver  = file_exists( $soft_nav_path ) ? filemtime( $soft_nav_path ) : $theme_version;
+    wp_enqueue_script( 'cf-soft-nav-js', get_template_directory_uri() . '/js/cf-soft-nav.js', array(), $soft_nav_ver, true );
 
     $cookie_css_path = get_template_directory() . '/assets/css/cookie-consent.css';
     $cookie_js_path  = get_template_directory() . '/assets/js/cookie-consent.js';
@@ -1122,6 +1469,22 @@ add_action( 'wp_ajax_cf_get_liked_tracks', 'cf_ajax_get_liked_tracks' );
 
 
 /**
+ * Return the full published track library for continuous player queue playback.
+ */
+function cf_ajax_get_track_library() {
+    check_ajax_referer( 'cf_interaction_nonce', 'security' );
+
+    wp_send_json_success(
+        array(
+            'tracks' => collective_finity_get_published_track_queue(),
+        )
+    );
+}
+add_action( 'wp_ajax_cf_get_track_library', 'cf_ajax_get_track_library' );
+add_action( 'wp_ajax_nopriv_cf_get_track_library', 'cf_ajax_get_track_library' );
+
+
+/**
  * 12. FORCE COMMENTS TO BE OPEN FOR TRACKS (Bypasses manual WP database & dashboard toggles)
  */
 function collective_finity_force_comments_open_for_tracks( $open, $post_id ) {
@@ -1183,4 +1546,8 @@ function collective_finity_extend_search( $query ) {
 }
 add_action( 'pre_get_posts', 'collective_finity_extend_search' );
 
+error_log( 'CF DEBUG: before music library require' );
 require get_template_directory() . '/inc/cf-music-library-shortcode.php';
+error_log( 'CF DEBUG: after music library require, before latest releases require' );
+require get_template_directory() . '/inc/cf-latest-releases-shortcode.php';
+error_log( 'CF DEBUG: after latest releases require. shortcode_exists = ' . ( shortcode_exists( 'cf_latest_releases' ) ? 'YES' : 'NO' ) );

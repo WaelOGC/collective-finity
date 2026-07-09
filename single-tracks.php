@@ -333,17 +333,13 @@ $comments_count = count($track_comments);
     --text-color: #FFFFFF;
 }
 
-/* Main Track Page Styling Adjustment to prevent overlap with the Mini-Sidebar */
-@media(min-width: 769px) {
-    .cf-single-track-page { 
-        padding-left: 70px;
-    }
-}
-
+/* Main Track Page Styling */
 .cf-single-track-page {
     background: radial-gradient(circle at top, rgba(255, 183, 0, 0.16), transparent 32%), #000;
     min-height: 100vh;
     padding-bottom: 40px;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 .cf-cinematic-hero {
     min-height: 100vh;
@@ -363,11 +359,11 @@ $comments_count = count($track_comments);
     position: relative;
     z-index: 1;
 }
-.cf-container { width: 90%; max-width: 1100px; margin: 0 auto; }
-.cf-track-header-layout { display: flex; align-items: center; gap: 50px; margin-bottom: 50px; flex-wrap: wrap; }
+.cf-container { width: 90%; max-width: 1100px; margin: 0 auto; box-sizing: border-box; }
+.cf-track-header-layout { display: flex; align-items: center; gap: 50px; margin-bottom: 50px; flex-wrap: wrap; min-width: 0; max-width: 100%; }
 
 /* 2. Visualizer Canvas styling (Upgraded for fluid aspect-ratio mobile responsiveness) */
-.cf-vinyl-wrapper { flex: 1; min-width: 250px; display: flex; flex-direction: column; align-items: center; position: relative; }
+.cf-vinyl-wrapper { flex: 1 1 250px; min-width: 0; max-width: 100%; display: flex; flex-direction: column; align-items: center; position: relative; }
 .cf-vinyl-inner { position: relative; width: 100%; max-width: 340px; aspect-ratio: 1 / 1; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
 #cf-circular-visualizer { position: absolute; top: -10px; left: -10px; width: 100% !important; height: 100% !important; max-width: 360px; max-height: 360px; z-index: 1; pointer-events: none; }
 .cf-vinyl-disc { width: 82% !important; height: 82% !important; max-width: 280px; max-height: 280px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 0 25px rgba(0,0,0,0.8); object-fit: cover; z-index: 2; transition: transform 0.2s, box-shadow 0.2s; }
@@ -378,8 +374,8 @@ $comments_count = count($track_comments);
 #cf-visualizer-type:focus { border-color: var(--primary-color); outline: none; }
 
 /* 3. Central Details Panel Styles */
-.cf-details-panel { flex: 1.5; min-width: 300px; padding: 36px; border-radius: 18px; text-align: left; }
-.cf-glass-card { background: rgba(16, 16, 16, 0.72); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 10px 35px rgba(0, 0, 0, 0.45); }
+.cf-details-panel { flex: 1.5 1 300px; min-width: 0; max-width: 100%; box-sizing: border-box; padding: 36px; border-radius: 18px; text-align: left; }
+.cf-glass-card { background: rgba(16, 16, 16, 0.72); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 10px 35px rgba(0, 0, 0, 0.45); box-sizing: border-box; max-width: 100%; }
 .cf-tag { display: inline-block; background-color: var(--primary-color); color: #000; padding: 5px 12px; font-size: 11px; font-weight: bold; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
 .cf-hero-title { font-size: clamp(32px, 3.2vw, 42px); line-height: 1.08; margin: 0 0 10px 0; color: #fff; }
 
@@ -467,15 +463,30 @@ $comments_count = count($track_comments);
 }
 
 @media(max-width: 768px) {
+    .cf-cinematic-hero {
+        padding: 88px 0 50px;
+    }
+    .cf-container {
+        width: 100%;
+        max-width: 100%;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
     .cf-track-header-layout { 
         flex-direction: column !important; 
         text-align: center !important; 
         gap: 30px !important;
+        width: 100%;
+        min-width: 0;
     }
     .cf-details-panel { 
+        flex: 1 1 auto !important;
         text-align: center !important; 
-        width: 100% !important; 
-        padding: 25px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        padding: 20px 16px !important;
     }
     .cf-hero-title { 
         font-size: 32px !important; 
@@ -558,28 +569,42 @@ jQuery(document).ready(function($) {
     var audio = document.getElementById('cf-native-audio-element');
     
     if (audio) {
-        audio.addEventListener('timeupdate', function() {
-            var currentTime = audio.currentTime;
-            
-            $('.cf-sync-line').each(function() {
-                var start = parseFloat($(this).data('start'));
-                var end = parseFloat($(this).data('end'));
+        if (!window.__cfTrackAudioUiBound) {
+            window.__cfTrackAudioUiBound = true;
+
+            audio.addEventListener('timeupdate', function() {
+                var currentTime = audio.currentTime;
                 
-                if (currentTime >= start && currentTime <= end) {
-                    $(this).addClass('active');
-                } else {
-                    $(this).removeClass('active');
+                $('.cf-sync-line').each(function() {
+                    var start = parseFloat($(this).data('start'));
+                    var end = parseFloat($(this).data('end'));
+                    
+                    if (currentTime >= start && currentTime <= end) {
+                        $(this).addClass('active');
+                    } else {
+                        $(this).removeClass('active');
+                    }
+                });
+            });
+
+            audio.addEventListener('play', function() {
+                var vinyl = document.getElementById('cf-track-spinning-vinyl');
+                if (vinyl) {
+                    vinyl.classList.add('playing');
                 }
             });
-        });
+            audio.addEventListener('pause', function() {
+                var vinyl = document.getElementById('cf-track-spinning-vinyl');
+                if (vinyl) {
+                    vinyl.classList.remove('playing');
+                }
+            });
+        }
 
-        // Toggle spinning vinyl state based on real play state
-        audio.addEventListener('play', function() {
-            $('#cf-track-spinning-vinyl').addClass('playing');
-        });
-        audio.addEventListener('pause', function() {
-            $('#cf-track-spinning-vinyl').removeClass('playing');
-        });
+        var vinylEl = document.getElementById('cf-track-spinning-vinyl');
+        if (vinylEl) {
+            vinylEl.classList.toggle('playing', !audio.paused && !!audio.src);
+        }
     }
 
 
@@ -588,12 +613,14 @@ jQuery(document).ready(function($) {
     var analyser;
     var source;
     var canvas = document.getElementById('cf-circular-visualizer');
-    var ctx = canvas.getContext('2d');
+    var ctx = canvas ? canvas.getContext('2d') : null;
     var bufferLength;
     var dataArray;
 
     function initVisualizer() {
-        if (audioContext) return; // Initialize only once
+        if (audioContext || window.cfAudioMediaSourceConnected) {
+            return;
+        }
 
         try {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -603,6 +630,7 @@ jQuery(document).ready(function($) {
             source = audioContext.createMediaElementSource(audio);
             source.connect(analyser);
             analyser.connect(audioContext.destination);
+            window.cfAudioMediaSourceConnected = true;
 
             analyser.fftSize = 256; 
             bufferLength = analyser.frequencyBinCount;
@@ -618,7 +646,19 @@ jQuery(document).ready(function($) {
         requestAnimationFrame(drawVisualizer);
         if (!analyser) return;
 
+        if (!canvas || !document.body.contains(canvas)) {
+            canvas = document.getElementById('cf-circular-visualizer');
+            if (!canvas) {
+                return;
+            }
+            ctx = canvas.getContext('2d');
+        }
+
         analyser.getByteFrequencyData(dataArray);
+
+        if (!canvas || !ctx) {
+            return;
+        }
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -792,7 +832,7 @@ jQuery(document).ready(function($) {
     }
 
     // Trigger visualizer initialize on stream trigger
-    $('.cf-play-btn-hero').on('click', function() {
+    $(document).off('click.cfViz', '.cf-play-btn-hero').on('click.cfViz', '.cf-play-btn-hero', function() {
         initVisualizer();
         if (audioContext && audioContext.state === 'suspended') {
             audioContext.resume();

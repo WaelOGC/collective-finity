@@ -17,6 +17,36 @@ function collective_finity_default_theme_options() {
     return array(
         'primary_color'      => '#FFB700',
         'accent_color'       => '#0D0D0D',
+        'text_color'         => '#FFFFFF',
+        'text_muted_color'   => '#B3B3B3',
+        'card_bg_color'      => '#141414',
+        'border_color'       => '#232323',
+        'link_color'         => '#FFB700',
+        'link_hover_color'   => '#ffc633',
+        'base_font_size'     => 16,
+        'h1_font_size'       => 52,
+        'h2_font_size'       => 22,
+        'h3_font_size'       => 18,
+        'heading_font_weight' => '700',
+        'heading_letter_spacing' => 0,
+        'body_line_height'   => 1.6,
+        'button_radius'      => 9,
+        'button_size'        => 'regular',
+        'button_hover_effect' => 'brighten',
+        'card_radius'        => 12,
+        'card_border_width'  => 1,
+        'card_hover_effect'  => 'lift',
+        'card_shadow'        => 'soft',
+        'transition_speed'   => 'normal',
+        'enable_glow_effects' => 1,
+        'section_spacing'    => 'default',
+        'sidebar_logo'       => 0,
+        'sidebar_logo_size'  => 40,
+        'mobile_logo'        => 0,
+        'mobile_logo_size'   => 32,
+        'adsense_publisher_id' => '',
+        'body_font'          => 'inter',
+        'heading_font'       => 'space-mono',
         'enable_preloader'   => 0,
         'enable_back_to_top' => 1,
         'show_global_player' => 1,
@@ -24,11 +54,18 @@ function collective_finity_default_theme_options() {
         'footer_copyright'   => '',
         'footer_tagline'     => 'Experience Music Beyond Imagination',
         'footer_description' => 'Welcome to Collective Finity — a cinematic world where emotional sound, visual stories and creativity connect in one immersive universe.',
-        'social_instagram'   => '',
-        'social_youtube'     => '',
-        'social_spotify'     => '',
-        'social_facebook'    => '',
-        'social_x'           => '',
+        'social_instagram'           => '',
+        'social_instagram_community' => '',
+        'social_youtube'             => '',
+        'social_spotify'             => '',
+        'social_facebook'            => '',
+        'social_facebook_group'      => '',
+        'social_discord'             => '',
+        'social_tiktok'              => '',
+        'social_soundcloud'          => '',
+        'social_amazon'              => '',
+        'social_amazon_music'      => '',
+        'social_x'                   => '',
         'custom_css'         => '',
         'ad_preview_mode'    => 0,
         'ad_zones'           => collective_finity_default_ad_zones(),
@@ -66,6 +103,200 @@ function collective_finity_get_theme_option( $key, $default = null ) {
     return isset( $defaults[ $key ] ) ? $defaults[ $key ] : null;
 }
 
+/**
+ * URLs embedded in the Join Community page editor content (legacy fallback).
+ *
+ * @return array<string, string>
+ */
+function collective_finity_get_community_urls_from_page_content() {
+    static $cache = null;
+
+    if ( null !== $cache ) {
+        return $cache;
+    }
+
+    $cache = array();
+    $page  = get_page_by_path( 'join-community' );
+
+    if ( ! $page ) {
+        return $cache;
+    }
+
+    $content = (string) $page->post_content;
+    if ( '' === trim( wp_strip_all_tags( $content ) ) ) {
+        return $cache;
+    }
+
+    $patterns = array(
+        'social_discord'             => '/discord\.(gg|com|app)/i',
+        'social_facebook'            => '/facebook\.com/i',
+        'social_facebook_group'      => '/facebook\.com\/groups/i',
+        'social_tiktok'              => '/tiktok\.com/i',
+        'social_instagram'           => '/instagram\.com/i',
+        'social_instagram_community' => '/instagram\.com/i',
+        'social_youtube'             => '/youtube\.com|youtu\.be/i',
+        'social_amazon'              => '/music\.amazon|amazon\./i',
+        'social_soundcloud'          => '/soundcloud\.com/i',
+        'social_spotify'             => '/open\.spotify\.com|spotify\.com/i',
+    );
+
+    if ( ! preg_match_all( '/href=["\']([^"\']+)["\']/i', $content, $matches ) ) {
+        return $cache;
+    }
+
+    $instagram_urls = array();
+
+    foreach ( $matches[1] as $href ) {
+        $href = trim( (string) $href );
+        if ( ! $href || '#' === $href || 0 === strpos( $href, 'mailto:' ) ) {
+            continue;
+        }
+
+        if ( preg_match( '/instagram\.com/i', $href ) ) {
+            $instagram_urls[] = esc_url_raw( $href );
+        }
+
+        foreach ( $patterns as $key => $pattern ) {
+            if ( ! empty( $cache[ $key ] ) ) {
+                continue;
+            }
+            if ( preg_match( $pattern, $href ) ) {
+                $cache[ $key ] = esc_url_raw( $href );
+            }
+        }
+    }
+
+    if ( ! empty( $instagram_urls ) ) {
+        if ( empty( $cache['social_instagram'] ) ) {
+            $cache['social_instagram'] = $instagram_urls[0];
+        }
+        if ( empty( $cache['social_instagram_community'] ) ) {
+            $cache['social_instagram_community'] = $instagram_urls[ count( $instagram_urls ) > 1 ? 1 : 0 ];
+        }
+    }
+
+    return $cache;
+}
+
+/**
+ * Resolve a social URL from theme options, legacy keys, and page content.
+ *
+ * @param string|string[] $option_keys Option key or keys to try in order.
+ * @param string          $fallback    Fallback URL when nothing is configured.
+ */
+function collective_finity_get_social_url( $option_keys, $fallback = '#' ) {
+    if ( ! is_array( $option_keys ) ) {
+        $option_keys = array( $option_keys );
+    }
+
+    $options       = collective_finity_get_theme_options();
+    $content_urls  = collective_finity_get_community_urls_from_page_content();
+
+    foreach ( $option_keys as $key ) {
+        if ( ! empty( $options[ $key ] ) ) {
+            return esc_url( $options[ $key ] );
+        }
+        if ( ! empty( $content_urls[ $key ] ) ) {
+            return esc_url( $content_urls[ $key ] );
+        }
+    }
+
+    return $fallback;
+}
+
+/**
+ * Back-compat alias used by older page templates.
+ *
+ * @param string $option_key Theme option key.
+ * @param string $fallback   Fallback URL.
+ */
+function cf_get_theme_social_url( $option_key, $fallback = '#' ) {
+    return collective_finity_get_social_url( $option_key, $fallback );
+}
+
+/**
+ * Selectable font presets for the body and heading/accent typography.
+ *
+ * Each entry: label (admin), stack (CSS font-family value), google (families
+ * segment for the css2 API, empty for system fonts).
+ *
+ * @return array<string, array<string, string>>
+ */
+function collective_finity_get_font_choices() {
+    return array(
+        'inter'          => array( 'label' => 'Inter',          'stack' => "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", 'google' => 'Inter:wght@400;500;600;700' ),
+        'roboto'         => array( 'label' => 'Roboto',         'stack' => "'Roboto', sans-serif",       'google' => 'Roboto:wght@400;500;700' ),
+        'open-sans'      => array( 'label' => 'Open Sans',      'stack' => "'Open Sans', sans-serif",    'google' => 'Open+Sans:wght@400;500;600;700' ),
+        'lato'           => array( 'label' => 'Lato',           'stack' => "'Lato', sans-serif",         'google' => 'Lato:wght@400;700' ),
+        'montserrat'     => array( 'label' => 'Montserrat',     'stack' => "'Montserrat', sans-serif",   'google' => 'Montserrat:wght@400;500;600;700' ),
+        'poppins'        => array( 'label' => 'Poppins',        'stack' => "'Poppins', sans-serif",      'google' => 'Poppins:wght@400;500;600;700' ),
+        'nunito-sans'    => array( 'label' => 'Nunito Sans',    'stack' => "'Nunito Sans', sans-serif",  'google' => 'Nunito+Sans:wght@400;600;700' ),
+        'work-sans'      => array( 'label' => 'Work Sans',      'stack' => "'Work Sans', sans-serif",    'google' => 'Work+Sans:wght@400;500;600;700' ),
+        'space-grotesk'  => array( 'label' => 'Space Grotesk',  'stack' => "'Space Grotesk', sans-serif", 'google' => 'Space+Grotesk:wght@400;500;600;700' ),
+        'space-mono'     => array( 'label' => 'Space Mono',     'stack' => "'Space Mono', monospace",    'google' => 'Space+Mono:wght@400;700' ),
+        'jetbrains-mono' => array( 'label' => 'JetBrains Mono', 'stack' => "'JetBrains Mono', monospace", 'google' => 'JetBrains+Mono:wght@400;700' ),
+        'ibm-plex-mono'  => array( 'label' => 'IBM Plex Mono',  'stack' => "'IBM Plex Mono', monospace", 'google' => 'IBM+Plex+Mono:wght@400;500;700' ),
+        'system'         => array( 'label' => 'System Default',  'stack' => "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", 'google' => '' ),
+    );
+}
+
+/**
+ * Resolve the CSS font-family stack for a saved font key.
+ *
+ * @param string $key      Saved font option key.
+ * @param string $fallback Fallback font key.
+ * @return string
+ */
+function collective_finity_get_font_stack( $key, $fallback = 'inter' ) {
+    $fonts = collective_finity_get_font_choices();
+    if ( isset( $fonts[ $key ] ) ) {
+        return $fonts[ $key ]['stack'];
+    }
+    return isset( $fonts[ $fallback ] ) ? $fonts[ $fallback ]['stack'] : "'Inter', sans-serif";
+}
+
+/**
+ * Convert a hex color into an rgba() string.
+ *
+ * @param string $hex   Hex color (#rgb or #rrggbb).
+ * @param float  $alpha Alpha channel 0–1.
+ * @return string
+ */
+function collective_finity_hex_to_rgba( $hex, $alpha = 1 ) {
+    $hex = ltrim( (string) $hex, '#' );
+    if ( 3 === strlen( $hex ) ) {
+        $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+    }
+    if ( 6 !== strlen( $hex ) ) {
+        return 'rgba(255,183,0,' . $alpha . ')';
+    }
+    $r = hexdec( substr( $hex, 0, 2 ) );
+    $g = hexdec( substr( $hex, 2, 2 ) );
+    $b = hexdec( substr( $hex, 4, 2 ) );
+    return sprintf( 'rgba(%d,%d,%d,%s)', $r, $g, $b, $alpha );
+}
+
+/**
+ * Lighten or darken a hex color by an absolute RGB step.
+ *
+ * @param string $hex   Hex color.
+ * @param int    $steps Positive lightens, negative darkens.
+ * @return string
+ */
+function collective_finity_adjust_hex_brightness( $hex, $steps ) {
+    $hex = ltrim( (string) $hex, '#' );
+    if ( 3 === strlen( $hex ) ) {
+        $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+    }
+    if ( 6 !== strlen( $hex ) ) {
+        return '#' . $hex;
+    }
+    $r = max( 0, min( 255, hexdec( substr( $hex, 0, 2 ) ) + $steps ) );
+    $g = max( 0, min( 255, hexdec( substr( $hex, 2, 2 ) ) + $steps ) );
+    $b = max( 0, min( 255, hexdec( substr( $hex, 4, 2 ) ) + $steps ) );
+    return sprintf( '#%02x%02x%02x', $r, $g, $b );
+}
+
 
 function collective_finity_register_theme_options_settings() {
     register_setting(
@@ -93,6 +324,67 @@ function collective_finity_sanitize_theme_options( $input ) {
     if ( 'general' === $submitted_tab ) {
         $output['primary_color']      = sanitize_hex_color( $input['primary_color'] ?? $defaults['primary_color'] ) ?: $defaults['primary_color'];
         $output['accent_color']       = sanitize_hex_color( $input['accent_color'] ?? $defaults['accent_color'] ) ?: $defaults['accent_color'];
+        $output['text_color']         = sanitize_hex_color( $input['text_color'] ?? $defaults['text_color'] ) ?: $defaults['text_color'];
+        $output['text_muted_color']   = sanitize_hex_color( $input['text_muted_color'] ?? $defaults['text_muted_color'] ) ?: $defaults['text_muted_color'];
+        $output['card_bg_color']      = sanitize_hex_color( $input['card_bg_color'] ?? $defaults['card_bg_color'] ) ?: $defaults['card_bg_color'];
+        $output['border_color']       = sanitize_hex_color( $input['border_color'] ?? $defaults['border_color'] ) ?: $defaults['border_color'];
+        $output['link_color']         = sanitize_hex_color( $input['link_color'] ?? $defaults['link_color'] ) ?: $defaults['link_color'];
+        $output['link_hover_color']   = sanitize_hex_color( $input['link_hover_color'] ?? $defaults['link_hover_color'] ) ?: $defaults['link_hover_color'];
+
+        $output['base_font_size']     = min( 20, max( 13, absint( $input['base_font_size'] ?? $defaults['base_font_size'] ) ) );
+        $output['h1_font_size']       = min( 72, max( 20, absint( $input['h1_font_size'] ?? $defaults['h1_font_size'] ) ) );
+        $output['h2_font_size']       = min( 56, max( 18, absint( $input['h2_font_size'] ?? $defaults['h2_font_size'] ) ) );
+        $output['h3_font_size']       = min( 40, max( 16, absint( $input['h3_font_size'] ?? $defaults['h3_font_size'] ) ) );
+
+        $heading_weights = array( '400', '500', '600', '700', '800' );
+        $heading_weight  = isset( $input['heading_font_weight'] ) ? sanitize_key( $input['heading_font_weight'] ) : $defaults['heading_font_weight'];
+        $output['heading_font_weight'] = in_array( $heading_weight, $heading_weights, true ) ? $heading_weight : $defaults['heading_font_weight'];
+
+        $output['heading_letter_spacing'] = min( 0.15, max( 0, round( floatval( $input['heading_letter_spacing'] ?? $defaults['heading_letter_spacing'] ), 2 ) ) );
+        $output['body_line_height']     = min( 2.0, max( 1.2, round( floatval( $input['body_line_height'] ?? $defaults['body_line_height'] ), 2 ) ) );
+
+        $output['button_radius'] = min( 40, max( 0, absint( $input['button_radius'] ?? $defaults['button_radius'] ) ) );
+
+        $button_sizes = array( 'compact', 'regular', 'large' );
+        $button_size  = isset( $input['button_size'] ) ? sanitize_key( $input['button_size'] ) : $defaults['button_size'];
+        $output['button_size'] = in_array( $button_size, $button_sizes, true ) ? $button_size : $defaults['button_size'];
+
+        $button_hovers = array( 'none', 'brighten', 'scale', 'lift' );
+        $button_hover  = isset( $input['button_hover_effect'] ) ? sanitize_key( $input['button_hover_effect'] ) : $defaults['button_hover_effect'];
+        $output['button_hover_effect'] = in_array( $button_hover, $button_hovers, true ) ? $button_hover : $defaults['button_hover_effect'];
+
+        $output['card_radius']       = min( 32, max( 0, absint( $input['card_radius'] ?? $defaults['card_radius'] ) ) );
+        $output['card_border_width'] = min( 4, max( 0, absint( $input['card_border_width'] ?? $defaults['card_border_width'] ) ) );
+
+        $card_hovers = array( 'none', 'lift', 'glow', 'scale' );
+        $card_hover  = isset( $input['card_hover_effect'] ) ? sanitize_key( $input['card_hover_effect'] ) : $defaults['card_hover_effect'];
+        $output['card_hover_effect'] = in_array( $card_hover, $card_hovers, true ) ? $card_hover : $defaults['card_hover_effect'];
+
+        $card_shadows = array( 'none', 'soft', 'strong' );
+        $card_shadow  = isset( $input['card_shadow'] ) ? sanitize_key( $input['card_shadow'] ) : $defaults['card_shadow'];
+        $output['card_shadow'] = in_array( $card_shadow, $card_shadows, true ) ? $card_shadow : $defaults['card_shadow'];
+
+        $transition_speeds = array( 'fast', 'normal', 'slow' );
+        $transition_speed  = isset( $input['transition_speed'] ) ? sanitize_key( $input['transition_speed'] ) : $defaults['transition_speed'];
+        $output['transition_speed'] = in_array( $transition_speed, $transition_speeds, true ) ? $transition_speed : $defaults['transition_speed'];
+
+        $output['enable_glow_effects'] = empty( $input['enable_glow_effects'] ) ? 0 : 1;
+
+        $section_spacings = array( 'compact', 'default', 'spacious' );
+        $section_spacing  = isset( $input['section_spacing'] ) ? sanitize_key( $input['section_spacing'] ) : $defaults['section_spacing'];
+        $output['section_spacing'] = in_array( $section_spacing, $section_spacings, true ) ? $section_spacing : $defaults['section_spacing'];
+
+        $output['sidebar_logo']       = absint( $input['sidebar_logo'] ?? 0 );
+        $output['mobile_logo']        = absint( $input['mobile_logo'] ?? 0 );
+        $output['sidebar_logo_size']  = min( 120, max( 16, absint( $input['sidebar_logo_size'] ?? $defaults['sidebar_logo_size'] ) ) );
+        $output['mobile_logo_size']   = min( 120, max( 16, absint( $input['mobile_logo_size'] ?? $defaults['mobile_logo_size'] ) ) );
+
+        $fonts                        = collective_finity_get_font_choices();
+        $body_font                    = isset( $input['body_font'] ) ? sanitize_key( $input['body_font'] ) : $defaults['body_font'];
+        $heading_font                 = isset( $input['heading_font'] ) ? sanitize_key( $input['heading_font'] ) : $defaults['heading_font'];
+        $output['body_font']          = isset( $fonts[ $body_font ] ) ? $body_font : $defaults['body_font'];
+        $output['heading_font']       = isset( $fonts[ $heading_font ] ) ? $heading_font : $defaults['heading_font'];
+
         $output['enable_preloader']   = empty( $input['enable_preloader'] ) ? 0 : 1;
         $output['enable_back_to_top'] = empty( $input['enable_back_to_top'] ) ? 0 : 1;
     }
@@ -107,7 +399,20 @@ function collective_finity_sanitize_theme_options( $input ) {
         $output['footer_tagline']     = sanitize_text_field( $input['footer_tagline'] ?? $defaults['footer_tagline'] );
         $desc                         = sanitize_text_field( $input['footer_description'] ?? '' );
         $output['footer_description'] = mb_substr( $desc ?: $defaults['footer_description'], 0, 140 );
-        $social_fields                = array( 'social_instagram', 'social_youtube', 'social_spotify', 'social_facebook', 'social_x' );
+        $social_fields                = array(
+            'social_instagram',
+            'social_instagram_community',
+            'social_youtube',
+            'social_spotify',
+            'social_facebook',
+            'social_facebook_group',
+            'social_discord',
+            'social_tiktok',
+            'social_soundcloud',
+            'social_amazon',
+            'social_amazon_music',
+            'social_x',
+        );
         foreach ( $social_fields as $field ) {
             $output[ $field ] = esc_url_raw( $input[ $field ] ?? '' );
         }
@@ -120,6 +425,9 @@ function collective_finity_sanitize_theme_options( $input ) {
 
     if ( 'ads' === $submitted_tab ) {
         $output['ad_preview_mode'] = empty( $input['ad_preview_mode'] ) ? 0 : 1;
+
+        $publisher_id = sanitize_text_field( $input['adsense_publisher_id'] ?? '' );
+        $output['adsense_publisher_id'] = ( $publisher_id && preg_match( '/^ca-pub-\d+$/', $publisher_id ) ) ? $publisher_id : '';
 
         $default_zones = collective_finity_default_ad_zones();
         $input_zones   = isset( $input['ad_zones'] ) && is_array( $input['ad_zones'] ) ? $input['ad_zones'] : array();
@@ -135,6 +443,8 @@ function collective_finity_sanitize_theme_options( $input ) {
             } else {
                 $output['ad_zones'][ $zone_id ]['code'] = wp_kses_post( $zone_input['code'] ?? '' );
             }
+
+            $output['ad_zones'][ $zone_id ]['adsense_slot_id'] = sanitize_text_field( $zone_input['adsense_slot_id'] ?? '' );
 
             if ( isset( $zone_defaults['frequency'] ) ) {
                 $output['ad_zones'][ $zone_id ]['frequency'] = min( 50, max( 2, absint( $zone_input['frequency'] ?? $zone_defaults['frequency'] ) ) );
@@ -173,8 +483,9 @@ function collective_finity_theme_options_assets( $hook ) {
     }
     wp_enqueue_style( 'wp-color-picker' );
     wp_enqueue_script( 'wp-color-picker' );
+    wp_enqueue_media();
     wp_enqueue_style( 'cf-theme-options-admin', get_template_directory_uri() . '/assets/css/theme-options-admin.css', array(), wp_get_theme()->get( 'Version' ) );
-    wp_enqueue_script( 'cf-theme-options-admin', get_template_directory_uri() . '/assets/js/theme-options-admin.js', array( 'jquery', 'wp-color-picker' ), wp_get_theme()->get( 'Version' ), true );
+    wp_enqueue_script( 'cf-theme-options-admin', get_template_directory_uri() . '/assets/js/theme-options-admin.js', array( 'jquery', 'wp-color-picker', 'media-editor' ), wp_get_theme()->get( 'Version' ), true );
 }
 add_action( 'admin_enqueue_scripts', 'collective_finity_theme_options_assets' );
 
@@ -241,18 +552,297 @@ function collective_finity_render_theme_options_page() {
     <?php
 }
 
+function collective_finity_render_theme_options_logo_field( $field, $label, $value, $description ) {
+    $option_key = collective_finity_theme_options_key();
+    $attachment = $value ? wp_get_attachment_image_url( absint( $value ), 'thumbnail' ) : '';
+    ?>
+    <tr>
+        <th scope="row"><?php echo esc_html( $label ); ?></th>
+        <td>
+            <div class="cf-logo-field" data-cf-media-field>
+                <input type="hidden" class="cf-logo-input" name="<?php echo esc_attr( $option_key ); ?>[<?php echo esc_attr( $field ); ?>]" value="<?php echo esc_attr( $value ); ?>">
+                <div class="cf-logo-preview">
+                    <?php if ( $attachment ) : ?>
+                        <img src="<?php echo esc_url( $attachment ); ?>" alt="">
+                    <?php endif; ?>
+                </div>
+                <div class="cf-logo-actions">
+                    <button type="button" class="button cf-logo-upload"><?php esc_html_e( 'Select Logo', 'collective-finity' ); ?></button>
+                    <button type="button" class="button cf-logo-remove"<?php disabled( empty( $value ) ); ?>><?php esc_html_e( 'Remove', 'collective-finity' ); ?></button>
+                </div>
+            </div>
+            <p class="description"><?php echo esc_html( $description ); ?></p>
+        </td>
+    </tr>
+    <?php
+}
+
 function collective_finity_render_theme_options_general_tab( $options ) {
+    $option_key   = collective_finity_theme_options_key();
+    $font_choices = collective_finity_get_font_choices();
     ?>
     <h2><?php esc_html_e( 'General Settings', 'collective-finity' ); ?></h2>
+    <h3 class="cf-options-subhead"><?php esc_html_e( 'Colors', 'collective-finity' ); ?></h3>
     <table class="form-table" role="presentation">
         <tr>
             <th scope="row"><label for="cf_primary_color"><?php esc_html_e( 'Primary Color', 'collective-finity' ); ?></label></th>
-            <td><input type="text" class="cf-color-field" id="cf_primary_color" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[primary_color]" value="<?php echo esc_attr( $options['primary_color'] ); ?>" data-default-color="#FFB700"></td>
+            <td>
+                <input type="text" class="cf-color-field" id="cf_primary_color" name="<?php echo esc_attr( $option_key ); ?>[primary_color]" value="<?php echo esc_attr( $options['primary_color'] ); ?>" data-default-color="#FFB700">
+                <p class="description"><?php esc_html_e( 'Brand accent used across the sidebar, footer, buttons, and active nav item.', 'collective-finity' ); ?></p>
+            </td>
         </tr>
         <tr>
             <th scope="row"><label for="cf_accent_color"><?php esc_html_e( 'Dark Accent Color', 'collective-finity' ); ?></label></th>
-            <td><input type="text" class="cf-color-field" id="cf_accent_color" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[accent_color]" value="<?php echo esc_attr( $options['accent_color'] ); ?>" data-default-color="#0D0D0D"></td>
+            <td>
+                <input type="text" class="cf-color-field" id="cf_accent_color" name="<?php echo esc_attr( $option_key ); ?>[accent_color]" value="<?php echo esc_attr( $options['accent_color'] ); ?>" data-default-color="#0D0D0D">
+                <p class="description"><?php esc_html_e( 'Dark base tone used for the site background and side panels.', 'collective-finity' ); ?></p>
+            </td>
         </tr>
+        <tr>
+            <th scope="row"><label for="cf_text_color"><?php esc_html_e( 'Text Color', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="text" class="cf-color-field" id="cf_text_color" name="<?php echo esc_attr( $option_key ); ?>[text_color]" value="<?php echo esc_attr( $options['text_color'] ); ?>" data-default-color="#FFFFFF">
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_text_muted_color"><?php esc_html_e( 'Muted Text Color', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="text" class="cf-color-field" id="cf_text_muted_color" name="<?php echo esc_attr( $option_key ); ?>[text_muted_color]" value="<?php echo esc_attr( $options['text_muted_color'] ); ?>" data-default-color="#B3B3B3">
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_card_bg_color"><?php esc_html_e( 'Card Background', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="text" class="cf-color-field" id="cf_card_bg_color" name="<?php echo esc_attr( $option_key ); ?>[card_bg_color]" value="<?php echo esc_attr( $options['card_bg_color'] ); ?>" data-default-color="#141414">
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_border_color"><?php esc_html_e( 'Border Color', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="text" class="cf-color-field" id="cf_border_color" name="<?php echo esc_attr( $option_key ); ?>[border_color]" value="<?php echo esc_attr( $options['border_color'] ); ?>" data-default-color="#232323">
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_link_color"><?php esc_html_e( 'Link Color', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="text" class="cf-color-field" id="cf_link_color" name="<?php echo esc_attr( $option_key ); ?>[link_color]" value="<?php echo esc_attr( $options['link_color'] ); ?>" data-default-color="#FFB700">
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_link_hover_color"><?php esc_html_e( 'Link Hover Color', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="text" class="cf-color-field" id="cf_link_hover_color" name="<?php echo esc_attr( $option_key ); ?>[link_hover_color]" value="<?php echo esc_attr( $options['link_hover_color'] ); ?>" data-default-color="#ffc633">
+            </td>
+        </tr>
+    </table>
+
+    <h3 class="cf-options-subhead"><?php esc_html_e( 'Logo', 'collective-finity' ); ?></h3>
+    <table class="form-table" role="presentation">
+        <?php
+        collective_finity_render_theme_options_logo_field(
+            'sidebar_logo',
+            __( 'Sidebar / Header Logo', 'collective-finity' ),
+            $options['sidebar_logo'],
+            __( 'Replaces the diamond mark next to the brand name in the desktop sidebar. Leave empty to use the default diamond icon.', 'collective-finity' )
+        );
+        ?>
+        <tr>
+            <th scope="row"><label for="cf_sidebar_logo_size"><?php esc_html_e( 'Sidebar Logo Size (px)', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="number" min="16" max="120" id="cf_sidebar_logo_size" name="<?php echo esc_attr( $option_key ); ?>[sidebar_logo_size]" value="<?php echo esc_attr( $options['sidebar_logo_size'] ); ?>">
+            </td>
+        </tr>
+        <?php
+        collective_finity_render_theme_options_logo_field(
+            'mobile_logo',
+            __( 'Mobile / Tablet Logo Override', 'collective-finity' ),
+            $options['mobile_logo'],
+            __( 'Optional. Shown in the mobile/tablet top bar. Falls back to the sidebar logo, then the diamond icon.', 'collective-finity' )
+        );
+        ?>
+        <tr>
+            <th scope="row"><label for="cf_mobile_logo_size"><?php esc_html_e( 'Mobile Logo Size (px)', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="number" min="16" max="120" id="cf_mobile_logo_size" name="<?php echo esc_attr( $option_key ); ?>[mobile_logo_size]" value="<?php echo esc_attr( $options['mobile_logo_size'] ); ?>">
+            </td>
+        </tr>
+    </table>
+
+    <h3 class="cf-options-subhead"><?php esc_html_e( 'Typography', 'collective-finity' ); ?></h3>
+    <table class="form-table" role="presentation">
+        <tr>
+            <th scope="row"><label for="cf_body_font"><?php esc_html_e( 'Body Font', 'collective-finity' ); ?></label></th>
+            <td>
+                <select id="cf_body_font" name="<?php echo esc_attr( $option_key ); ?>[body_font]">
+                    <?php foreach ( $font_choices as $key => $font ) : ?>
+                        <option value="<?php echo esc_attr( $key ); ?>" <?php selected( $options['body_font'], $key ); ?>><?php echo esc_html( $font['label'] ); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <p class="description"><?php esc_html_e( 'Base font for body text and navigation (default: Inter).', 'collective-finity' ); ?></p>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_heading_font"><?php esc_html_e( 'Accent / Heading Font', 'collective-finity' ); ?></label></th>
+            <td>
+                <select id="cf_heading_font" name="<?php echo esc_attr( $option_key ); ?>[heading_font]">
+                    <?php foreach ( $font_choices as $key => $font ) : ?>
+                        <option value="<?php echo esc_attr( $key ); ?>" <?php selected( $options['heading_font'], $key ); ?>><?php echo esc_html( $font['label'] ); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <p class="description"><?php esc_html_e( 'Monospace/accent font for the wordmark, eyebrows, and labels (default: Space Mono).', 'collective-finity' ); ?></p>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_base_font_size"><?php esc_html_e( 'Base Font Size (px)', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="number" min="13" max="20" id="cf_base_font_size" name="<?php echo esc_attr( $option_key ); ?>[base_font_size]" value="<?php echo esc_attr( $options['base_font_size'] ); ?>">
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_h1_font_size"><?php esc_html_e( 'H1 Font Size (px)', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="number" min="20" max="72" id="cf_h1_font_size" name="<?php echo esc_attr( $option_key ); ?>[h1_font_size]" value="<?php echo esc_attr( $options['h1_font_size'] ); ?>">
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_h2_font_size"><?php esc_html_e( 'H2 Font Size (px)', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="number" min="18" max="56" id="cf_h2_font_size" name="<?php echo esc_attr( $option_key ); ?>[h2_font_size]" value="<?php echo esc_attr( $options['h2_font_size'] ); ?>">
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_h3_font_size"><?php esc_html_e( 'H3 Font Size (px)', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="number" min="16" max="40" id="cf_h3_font_size" name="<?php echo esc_attr( $option_key ); ?>[h3_font_size]" value="<?php echo esc_attr( $options['h3_font_size'] ); ?>">
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_heading_font_weight"><?php esc_html_e( 'Heading Font Weight', 'collective-finity' ); ?></label></th>
+            <td>
+                <select id="cf_heading_font_weight" name="<?php echo esc_attr( $option_key ); ?>[heading_font_weight]">
+                    <?php foreach ( array( '400', '500', '600', '700', '800' ) as $weight ) : ?>
+                        <option value="<?php echo esc_attr( $weight ); ?>" <?php selected( $options['heading_font_weight'], $weight ); ?>><?php echo esc_html( $weight ); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_heading_letter_spacing"><?php esc_html_e( 'Heading Letter Spacing (em)', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="number" min="0" max="0.15" step="0.01" id="cf_heading_letter_spacing" name="<?php echo esc_attr( $option_key ); ?>[heading_letter_spacing]" value="<?php echo esc_attr( $options['heading_letter_spacing'] ); ?>">
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_body_line_height"><?php esc_html_e( 'Body Line Height', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="number" min="1.2" max="2.0" step="0.05" id="cf_body_line_height" name="<?php echo esc_attr( $option_key ); ?>[body_line_height]" value="<?php echo esc_attr( $options['body_line_height'] ); ?>">
+            </td>
+        </tr>
+    </table>
+
+    <h3 class="cf-options-subhead"><?php esc_html_e( 'Buttons', 'collective-finity' ); ?></h3>
+    <table class="form-table" role="presentation">
+        <tr>
+            <th scope="row"><label for="cf_button_radius"><?php esc_html_e( 'Button Radius (px)', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="number" min="0" max="40" id="cf_button_radius" name="<?php echo esc_attr( $option_key ); ?>[button_radius]" value="<?php echo esc_attr( $options['button_radius'] ); ?>">
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_button_size"><?php esc_html_e( 'Button Size', 'collective-finity' ); ?></label></th>
+            <td>
+                <select id="cf_button_size" name="<?php echo esc_attr( $option_key ); ?>[button_size]">
+                    <option value="compact" <?php selected( $options['button_size'], 'compact' ); ?>><?php esc_html_e( 'Compact', 'collective-finity' ); ?></option>
+                    <option value="regular" <?php selected( $options['button_size'], 'regular' ); ?>><?php esc_html_e( 'Regular', 'collective-finity' ); ?></option>
+                    <option value="large" <?php selected( $options['button_size'], 'large' ); ?>><?php esc_html_e( 'Large', 'collective-finity' ); ?></option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_button_hover_effect"><?php esc_html_e( 'Button Hover Effect', 'collective-finity' ); ?></label></th>
+            <td>
+                <select id="cf_button_hover_effect" name="<?php echo esc_attr( $option_key ); ?>[button_hover_effect]">
+                    <option value="none" <?php selected( $options['button_hover_effect'], 'none' ); ?>><?php esc_html_e( 'None', 'collective-finity' ); ?></option>
+                    <option value="brighten" <?php selected( $options['button_hover_effect'], 'brighten' ); ?>><?php esc_html_e( 'Brighten', 'collective-finity' ); ?></option>
+                    <option value="scale" <?php selected( $options['button_hover_effect'], 'scale' ); ?>><?php esc_html_e( 'Scale', 'collective-finity' ); ?></option>
+                    <option value="lift" <?php selected( $options['button_hover_effect'], 'lift' ); ?>><?php esc_html_e( 'Lift', 'collective-finity' ); ?></option>
+                </select>
+            </td>
+        </tr>
+    </table>
+
+    <h3 class="cf-options-subhead"><?php esc_html_e( 'Cards', 'collective-finity' ); ?></h3>
+    <table class="form-table" role="presentation">
+        <tr>
+            <th scope="row"><label for="cf_card_radius"><?php esc_html_e( 'Card Radius (px)', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="number" min="0" max="32" id="cf_card_radius" name="<?php echo esc_attr( $option_key ); ?>[card_radius]" value="<?php echo esc_attr( $options['card_radius'] ); ?>">
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_card_border_width"><?php esc_html_e( 'Card Border Width (px)', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="number" min="0" max="4" id="cf_card_border_width" name="<?php echo esc_attr( $option_key ); ?>[card_border_width]" value="<?php echo esc_attr( $options['card_border_width'] ); ?>">
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_card_hover_effect"><?php esc_html_e( 'Card Hover Effect', 'collective-finity' ); ?></label></th>
+            <td>
+                <select id="cf_card_hover_effect" name="<?php echo esc_attr( $option_key ); ?>[card_hover_effect]">
+                    <option value="none" <?php selected( $options['card_hover_effect'], 'none' ); ?>><?php esc_html_e( 'None', 'collective-finity' ); ?></option>
+                    <option value="lift" <?php selected( $options['card_hover_effect'], 'lift' ); ?>><?php esc_html_e( 'Lift', 'collective-finity' ); ?></option>
+                    <option value="glow" <?php selected( $options['card_hover_effect'], 'glow' ); ?>><?php esc_html_e( 'Glow', 'collective-finity' ); ?></option>
+                    <option value="scale" <?php selected( $options['card_hover_effect'], 'scale' ); ?>><?php esc_html_e( 'Scale', 'collective-finity' ); ?></option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_card_shadow"><?php esc_html_e( 'Card Shadow', 'collective-finity' ); ?></label></th>
+            <td>
+                <select id="cf_card_shadow" name="<?php echo esc_attr( $option_key ); ?>[card_shadow]">
+                    <option value="none" <?php selected( $options['card_shadow'], 'none' ); ?>><?php esc_html_e( 'None', 'collective-finity' ); ?></option>
+                    <option value="soft" <?php selected( $options['card_shadow'], 'soft' ); ?>><?php esc_html_e( 'Soft', 'collective-finity' ); ?></option>
+                    <option value="strong" <?php selected( $options['card_shadow'], 'strong' ); ?>><?php esc_html_e( 'Strong', 'collective-finity' ); ?></option>
+                </select>
+            </td>
+        </tr>
+    </table>
+
+    <h3 class="cf-options-subhead"><?php esc_html_e( 'Effects', 'collective-finity' ); ?></h3>
+    <table class="form-table" role="presentation">
+        <tr>
+            <th scope="row"><label for="cf_transition_speed"><?php esc_html_e( 'Transition Speed', 'collective-finity' ); ?></label></th>
+            <td>
+                <select id="cf_transition_speed" name="<?php echo esc_attr( $option_key ); ?>[transition_speed]">
+                    <option value="fast" <?php selected( $options['transition_speed'], 'fast' ); ?>><?php esc_html_e( 'Fast', 'collective-finity' ); ?></option>
+                    <option value="normal" <?php selected( $options['transition_speed'], 'normal' ); ?>><?php esc_html_e( 'Normal', 'collective-finity' ); ?></option>
+                    <option value="slow" <?php selected( $options['transition_speed'], 'slow' ); ?>><?php esc_html_e( 'Slow', 'collective-finity' ); ?></option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><?php esc_html_e( 'Glow Effects', 'collective-finity' ); ?></th>
+            <td><label><input type="checkbox" name="<?php echo esc_attr( $option_key ); ?>[enable_glow_effects]" value="1" <?php checked( $options['enable_glow_effects'], 1 ); ?>> <?php esc_html_e( 'Enable radial gradient glow effects', 'collective-finity' ); ?></label></td>
+        </tr>
+    </table>
+
+    <h3 class="cf-options-subhead"><?php esc_html_e( 'Spacing', 'collective-finity' ); ?></h3>
+    <table class="form-table" role="presentation">
+        <tr>
+            <th scope="row"><label for="cf_section_spacing"><?php esc_html_e( 'Section Spacing', 'collective-finity' ); ?></label></th>
+            <td>
+                <select id="cf_section_spacing" name="<?php echo esc_attr( $option_key ); ?>[section_spacing]">
+                    <option value="compact" <?php selected( $options['section_spacing'], 'compact' ); ?>><?php esc_html_e( 'Compact', 'collective-finity' ); ?></option>
+                    <option value="default" <?php selected( $options['section_spacing'], 'default' ); ?>><?php esc_html_e( 'Default', 'collective-finity' ); ?></option>
+                    <option value="spacious" <?php selected( $options['section_spacing'], 'spacious' ); ?>><?php esc_html_e( 'Spacious', 'collective-finity' ); ?></option>
+                </select>
+                <p class="description"><?php esc_html_e( 'Vertical gap between major page sections.', 'collective-finity' ); ?></p>
+            </td>
+        </tr>
+    </table>
+
+    <h3 class="cf-options-subhead"><?php esc_html_e( 'Behavior', 'collective-finity' ); ?></h3>
+    <table class="form-table" role="presentation">
         <tr>
             <th scope="row"><?php esc_html_e( 'Preloader', 'collective-finity' ); ?></th>
             <td><label><input type="checkbox" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[enable_preloader]" value="1" <?php checked( $options['enable_preloader'], 1 ); ?>> <?php esc_html_e( 'Enable site preloader', 'collective-finity' ); ?></label></td>
@@ -292,10 +882,16 @@ function collective_finity_render_theme_options_footer_content_tab( $options ) {
     </table>
     <h2><?php esc_html_e( 'Social Media Links', 'collective-finity' ); ?></h2>
     <table class="form-table" role="presentation">
-        <tr><th scope="row"><label for="cf_social_instagram">Instagram</label></th><td><input type="url" class="regular-text" id="cf_social_instagram" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_instagram]" value="<?php echo esc_url( $options['social_instagram'] ); ?>" placeholder="https://instagram.com/..."></td></tr>
+        <tr><th scope="row"><label for="cf_social_discord">Discord</label></th><td><input type="url" class="regular-text" id="cf_social_discord" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_discord]" value="<?php echo esc_url( $options['social_discord'] ); ?>" placeholder="https://discord.gg/..."></td></tr>
+        <tr><th scope="row"><label for="cf_social_facebook_group">Facebook Group</label></th><td><input type="url" class="regular-text" id="cf_social_facebook_group" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_facebook_group]" value="<?php echo esc_url( $options['social_facebook_group'] ); ?>" placeholder="https://facebook.com/groups/..."></td></tr>
+        <tr><th scope="row"><label for="cf_social_facebook">Facebook Page</label></th><td><input type="url" class="regular-text" id="cf_social_facebook" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_facebook]" value="<?php echo esc_url( $options['social_facebook'] ); ?>" placeholder="https://facebook.com/..."></td></tr>
+        <tr><th scope="row"><label for="cf_social_instagram">Instagram — Music</label></th><td><input type="url" class="regular-text" id="cf_social_instagram" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_instagram]" value="<?php echo esc_url( $options['social_instagram'] ); ?>" placeholder="https://instagram.com/..."></td></tr>
+        <tr><th scope="row"><label for="cf_social_instagram_community">Instagram — Community</label></th><td><input type="url" class="regular-text" id="cf_social_instagram_community" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_instagram_community]" value="<?php echo esc_url( $options['social_instagram_community'] ); ?>" placeholder="https://instagram.com/..."></td></tr>
+        <tr><th scope="row"><label for="cf_social_tiktok">TikTok</label></th><td><input type="url" class="regular-text" id="cf_social_tiktok" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_tiktok]" value="<?php echo esc_url( $options['social_tiktok'] ); ?>" placeholder="https://tiktok.com/@..."></td></tr>
         <tr><th scope="row"><label for="cf_social_youtube">YouTube</label></th><td><input type="url" class="regular-text" id="cf_social_youtube" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_youtube]" value="<?php echo esc_url( $options['social_youtube'] ); ?>" placeholder="https://youtube.com/..."></td></tr>
         <tr><th scope="row"><label for="cf_social_spotify">Spotify</label></th><td><input type="url" class="regular-text" id="cf_social_spotify" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_spotify]" value="<?php echo esc_url( $options['social_spotify'] ); ?>" placeholder="https://open.spotify.com/..."></td></tr>
-        <tr><th scope="row"><label for="cf_social_facebook">Facebook</label></th><td><input type="url" class="regular-text" id="cf_social_facebook" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_facebook]" value="<?php echo esc_url( $options['social_facebook'] ); ?>" placeholder="https://facebook.com/..."></td></tr>
+        <tr><th scope="row"><label for="cf_social_soundcloud">SoundCloud</label></th><td><input type="url" class="regular-text" id="cf_social_soundcloud" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_soundcloud]" value="<?php echo esc_url( $options['social_soundcloud'] ); ?>" placeholder="https://soundcloud.com/..."></td></tr>
+        <tr><th scope="row"><label for="cf_social_amazon">Amazon Music</label></th><td><input type="url" class="regular-text" id="cf_social_amazon" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_amazon]" value="<?php echo esc_url( $options['social_amazon'] ?: ( $options['social_amazon_music'] ?? '' ) ); ?>" placeholder="https://music.amazon.com/..."></td></tr>
         <tr><th scope="row"><label for="cf_social_x">X (Twitter)</label></th><td><input type="url" class="regular-text" id="cf_social_x" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_x]" value="<?php echo esc_url( $options['social_x'] ); ?>" placeholder="https://x.com/..."></td></tr>
     </table>
     <p class="description"><?php esc_html_e( 'Assign footer menu links under Appearance → Menus → Footer Menu. Suggested sections: Explore, Community, Legal.', 'collective-finity' ); ?></p>
@@ -401,6 +997,17 @@ function collective_finity_render_theme_options_ads_tab( $options ) {
             </tr>
         </table>
 
+        <h2><?php esc_html_e( 'Google AdSense', 'collective-finity' ); ?></h2>
+        <table class="form-table" role="presentation">
+            <tr>
+                <th scope="row"><label for="cf_adsense_publisher_id"><?php esc_html_e( 'AdSense Publisher ID', 'collective-finity' ); ?></label></th>
+                <td>
+                    <input type="text" class="regular-text" id="cf_adsense_publisher_id" name="<?php echo esc_attr( $option_key ); ?>[adsense_publisher_id]" value="<?php echo esc_attr( $options['adsense_publisher_id'] ?? '' ); ?>" placeholder="ca-pub-XXXXXXXXXXXXXXXX">
+                    <p class="description"><?php esc_html_e( 'Required for AdSense ad slots. Must match the ca-pub-XXXXXXXXXXXXXXXX format.', 'collective-finity' ); ?></p>
+                </td>
+            </tr>
+        </table>
+
         <h2><?php esc_html_e( 'Ad Zones', 'collective-finity' ); ?></h2>
         <p class="description"><?php esc_html_e( 'Only users with permission to edit theme options can save ad code. Scripts and HTML are stored as entered.', 'collective-finity' ); ?></p>
 
@@ -428,6 +1035,10 @@ function collective_finity_render_theme_options_ads_tab( $options ) {
                         </p>
                     <?php endif; ?>
                     <p>
+                        <label for="cf_ad_slot_<?php echo esc_attr( $zone_id ); ?>"><?php esc_html_e( 'AdSense Ad Slot ID', 'collective-finity' ); ?></label><br>
+                        <input type="text" class="large-text" id="cf_ad_slot_<?php echo esc_attr( $zone_id ); ?>" name="<?php echo esc_attr( $option_key ); ?>[ad_zones][<?php echo esc_attr( $zone_id ); ?>][adsense_slot_id]" value="<?php echo esc_attr( $zone['adsense_slot_id'] ?? '' ); ?>" placeholder="<?php esc_attr_e( 'e.g. 1234567890', 'collective-finity' ); ?>">
+                    </p>
+                    <p>
                         <label for="cf_ad_code_<?php echo esc_attr( $zone_id ); ?>"><?php esc_html_e( 'Ad code (HTML / JavaScript)', 'collective-finity' ); ?></label>
                         <textarea id="cf_ad_code_<?php echo esc_attr( $zone_id ); ?>" name="<?php echo esc_attr( $option_key ); ?>[ad_zones][<?php echo esc_attr( $zone_id ); ?>][code]" rows="6" class="large-text code"><?php echo esc_textarea( $zone['code'] ?? '' ); ?></textarea>
                     </p>
@@ -438,16 +1049,118 @@ function collective_finity_render_theme_options_ads_tab( $options ) {
     <?php
 }
 
+function collective_finity_get_button_size_padding( $size ) {
+    $map = array(
+        'compact' => array( 'y' => 8, 'x' => 16 ),
+        'regular' => array( 'y' => 12, 'x' => 24 ),
+        'large'   => array( 'y' => 16, 'x' => 32 ),
+    );
+    return $map[ $size ] ?? $map['regular'];
+}
+
+function collective_finity_get_card_shadow_value( $shadow ) {
+    $map = array(
+        'none'   => 'none',
+        'soft'   => '0 14px 28px -12px rgba(0,0,0,0.55)',
+        'strong' => '0 24px 48px -8px rgba(0,0,0,0.72)',
+    );
+    return $map[ $shadow ] ?? $map['soft'];
+}
+
+function collective_finity_get_transition_speed_value( $speed ) {
+    $map = array(
+        'fast'   => '150ms',
+        'normal' => '250ms',
+        'slow'   => '400ms',
+    );
+    return $map[ $speed ] ?? $map['normal'];
+}
+
+function collective_finity_get_section_gap_value( $spacing ) {
+    $map = array(
+        'compact'  => '40px',
+        'default'  => '60px',
+        'spacious' => '84px',
+    );
+    return $map[ $spacing ] ?? $map['default'];
+}
+
+/**
+ * Output data attributes for design-control body toggles.
+ */
+function collective_finity_render_body_design_attributes() {
+    $options = collective_finity_get_theme_options();
+    $attrs   = array(
+        'data-btn-hover'  => sanitize_key( $options['button_hover_effect'] ),
+        'data-card-hover' => sanitize_key( $options['card_hover_effect'] ),
+    );
+    $parts = array();
+    foreach ( $attrs as $name => $value ) {
+        if ( $value ) {
+            $parts[] = sprintf( '%s="%s"', esc_attr( $name ), esc_attr( $value ) );
+        }
+    }
+    if ( $parts ) {
+        echo ' ' . implode( ' ', $parts );
+    }
+}
+
 function collective_finity_output_theme_option_styles() {
     $options = collective_finity_get_theme_options();
-    $css     = ':root{--primary-color:' . esc_attr( $options['primary_color'] ) . ';--secondary-color:' . esc_attr( $options['accent_color'] ) . ';}';
+
+    $primary      = $options['primary_color'];
+    $accent       = $options['accent_color'];
+    $accent_hover = collective_finity_adjust_hex_brightness( $primary, 40 );
+    $accent_dim   = collective_finity_hex_to_rgba( $primary, 0.14 );
+    $body_stack   = collective_finity_get_font_stack( $options['body_font'], 'inter' );
+    $head_stack   = collective_finity_get_font_stack( $options['heading_font'], 'space-mono' );
+    $btn_padding  = collective_finity_get_button_size_padding( $options['button_size'] );
+
+    $vars  = '--primary-color:' . esc_attr( $primary ) . ';';
+    $vars .= '--secondary-color:' . esc_attr( $accent ) . ';';
+    $vars .= '--cf-accent:' . esc_attr( $primary ) . ';';
+    $vars .= '--cf-accent-hover:' . esc_attr( $accent_hover ) . ';';
+    $vars .= '--cf-accent-dim:' . esc_attr( $accent_dim ) . ';';
+    $vars .= '--cf-bg-darkest:' . esc_attr( $accent ) . ';';
+    $vars .= '--cf-bg-dark:' . esc_attr( $accent ) . ';';
+    $vars .= '--cf-bg-panel:' . esc_attr( $accent ) . ';';
+    $vars .= '--cf-text:' . esc_attr( $options['text_color'] ) . ';';
+    $vars .= '--cf-text-2:' . esc_attr( $options['text_muted_color'] ) . ';';
+    $vars .= '--cf-bg-card:' . esc_attr( $options['card_bg_color'] ) . ';';
+    $vars .= '--cf-border:' . esc_attr( $options['border_color'] ) . ';';
+    $vars .= '--cf-link:' . esc_attr( $options['link_color'] ) . ';';
+    $vars .= '--cf-link-hover:' . esc_attr( $options['link_hover_color'] ) . ';';
+    $vars .= '--cf-font-size-base:' . absint( $options['base_font_size'] ) . 'px;';
+    $vars .= '--cf-h1-size:' . absint( $options['h1_font_size'] ) . 'px;';
+    $vars .= '--cf-h2-size:' . absint( $options['h2_font_size'] ) . 'px;';
+    $vars .= '--cf-h3-size:' . absint( $options['h3_font_size'] ) . 'px;';
+    $vars .= '--cf-heading-weight:' . esc_attr( $options['heading_font_weight'] ) . ';';
+    $vars .= '--cf-heading-tracking:' . esc_attr( $options['heading_letter_spacing'] ) . 'em;';
+    $vars .= '--cf-body-line-height:' . esc_attr( $options['body_line_height'] ) . ';';
+    $vars .= '--cf-btn-radius:' . absint( $options['button_radius'] ) . 'px;';
+    $vars .= '--cf-btn-padding-y:' . absint( $btn_padding['y'] ) . 'px;';
+    $vars .= '--cf-btn-padding-x:' . absint( $btn_padding['x'] ) . 'px;';
+    $vars .= '--cf-card-radius:' . absint( $options['card_radius'] ) . 'px;';
+    $vars .= '--cf-card-border-width:' . absint( $options['card_border_width'] ) . 'px;';
+    $vars .= '--cf-card-shadow:' . esc_attr( collective_finity_get_card_shadow_value( $options['card_shadow'] ) ) . ';';
+    $vars .= '--cf-transition-speed:' . esc_attr( collective_finity_get_transition_speed_value( $options['transition_speed'] ) ) . ';';
+    $vars .= '--cf-section-gap:' . esc_attr( collective_finity_get_section_gap_value( $options['section_spacing'] ) ) . ';';
+    $vars .= '--cf-body:' . $body_stack . ';';
+    $vars .= '--cf-mono:' . $head_stack . ';';
+    $vars .= '--cf-sidebar-logo-size:' . absint( $options['sidebar_logo_size'] ) . 'px;';
+    $vars .= '--cf-mobile-logo-size:' . absint( $options['mobile_logo_size'] ) . 'px;';
+
+    $css = ':root{' . $vars . '}';
     if ( ! empty( $options['custom_css'] ) ) {
         $css .= "\n" . $options['custom_css'];
     }
     if ( ! $options['show_global_player'] ) {
         $css .= "\n#cf-global-audio-player{display:none!important;}body{padding-bottom:0!important;}";
     }
-    wp_add_inline_style( 'main-style', $css );
+
+    // Attach to the shell stylesheet so these :root overrides win over cf-shell.css defaults.
+    $handle = wp_style_is( 'cf-shell', 'enqueued' ) ? 'cf-shell' : 'main-style';
+    wp_add_inline_style( $handle, $css );
 }
 add_action( 'wp_enqueue_scripts', 'collective_finity_output_theme_option_styles', 20 );
 

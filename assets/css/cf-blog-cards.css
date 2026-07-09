@@ -1,0 +1,105 @@
+/**
+ * Shared blog card styles (Blog Hub grid + Single Post related articles).
+ *
+ * @package Collective_Finity
+ */
+
+/* Grid cards */
+.cf-bh-card {
+	display: flex;
+	flex-direction: column;
+	text-decoration: none;
+	border: 1px solid var(--cf-border);
+	background: var(--cf-bg-card);
+	border-radius: 12px;
+	overflow: hidden;
+	color: #fff;
+	transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.cf-bh-card:hover {
+	border-color: var(--cf-border-strong);
+	transform: translateY(-3px);
+}
+
+.cf-bh-card-art {
+	width: 100%;
+	aspect-ratio: 16 / 10;
+	background: #0d0d0d;
+}
+
+.cf-bh-card-art img {
+	width: 100%;
+	max-width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.cf-bh-card-body {
+	padding: 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.cf-bh-card-cat {
+	font-family: var(--cf-mono);
+	font-size: 10.5px;
+	color: var(--cf-accent);
+}
+
+.cf-bh-card-title {
+	font-size: 15px;
+	font-weight: 700;
+	line-height: 1.35;
+	margin: 0;
+	color: #fff;
+}
+
+.cf-bh-card-excerpt {
+	font-size: 12.5px;
+	color: var(--cf-text-3);
+	line-height: 1.5;
+	margin: 0;
+}
+
+.cf-bh-card-meta {
+	font-size: 11.5px;
+	color: var(--cf-text-4);
+	font-family: var(--cf-mono);
+	margin-top: 2px;
+}
+
+/* Featured card art overrides (Blog Hub hero card shares cf-bh-card-art) */
+.cf-bh-featured .cf-bh-featured-art {
+	width: min(45%, 360px);
+	flex: 0 1 45%;
+	min-width: 0;
+	max-width: 50%;
+	aspect-ratio: 16 / 10;
+	align-self: stretch;
+}
+
+.cf-bh-featured .cf-bh-featured-art img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.cf-bh-featured .cf-bh-featured-art.cf-bh-card-art--grad {
+	aspect-ratio: 16 / 10;
+}
+
+@media (max-width: 767px) {
+	.cf-bh-featured .cf-bh-featured-art {
+		width: 100%;
+		aspect-ratio: 16 / 10;
+		align-self: auto;
+	}
+
+	.cf-bh-featured .cf-bh-featured-art.cf-bh-card-art--grad {
+		aspect-ratio: 16 / 10;
+	}
+}

@@ -1,0 +1,233 @@
+/**
+ * Main content layout — fluid width between expandable sidebars.
+ * Container: #cf-app-content (cf-main) in cf-shell.css.
+ *
+ * @package Collective_Finity
+ */
+
+/* ---- Shell content roots ---- */
+.cf-app-content > .cf-blog,
+.cf-app-content > .cf-home,
+.cf-app-content > .cf-home-redesign,
+.cf-app-content > .site-main,
+.cf-app-content > .cf-single-track-page,
+.cf-app-content > .music-library-wrapper,
+.cf-app-content > main {
+	box-sizing: border-box;
+	min-width: 0;
+	max-width: 100%;
+}
+
+.cf-contact-page,
+.cf-community-page,
+.cf-about-page.cf-page-shell {
+	min-width: 0;
+	max-width: 100%;
+}
+
+.cf-contact-page__inner,
+.cf-community-page__inner,
+.cf-about-page .cf-page-container.cf-about {
+	max-width: min(1100px, 100%);
+}
+
+.cf-page-shell .cf-page-container {
+	max-width: min(980px, 100%);
+}
+
+.cf-home,
+.cf-home.cf-home-redesign {
+	padding-left: clamp(16px, 3vw, 34px);
+	padding-right: clamp(16px, 3vw, 34px);
+	box-sizing: border-box;
+}
+
+/* ---- Blog Hub ---- */
+.cf-blog.cf-bloghub {
+	min-width: 0;
+	max-width: 100%;
+}
+
+.cf-bh-featured {
+	min-width: 0;
+	max-width: 100%;
+}
+
+.cf-bh-featured-body {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.cf-bh-featured-title,
+.cf-bh-featured-excerpt,
+.cf-bh-featured-tag,
+.cf-bh-featured-meta {
+	overflow-wrap: anywhere;
+}
+
+.cf-bh-grid {
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+	min-width: 0;
+}
+
+.cf-bh-card,
+.cf-bh-card-body {
+	min-width: 0;
+}
+
+/* ---- Single post ---- */
+.cf-single-hero {
+	width: 100% !important;
+	max-width: 100% !important;
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+	box-sizing: border-box;
+}
+
+.cf-post-body {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.cf-post-body pre {
+	overflow-x: auto;
+	max-width: 100%;
+}
+
+.cf-post-body pre code {
+	overflow-x: visible;
+	white-space: pre;
+}
+
+.albums-grid,
+.tracks-grid {
+	min-width: 0;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+
+/* ---- Music library shortcode ---- */
+.music-library-wrapper {
+	min-width: 0;
+	max-width: 100%;
+}
+
+/* ---- Container breakpoints (sidebar-aware) ---- */
+@container cf-main (max-width: 900px) {
+	.cf-pillars {
+		grid-template-columns: 1fr;
+	}
+
+	.cf-album-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.cf-cta {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.cf-home-redesign .cf-home-reviews-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.cf-about-pillars__grid,
+	.cf-about-timeline__stops {
+		grid-template-columns: 1fr;
+	}
+
+	.cf-about-story-grid {
+		grid-template-columns: 1fr !important;
+	}
+
+	.cf-contact-together__grid {
+		grid-template-columns: 1fr;
+	}
+
+	.cf-contact-methods {
+		grid-template-columns: 1fr;
+	}
+
+	.cf-contact-method-card--full .cf-contact-method-card__body {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.cf-single-widget-col {
+		float: none !important;
+		width: 100% !important;
+		margin-left: 0 !important;
+		margin-bottom: 24px !important;
+	}
+
+	.cf-single-read-layout {
+		overflow: visible !important;
+	}
+
+	.moods-grid,
+	.releases-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	}
+
+	.split-layout {
+		grid-template-columns: 1fr !important;
+	}
+
+	.library-gallery {
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	}
+}
+
+@container cf-main (max-width: 720px) {
+	.cf-bh-featured {
+		flex-direction: column;
+	}
+
+	.cf-bh-featured .cf-bh-featured-art {
+		width: 100% !important;
+		max-width: none !important;
+		align-self: auto !important;
+	}
+
+	.cf-bh-featured-body {
+		padding: 20px;
+	}
+
+	.cf-bh-featured-title {
+		font-size: 19px;
+	}
+
+	.cf-about-hero__grid {
+		grid-template-columns: 1fr !important;
+	}
+
+	.cf-about-hero__visual {
+		display: flex;
+	}
+
+	.cf-album-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.cf-footer-inner {
+		flex-direction: column;
+		gap: 28px;
+	}
+
+	.cf-footer-cols {
+		gap: 28px;
+	}
+}
+
+@container cf-main (max-width: 560px) {
+	.cf-album-grid,
+	.cf-home-redesign .cf-home-reviews-grid,
+	.cf-bh-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.moods-grid,
+	.releases-grid,
+	.library-gallery {
+		grid-template-columns: 1fr !important;
+	}
+}

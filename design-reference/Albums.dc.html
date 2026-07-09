@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</helmet>
+<dc-import name="Shell" active-screen="albums" content="{{ pageContent }}" hint-size="100%,100%"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { loaded: false, width: typeof window !== 'undefined' ? window.innerWidth : 1440 };
+  }
+  async componentDidMount() {
+    const [dataMod] = await Promise.all([import('./shared-data.js')]);
+    this._mod = dataMod;
+    this.setState({ loaded: true });
+    this._onResize = () => this.setState({ width: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+  }
+  componentWillUnmount() { if (this._onResize) window.removeEventListener('resize', this._onResize); }
+
+  renderVals() {
+    if (!this.state.loaded) return { pageContent: null };
+    const isMobile = this.state.width < 768;
+    const albums = this._mod.buildAlbums();
+
+    const dotBg = { backgroundImage: 'radial-gradient(circle, rgba(255,183,0,0.3) 1px, transparent 1.4px)', backgroundSize: '26px 26px' };
+    const hero = React.createElement('div', { style: { position: 'relative', padding: isMobile ? '28px 22px' : '44px 40px', borderRadius: '16px', background: 'radial-gradient(ellipse at 80% 20%, rgba(255,183,0,0.14), transparent 60%), #0B0B0B', border: '1px solid #1E1E1E', overflow: 'hidden', marginBottom: '28px' } },
+      React.createElement('div', { style: { position: 'absolute', inset: 0, ...dotBg, opacity: 0.4, pointerEvents: 'none' } }),
+      React.createElement('div', { style: { position: 'relative' } },
+        React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '11px', letterSpacing: '0.1em', color: '#FFB700' } }, 'THE CATALOG'),
+        React.createElement('div', { style: { fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: '#fff', marginTop: '8px', lineHeight: 1.2 } }, 'Albums & Collections'),
+        React.createElement('div', { style: { fontSize: '13.5px', color: '#B3B3B3', marginTop: '8px', maxWidth: '520px', lineHeight: 1.6 } }, 'Full-length releases and EPs from every artist across the collective.')));
+
+    const pageContent = React.createElement('div', {},
+      hero,
+      React.createElement('div', { style: { fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: '#fff', marginBottom: '20px' } }, 'All Albums'),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '130px' : '170px'}, 1fr))`, gap: '20px' } },
+        albums.map((a) => React.createElement('a', { key: a.id, href: 'Album-Detail.dc.html?id=' + a.id, style: { textDecoration: 'none', color: '#fff' }, 'style-hover': { opacity: 0.9 } },
+          React.createElement('div', { style: { width: '100%', aspectRatio: '1', borderRadius: '12px', background: a.gradient, marginBottom: '10px' } }),
+          React.createElement('div', { style: { fontSize: '14px', fontWeight: 600 } }, a.title),
+          React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A', marginTop: '2px' } }, a.year + ' \u00B7 ' + a.trackCount + ' tracks')))));
+
+    return { pageContent };
+  }
+}
+
+</script>
+</body>
+</html>

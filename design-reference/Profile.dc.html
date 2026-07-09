@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</helmet>
+<dc-import name="Shell" active-screen="profile" content="{{ pageContent }}" hint-size="100%,100%"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { loaded: false, width: typeof window !== 'undefined' ? window.innerWidth : 1440, auth: 'out', tab: 'overview', notifPrefs: { emailUpdates: true, newReleases: true, community: false } };
+  }
+  async componentDidMount() {
+    const [dataMod, tokMod] = await Promise.all([import('./shared-data.js'), import('./shared-tokens.js')]);
+    this._mod = dataMod;
+    this._tok = tokMod;
+    const params = new URLSearchParams(window.location.search);
+    this.setState({ loaded: true, auth: tokMod.loadSharedState().auth || 'out', tab: params.get('tab') || 'overview' });
+    this._onResize = () => this.setState({ width: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+  }
+  componentWillUnmount() { if (this._onResize) window.removeEventListener('resize', this._onResize); }
+  setTab = (t) => this.setState({ tab: t });
+  toggleNotifPref = (key) => this.setState((s) => ({ notifPrefs: { ...s.notifPrefs, [key]: !s.notifPrefs[key] } }));
+
+  renderVals() {
+    if (!this.state.loaded) return { pageContent: null };
+    const isMobile = this.state.width < 768;
+    const inputStyle = { width: '100%', padding: '11px 13px', borderRadius: '9px', border: '1px solid #262626', background: '#141414', color: '#fff', fontSize: '13.5px', fontFamily: 'Inter,sans-serif' };
+    const labelStyle = { fontSize: '12px', color: '#B3B3B3', marginBottom: '6px', display: 'block', fontFamily: "'Space Mono',monospace" };
+
+    let pageContent;
+    if (this.state.auth !== 'in') {
+      pageContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px', padding: '60px 20px', maxWidth: '380px', margin: '0 auto' } },
+        React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff' } }, 'Sign in to view your Profile'),
+        React.createElement('div', { style: { fontSize: '13.5px', color: '#7A7A7A', lineHeight: 1.5 } }, 'Sign in to your Collective Finity account to keep this personalized.'),
+        React.createElement('a', { href: 'Login.dc.html', style: { padding: '11px 22px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13.5px', textDecoration: 'none', marginTop: '4px' }, 'style-hover': { background: '#ffc633' } }, 'Log In'));
+      return { pageContent };
+    }
+
+    const { buildAlbums, buildLibraryTracks } = this._mod;
+    const albums = buildAlbums();
+    const libraryTracks = buildLibraryTracks(albums);
+
+    const tabs = [['overview', 'Overview'], ['favorites', 'Favorites'], ['history', 'History'], ['settings', 'Settings']];
+    const tabRow = React.createElement('div', { style: { display: 'flex', gap: '4px', borderBottom: '1px solid #1E1E1E', marginBottom: '26px', overflowX: 'auto' } },
+      tabs.map(([id, label]) => React.createElement('button', { key: id, onClick: () => this.setTab(id), style: { padding: '11px 4px', marginRight: '22px', border: 'none', borderBottom: this.state.tab === id ? '2px solid #FFB700' : '2px solid transparent', background: 'transparent', color: this.state.tab === id ? '#FFB700' : '#7A7A7A', fontWeight: this.state.tab === id ? 700 : 500, fontSize: '13.5px', cursor: 'pointer', whiteSpace: 'nowrap' }, 'style-hover': { color: '#fff' } }, label)));
+
+    const statCard = (label, value) => React.createElement('div', { style: { background: '#141414', border: '1px solid #232323', borderRadius: '12px', padding: '18px', flex: 1, minWidth: '120px' } },
+      React.createElement('div', { style: { fontSize: '22px', fontWeight: 700, color: '#fff' } }, value),
+      React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A', marginTop: '4px', fontFamily: "'Space Mono',monospace" } }, label));
+
+    const overviewTab = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '26px' } },
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '18px', flexWrap: 'wrap' } },
+        React.createElement('div', { style: { width: '68px', height: '68px', borderRadius: '18px', background: 'linear-gradient(135deg,#FFB700,#8a6200)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D0D0D', fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: '24px' } }, 'S'),
+        React.createElement('div', {},
+          React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff' } }, 'Sasha Reyes'),
+          React.createElement('div', { style: { fontSize: '13px', color: '#7A7A7A', marginTop: '3px' } }, 'sasha@collectivefinity.co'),
+          React.createElement('div', { style: { fontSize: '12px', color: '#4a4a4a', marginTop: '3px', fontFamily: "'Space Mono',monospace" } }, 'Member since March 2024'))),
+      React.createElement('div', { style: { display: 'flex', gap: '14px', flexWrap: 'wrap' } }, statCard('FAV TRACKS', '5'), statCard('FAV ALBUMS', '3'), statCard('PLAN', 'Collective+')));
+
+    const favoritesTab = React.createElement('div', {},
+      React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff', marginBottom: '16px' } }, 'Liked Tracks'),
+      libraryTracks.slice(0, 5).map((t, i) => React.createElement('div', { key: t.id, style: { display: 'flex', alignItems: 'center', gap: '14px', padding: '11px 10px' } },
+        React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '12px', color: '#7A7A7A', width: '20px' } }, i + 1),
+        React.createElement('span', { style: { color: '#FFB700' } }, '\u2665'),
+        React.createElement('span', { style: { fontSize: '13.5px', fontWeight: 600, color: '#fff', flex: 1 } }, t.title),
+        React.createElement('span', { style: { fontSize: '12px', color: '#7A7A7A' } }, t.artist))));
+
+    const historyTab = React.createElement('div', {},
+      React.createElement('div', { style: { fontSize: '19px', fontWeight: 700, color: '#fff', marginBottom: '16px' } }, 'Recently Played'),
+      libraryTracks.slice(0, 6).map((t, i) => React.createElement('div', { key: t.id, style: { display: 'grid', gridTemplateColumns: '28px 1fr 90px', alignItems: 'center', gap: '14px', padding: '11px 10px' } },
+        React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", fontSize: '12px', color: '#7A7A7A' } }, String(i + 1).padStart(2, '0')),
+        React.createElement('span', {},
+          React.createElement('div', { style: { fontSize: '13.5px', fontWeight: 600, color: '#fff' } }, t.title),
+          React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A' } }, t.artist)),
+        React.createElement('span', { style: { fontSize: '11.5px', color: '#7A7A7A', textAlign: 'right', fontFamily: "'Space Mono',monospace" } }, ['2h ago', '5h ago', 'Yesterday', '2d ago', '3d ago', '1w ago'][i]))));
+
+    const toggleSwitch = (checked, onClick) => React.createElement('button', { onClick, style: { width: '42px', height: '24px', borderRadius: '12px', border: 'none', background: checked ? '#FFB700' : '#262626', position: 'relative', cursor: 'pointer', flexShrink: 0 } },
+      React.createElement('div', { style: { width: '18px', height: '18px', borderRadius: '50%', background: checked ? '#0D0D0D' : '#7A7A7A', position: 'absolute', top: '3px', left: checked ? '21px' : '3px', transition: 'left 0.15s ease' } }));
+
+    const settingsTab = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '30px', maxWidth: '480px' } },
+      React.createElement('div', {},
+        React.createElement('div', { style: { fontSize: '15px', fontWeight: 700, color: '#fff', marginBottom: '14px' } }, 'Profile Details'),
+        React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '14px' } },
+          React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'DISPLAY NAME'), React.createElement('input', { type: 'text', defaultValue: 'Sasha Reyes', style: inputStyle })),
+          React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'EMAIL'), React.createElement('input', { type: 'email', defaultValue: 'sasha@collectivefinity.co', style: inputStyle })))),
+      React.createElement('div', {},
+        React.createElement('div', { style: { fontSize: '15px', fontWeight: 700, color: '#fff', marginBottom: '14px' } }, 'Change Password'),
+        React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '14px' } },
+          React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'CURRENT PASSWORD'), React.createElement('input', { type: 'password', placeholder: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022', style: inputStyle })),
+          React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'NEW PASSWORD'), React.createElement('input', { type: 'password', placeholder: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022', style: inputStyle })),
+          React.createElement('div', {}, React.createElement('label', { style: labelStyle }, 'CONFIRM NEW PASSWORD'), React.createElement('input', { type: 'password', placeholder: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022', style: inputStyle })),
+          React.createElement('button', { style: { padding: '11px 18px', borderRadius: '9px', border: '1px solid #262626', background: 'transparent', color: '#fff', fontSize: '13px', cursor: 'pointer', width: 'fit-content' }, 'style-hover': { background: '#161616' } }, 'Update Password'))),
+      React.createElement('div', {},
+        React.createElement('div', { style: { fontSize: '15px', fontWeight: 700, color: '#fff', marginBottom: '14px' } }, 'Notifications'),
+        React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '14px' } },
+          [['emailUpdates', 'Email updates'], ['newReleases', 'New release alerts'], ['community', 'Community activity']].map(([key, label]) => React.createElement('div', { key, style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+            React.createElement('span', { style: { fontSize: '13.5px', color: '#E4E4E4' } }, label),
+            toggleSwitch(this.state.notifPrefs[key], () => this.toggleNotifPref(key)))))));
+
+    const tabContent = this.state.tab === 'overview' ? overviewTab : this.state.tab === 'favorites' ? favoritesTab : this.state.tab === 'history' ? historyTab : settingsTab;
+
+    pageContent = React.createElement('div', {},
+      React.createElement('div', { style: { fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: '#fff', marginBottom: '20px' } }, 'My Account'),
+      tabRow, tabContent);
+
+    return { pageContent };
+  }
+}
+
+</script>
+</body>
+</html>

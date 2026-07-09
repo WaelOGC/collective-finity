@@ -210,20 +210,25 @@ get_header();
 
 <style>
     .cf-about-page.cf-page-shell {
-        padding: 90px 20px 140px;
+        padding: 90px clamp(16px, 3vw, 20px) 140px;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
     }
 
     .cf-about-page .cf-page-container.cf-about {
-        max-width: 980px;
+        max-width: min(980px, 100%);
         margin: 0 auto;
+        min-width: 0;
     }
 
     .cf-about__inner {
         display: flex;
         flex-direction: column;
         gap: 54px;
-        max-width: 920px;
+        max-width: min(920px, 100%);
         margin: 0 auto;
+        min-width: 0;
     }
 
     .cf-about-hero__grid {

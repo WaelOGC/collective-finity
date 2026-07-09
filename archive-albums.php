@@ -199,3 +199,5 @@ get_header(); ?>
         line-height: 1.7;
     }
 </style>
+
+<?php get_footer(); ?>

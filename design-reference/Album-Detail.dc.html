@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    @keyframes cfSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes cfPulseGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,183,0,0.45); } 50% { box-shadow: 0 0 0 22px rgba(255,183,0,0); } }
+    @keyframes cfBar0 { 0%,100% { height: 30%; } 50% { height: 90%; } }
+    @keyframes cfBar1 { 0%,100% { height: 55%; } 50% { height: 20%; } }
+    @keyframes cfBar2 { 0%,100% { height: 40%; } 50% { height: 100%; } }
+  </style>
+</helmet>
+<dc-import name="Shell" active-screen="albums" content="{{ pageContent }}" hint-size="100%,100%"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { loaded: false, width: typeof window !== 'undefined' ? window.innerWidth : 1440, albumLiked: false, likedTracks: {}, shareMenuOpen: false, effectMenuOpen: false, audioEffectStyle: 'Pulse Glow', livePlayer: { playing: false, seed: null } };
+  }
+  async componentDidMount() {
+    const [dataMod, uiMod, tokMod] = await Promise.all([import('./shared-data.js'), import('./shared-ui.js'), import('./shared-tokens.js')]);
+    this._mod = dataMod;
+    this._ui = uiMod;
+    this._tok = tokMod;
+    const saved = tokMod.loadSharedState();
+    this.setState({ loaded: true, livePlayer: saved.player ? { playing: !!saved.player.playing, seed: saved.player.seed } : this.state.livePlayer });
+    this._onResize = () => this.setState({ width: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+    this._onPlayerSync = () => {
+      const fresh = tokMod.loadSharedState();
+      if (fresh.player) this.setState({ livePlayer: { playing: !!fresh.player.playing, seed: fresh.player.seed } });
+    };
+    window.addEventListener('cf-player-sync', this._onPlayerSync);
+  }
+  componentWillUnmount() {
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this._onPlayerSync) window.removeEventListener('cf-player-sync', this._onPlayerSync);
+  }
+  toggleEffectMenu = () => this.setState((s) => ({ effectMenuOpen: !s.effectMenuOpen }));
+  closeEffectMenu = () => this.setState({ effectMenuOpen: false });
+  setAudioEffectStyle = (v) => this.setState({ audioEffectStyle: v, effectMenuOpen: false });
+
+  toggleAlbumLike = () => this.setState((s) => ({ albumLiked: !s.albumLiked }));
+  toggleTrackLike = (id) => this.setState((s) => ({ likedTracks: { ...s.likedTracks, [id]: !s.likedTracks[id] } }));
+  toggleShareMenu = () => this.setState((s) => ({ shareMenuOpen: !s.shareMenuOpen }));
+  closeShareMenu = () => this.setState({ shareMenuOpen: false });
+
+  playTrack = (album, track, index) => {
+    const current = this._tok.loadSharedState();
+    const player = { ...(current.player || {}), title: track.title, artist: album.artist, seed: album.seed, trackIndex: index, playing: true, progress: 0.04, liked: false };
+    this._tok.saveSharedState({ player });
+    window.dispatchEvent(new Event('cf-player-sync'));
+  };
+
+  renderVals() {
+    if (!this.state.loaded) return { pageContent: null };
+    const icon = (name, size, filled) => this._ui.buildIcon(React, name, size, filled);
+    const isMobile = this.state.width < 768;
+    const albums = this._mod.buildAlbums();
+    const params = new URLSearchParams(window.location.search);
+    const albumId = params.get('id') || albums[0].id;
+    const album = albums.find((a) => a.id === albumId) || albums[0];
+
+    const shareMenuItems = [
+      { label: 'Facebook', icon: 'community' }, { label: 'X', icon: 'chat' }, { label: 'LinkedIn', icon: 'community' },
+      { label: 'WhatsApp', icon: 'chat' }, { label: 'Copy Link', icon: 'link' },
+    ];
+    const shareMenuPanel = this.state.shareMenuOpen ? React.createElement(React.Fragment, {},
+      React.createElement('div', { onClick: this.closeShareMenu, style: { position: 'fixed', inset: 0, zIndex: 59 } }),
+      React.createElement('div', { style: { position: 'absolute', top: '46px', right: 0, zIndex: 60, background: '#161616', border: '1px solid #262626', borderRadius: '12px', padding: '8px', minWidth: '190px', boxShadow: '0 24px 48px -12px rgba(0,0,0,0.6)' } },
+        shareMenuItems.map((item) => React.createElement('button', { key: item.label, onClick: this.closeShareMenu, style: { display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', color: '#E4E4E4', borderRadius: '8px', cursor: 'pointer', fontSize: '13.5px', textAlign: 'left' }, 'style-hover': { background: '#232323' } }, icon(item.icon, 16), item.label)))) : null;
+
+    const isThisPlaying = this.state.livePlayer.playing && this.state.livePlayer.seed === album.seed;
+    const effectOptions = ['Pulse Glow', 'Spinning Vinyl', 'Waveform Ring', 'Equalizer Bars', 'None'];
+    const effectMenuPanel = this.state.effectMenuOpen ? React.createElement(React.Fragment, {},
+      React.createElement('div', { onClick: this.closeEffectMenu, style: { position: 'fixed', inset: 0, zIndex: 59 } }),
+      React.createElement('div', { style: { position: 'absolute', top: '42px', left: 0, zIndex: 60, background: '#161616', border: '1px solid #262626', borderRadius: '10px', padding: '6px', minWidth: '170px', boxShadow: '0 24px 48px -12px rgba(0,0,0,0.6)' } },
+        effectOptions.map((opt) => React.createElement('button', { key: opt, onClick: () => this.setAudioEffectStyle(opt), style: { display: 'block', width: '100%', padding: '9px 11px', border: 'none', background: this.state.audioEffectStyle === opt ? 'rgba(255,183,0,0.14)' : 'transparent', color: this.state.audioEffectStyle === opt ? '#FFB700' : '#E4E4E4', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', textAlign: 'left' }, 'style-hover': { background: '#232323' } }, opt)))) : null;
+
+    const artSize = isMobile ? 150 : 200;
+    const circleStyle = { width: artSize + 'px', height: artSize + 'px', borderRadius: '50%', background: album.gradient, boxShadow: '0 24px 48px -16px rgba(0,0,0,0.6)', animation: (isThisPlaying && this.state.audioEffectStyle === 'Spinning Vinyl') ? 'cfSpin 8s linear infinite' : 'none' };
+    const artWrap = React.createElement('div', { style: { position: 'relative', width: artSize + 'px', height: artSize + 'px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+      (isThisPlaying && this.state.audioEffectStyle === 'Pulse Glow') ? React.createElement('div', { style: { position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', animation: 'cfPulseGlow 1.8s ease-out infinite' } }) : null,
+      (isThisPlaying && this.state.audioEffectStyle === 'Waveform Ring') ? React.createElement('div', { style: { position: 'absolute', inset: '-14px' } },
+        Array.from({ length: 16 }).map((_, i) => React.createElement('div', { key: i, style: { position: 'absolute', top: '50%', left: '50%', width: '3px', height: '10px', borderRadius: '2px', background: '#FFB700', transformOrigin: '50% ' + (artSize / 2 + 14) + 'px', transform: 'translate(-50%,-50%) rotate(' + (i * 22.5) + 'deg) translateY(-' + (artSize / 2 + 4) + 'px)', animation: 'cfBar' + (i % 3) + ' ' + (0.7 + (i % 4) * 0.15) + 's ease-in-out infinite', animationDelay: (i * 0.05) + 's' } }))) : null,
+      React.createElement('div', { style: circleStyle }),
+      (isThisPlaying && this.state.audioEffectStyle === 'Equalizer Bars') ? React.createElement('div', { style: { position: 'absolute', bottom: '-16px', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'flex-end', gap: '3px', height: '20px' } },
+        Array.from({ length: 7 }).map((_, i) => React.createElement('div', { key: i, style: { width: '4px', borderRadius: '2px', background: '#FFB700', animation: 'cfBar' + (i % 3) + ' ' + (0.6 + (i % 3) * 0.12) + 's ease-in-out infinite', animationDelay: (i * 0.06) + 's' } }))) : null);
+
+    const effectDropdown = React.createElement('div', { style: { position: 'relative', display: 'inline-block' } },
+      React.createElement('button', { onClick: this.toggleEffectMenu, style: { display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', borderRadius: '9px', border: '1px solid #262626', background: 'transparent', color: '#B3B3B3', fontSize: '12.5px', cursor: 'pointer', whiteSpace: 'nowrap' }, 'style-hover': { color: '#fff' } },
+        React.createElement('span', { style: { fontFamily: "'Space Mono',monospace", whiteSpace: 'nowrap' } }, 'EFFECT: ' + this.state.audioEffectStyle),
+        icon('chevronDown', 14)),
+      effectMenuPanel);
+
+    const actionBtnStyle = { width: '40px', height: '40px', borderRadius: '9px', border: '1px solid #262626', background: 'transparent', color: '#B3B3B3', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+
+    const trackRow = (t, i) => React.createElement('div', { key: t.id, style: { display: 'grid', gridTemplateColumns: isMobile ? '28px 1fr 34px 34px' : '28px 1fr 70px 90px 90px 34px 34px', alignItems: 'center', gap: '10px', padding: '11px 10px', borderRadius: '9px' }, 'style-hover': { background: '#151515' } },
+      React.createElement('button', { onClick: () => this.playTrack(album, t, i), style: { border: 'none', background: 'transparent', color: '#7A7A7A', cursor: 'pointer', fontFamily: "'Space Mono',monospace", fontSize: '12px', textAlign: 'left', padding: 0 }, 'style-hover': { color: '#FFB700' } }, String(i + 1).padStart(2, '0')),
+      React.createElement('button', { onClick: () => this.playTrack(album, t, i), style: { border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: 0 } },
+        React.createElement('div', { style: { fontSize: '13.5px', fontWeight: 600, color: '#fff' } }, t.title),
+        React.createElement('div', { style: { fontSize: '12px', color: '#7A7A7A' } }, album.artist)),
+      !isMobile ? React.createElement('span', { style: { fontSize: '12px', color: '#7A7A7A', fontFamily: "'Space Mono',monospace" } }, (140 + i * 37) + ' views') : null,
+      !isMobile ? React.createElement('span', { style: { fontSize: '12px', color: '#7A7A7A', fontFamily: "'Space Mono',monospace" } }, (2 + i) + ' comments') : null,
+      !isMobile ? React.createElement('span', { style: { fontSize: '12px', color: '#7A7A7A', fontFamily: "'Space Mono',monospace" } }, t.duration) : null,
+      React.createElement('button', { onClick: () => this.toggleTrackLike(t.id), style: { border: 'none', background: 'transparent', color: this.state.likedTracks[t.id] ? '#FFB700' : '#7A7A7A', cursor: 'pointer', display: 'flex' }, 'style-hover': { color: '#FFB700' } }, icon('heart', 16, this.state.likedTracks[t.id])),
+      React.createElement('button', { style: { border: 'none', background: 'transparent', color: '#7A7A7A', cursor: 'pointer', display: 'flex' }, 'style-hover': { color: '#fff' } }, icon('plus', 16)));
+
+    const pageContent = React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '26px' } },
+      React.createElement('a', { href: 'Albums.dc.html', style: { display: 'flex', alignItems: 'center', gap: '6px', color: '#7A7A7A', textDecoration: 'none', fontSize: '13px', width: 'fit-content' }, 'style-hover': { color: '#fff' } }, icon('chevronLeft', 15), 'Back to Albums'),
+      React.createElement('div', { style: { display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-end' } },
+        artWrap,
+        React.createElement('div', {},
+          React.createElement('div', { style: { fontSize: isMobile ? '22px' : '30px', fontWeight: 700, color: '#fff' } }, album.title),
+          React.createElement('div', { style: { fontSize: '14px', color: '#FFB700', fontFamily: "'Space Mono',monospace", marginTop: '6px' } }, album.artist),
+          React.createElement('div', { style: { fontSize: '12.5px', color: '#7A7A7A', marginTop: '4px' } }, album.year + ' \u00B7 ' + album.trackCount + ' tracks'),
+          React.createElement('div', { style: { display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' } },
+            React.createElement('button', { onClick: () => this.playTrack(album, album.tracks[0], 0), style: { padding: '10px 18px', borderRadius: '9px', border: 'none', background: '#FFB700', color: '#0D0D0D', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }, 'style-hover': { background: '#ffc633' } }, 'Play All'),
+            React.createElement('button', { style: { padding: '10px 18px', borderRadius: '9px', border: '1px solid #262626', background: 'transparent', color: '#B3B3B3', fontSize: '13px', cursor: 'pointer' }, 'style-hover': { background: '#161616', color: '#fff' } }, 'Shuffle'),
+            React.createElement('button', { onClick: this.toggleAlbumLike, style: { ...actionBtnStyle, border: this.state.albumLiked ? '1px solid #FFB700' : '1px solid #262626', color: this.state.albumLiked ? '#FFB700' : '#B3B3B3' }, 'style-hover': { color: '#FFB700' } }, icon('heart', 16, this.state.albumLiked)),
+            React.createElement('div', { style: { position: 'relative' } },
+              React.createElement('button', { onClick: this.toggleShareMenu, style: actionBtnStyle, 'style-hover': { color: '#fff' } }, icon('share', 16)),
+              shareMenuPanel),
+            effectDropdown))),
+      React.createElement('div', {}, album.tracks.map((t, i) => trackRow(t, i))));
+
+    return { pageContent };
+  }
+}
+
+</script>
+</body>
+</html>
