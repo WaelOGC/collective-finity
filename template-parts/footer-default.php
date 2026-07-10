@@ -13,11 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-if ( is_active_sidebar( 'footer-widget-area' ) ) :
-    dynamic_sidebar( 'footer-widget-area' );
-    return;
-endif;
-
 $cf_tagline       = collective_finity_get_theme_option( 'footer_tagline' );
 $cf_description   = collective_finity_get_theme_option( 'footer_description' );
 $cf_social_links  = collective_finity_get_footer_social_links();
@@ -64,6 +59,8 @@ $cf_description = $cf_description ? $cf_description : __( 'Welcome to Collective
             <?php endforeach; ?>
         </div>
     </div>
+
+    <?php echo do_shortcode( '[cf_footer_player]' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 
     <div class="cf-footer-bottom">
         <p class="cf-footer-copy">

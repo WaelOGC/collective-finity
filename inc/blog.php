@@ -364,61 +364,13 @@ function collective_finity_user_liked_post( $post_id, $user_id = 0 ) {
         return false;
     }
 
-    $liked_posts = get_user_meta( $user_id, '_cf_liked_posts', true );
+    $liked_posts = get_user_meta( $user_id, 'cf_favorite_posts', true );
     if ( ! is_array( $liked_posts ) ) {
         return false;
     }
 
     return in_array( $post_id, array_map( 'intval', $liked_posts ), true );
 }
-
-/**
- * AJAX: toggle like on a blog post (mirrors cf_toggle_like for tracks).
- */
-function cf_ajax_toggle_post_like() {
-    check_ajax_referer( 'cf_interaction_nonce', 'security' );
-
-    if ( ! is_user_logged_in() ) {
-        wp_send_json_error( array( 'message' => __( 'Please log in to like this article.', 'collective-finity' ) ) );
-    }
-
-    $user_id = get_current_user_id();
-    $post_id = isset( $_POST['post_id'] ) ? (int) $_POST['post_id'] : 0;
-
-    if ( ! $post_id || 'post' !== get_post_type( $post_id ) ) {
-        wp_send_json_error( array( 'message' => __( 'Invalid article.', 'collective-finity' ) ) );
-    }
-
-    $liked_posts = get_user_meta( $user_id, '_cf_liked_posts', true );
-    if ( ! is_array( $liked_posts ) ) {
-        $liked_posts = array();
-    }
-    $liked_posts = array_map( 'intval', $liked_posts );
-
-    $current_likes = collective_finity_post_likes_count( $post_id );
-
-    if ( in_array( $post_id, $liked_posts, true ) ) {
-        $liked_posts = array_values( array_diff( $liked_posts, array( $post_id ) ) );
-        $status        = 'unliked';
-        $current_likes = max( 0, $current_likes - 1 );
-    } else {
-        $liked_posts[] = $post_id;
-        $status        = 'liked';
-        $current_likes++;
-    }
-
-    update_user_meta( $user_id, '_cf_liked_posts', $liked_posts );
-    update_post_meta( $post_id, '_cf_total_likes_count', $current_likes );
-
-    wp_send_json_success(
-        array(
-            'status'      => $status,
-            'likes_count' => $current_likes,
-            'message'     => __( 'Success', 'collective-finity' ),
-        )
-    );
-}
-add_action( 'wp_ajax_cf_toggle_post_like', 'cf_ajax_toggle_post_like' );
 
 /**
  * Enqueue shared blog card styles on Blog Hub and single posts.

@@ -754,12 +754,6 @@ while ( have_posts() ) :
             });
         });
 
-        var cfPostLikeCfg = {
-            ajaxUrl: <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>,
-            nonce: <?php echo wp_json_encode( wp_create_nonce( 'cf_interaction_nonce' ) ); ?>,
-            loggedIn: <?php echo is_user_logged_in() ? 'true' : 'false'; ?>
-        };
-
         function cfSetPostLikeVisual(btn, liked) {
             btn.classList.toggle('active', liked);
             btn.setAttribute('aria-pressed', liked ? 'true' : 'false');
@@ -775,8 +769,12 @@ while ( have_posts() ) :
 
         document.querySelectorAll('.cf-post-like-btn').forEach(function (btn) {
             btn.addEventListener('click', function () {
-                if (!cfPostLikeCfg.loggedIn) {
+                if (!window.CF_AUTH || window.CF_AUTH.is_logged_in !== '1') {
                     alert('Please log in to like this article.');
+                    return;
+                }
+                if (typeof window.CF_Auth === 'undefined' || !window.CF_Auth.toggleFavorite) {
+                    alert('An error occurred. Please try again.');
                     return;
                 }
 
@@ -788,34 +786,19 @@ while ( have_posts() ) :
                 var wasLiked = btn.classList.contains('active');
                 cfSetPostLikeVisual(btn, !wasLiked);
 
-                var body = new URLSearchParams();
-                body.append('action', 'cf_toggle_post_like');
-                body.append('post_id', postId);
-                body.append('security', cfPostLikeCfg.nonce);
-
-                fetch(cfPostLikeCfg.ajaxUrl, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-                    body: body.toString()
-                })
-                    .then(function (res) { return res.json(); })
-                    .then(function (response) {
-                        if (response.success) {
-                            var isLiked = response.data.status === 'liked';
-                            cfSetPostLikeVisual(btn, isLiked);
-                            var countEl = btn.querySelector('.cf-post-like-count');
-                            if (countEl && typeof response.data.likes_count !== 'undefined') {
-                                countEl.textContent = String(response.data.likes_count);
-                            }
-                        } else {
-                            cfSetPostLikeVisual(btn, wasLiked);
-                            alert((response.data && response.data.message) ? response.data.message : 'Unable to update like.');
+                window.CF_Auth.toggleFavorite(postId, 'post')
+                    .then(function (result) {
+                        var isLiked = result.is_favorite;
+                        cfSetPostLikeVisual(btn, isLiked);
+                        var countEl = btn.querySelector('.cf-post-like-count');
+                        if (countEl && typeof result.likes_count !== 'undefined') {
+                            countEl.textContent = String(result.likes_count);
                         }
                     })
-                    .catch(function () {
+                    .catch(function (err) {
                         cfSetPostLikeVisual(btn, wasLiked);
-                        alert('An error occurred. Please try again.');
+                        var message = (err && err.message) ? err.message : 'An error occurred. Please try again.';
+                        alert(message);
                     });
             });
         });

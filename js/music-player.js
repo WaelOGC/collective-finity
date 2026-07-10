@@ -36,6 +36,10 @@ jQuery(document).ready(function($) {
             var progress = (audio.currentTime / audio.duration) * 100;
             seekFill.css('width', progress + '%');
             $('#player-current-time').text(formatTime(audio.currentTime));
+            var $footerFill = $('#cf-footer-player-progress-fill');
+            if ($footerFill.length) {
+                $footerFill.css('width', progress + '%');
+            }
         }
     }
 
@@ -88,6 +92,16 @@ jQuery(document).ready(function($) {
             playBtn.html('<span class="cf-icon cf-icon-pause" aria-hidden="true"></span>');
             playBtn.attr('aria-label', 'Pause');
         }
+        var $footerPlay = $('#cf-footer-player-toggle-btn');
+        if ($footerPlay.length) {
+            if (audio.paused) {
+                $footerPlay.html('<span class="cf-icon cf-icon-play" aria-hidden="true"></span>');
+                $footerPlay.attr('aria-label', 'Play');
+            } else {
+                $footerPlay.html('<span class="cf-icon cf-icon-pause" aria-hidden="true"></span>');
+                $footerPlay.attr('aria-label', 'Pause');
+            }
+        }
         updateAlbumPlayBtnState();
     }
 
@@ -131,13 +145,26 @@ jQuery(document).ready(function($) {
 
     function showPlayerError(message) {
         $('#player-track-title').text(message || 'Unable to play track');
+        var $footerTitle = $('#cf-footer-player-title');
+        if ($footerTitle.length) {
+            $footerTitle.text(message || 'Unable to play track');
+        }
         updatePlayState();
     }
 
     function updatePlayerTrackActions(trackId) {
         var $like = $('#player-like-btn');
         var $playlist = $('#player-playlist-btn');
+        var $footerLike = $('#cf-footer-player-like-btn');
         if (!$like.length || !$playlist.length) {
+            if ($footerLike.length) {
+                if (trackId) {
+                    $footerLike.attr('data-track-id', trackId).prop('disabled', false);
+                    $footerLike.toggleClass('active', window.likedTracksArray.indexOf(parseInt(trackId, 10)) !== -1);
+                } else {
+                    $footerLike.removeAttr('data-track-id').removeClass('active').prop('disabled', true);
+                }
+            }
             return;
         }
         if (trackId) {
@@ -148,9 +175,16 @@ jQuery(document).ready(function($) {
             } else {
                 $like.removeClass('active');
             }
+            if ($footerLike.length) {
+                $footerLike.attr('data-track-id', trackId).prop('disabled', false);
+                $footerLike.toggleClass('active', window.likedTracksArray.indexOf(parseInt(trackId, 10)) !== -1);
+            }
         } else {
             $like.removeAttr('data-track-id').removeClass('active').prop('disabled', true);
             $playlist.removeAttr('data-track-id').prop('disabled', true);
+            if ($footerLike.length) {
+                $footerLike.removeAttr('data-track-id').removeClass('active').prop('disabled', true);
+            }
         }
     }
 
@@ -178,6 +212,14 @@ jQuery(document).ready(function($) {
 
         if (track.art) {
             $('.cf-player-cover').css('background-image', 'url("' + escapeCssUrl(track.art) + '")');
+        }
+
+        var $footerTitle = $('#cf-footer-player-title');
+        if ($footerTitle.length) {
+            $footerTitle.text(track.title);
+            if (track.art) {
+                $('#cf-footer-player-cover').css('background-image', 'url("' + escapeCssUrl(track.art) + '")');
+            }
         }
 
         if (track.id) {
@@ -371,6 +413,38 @@ jQuery(document).ready(function($) {
         window.cfIsMuted = false;
         window.cfLastVolume = percent;
         updateVolumeUI();
+    });
+
+    $('#cf-footer-player-toggle-btn').on('click', function() {
+        playBtn.trigger('click');
+    });
+
+    $('#cf-footer-player-prev-btn').on('click', function() {
+        playPrevTrack();
+    });
+
+    $('#cf-footer-player-next-btn').on('click', function() {
+        playNextTrack();
+    });
+
+    $('#cf-footer-player-like-btn').on('click', function(e) {
+        e.preventDefault();
+        var trackId = $(this).attr('data-track-id');
+        if (trackId) {
+            $('.cf-like-btn[data-track-id="' + trackId + '"]').first().trigger('click');
+        }
+    });
+
+    $('#cf-footer-player-progress-bg').on('click', function(e) {
+        if (!audio.duration) {
+            return;
+        }
+        var offset = $(this).offset();
+        var x = e.pageX - offset.left;
+        var width = $(this).width();
+        var percent = x / width;
+        audio.currentTime = audio.duration * percent;
+        updateProgress();
     });
 
     window.playTrack = function(fileUrl, title, artist, artUrl, trackId, queue, queueIndex) {
@@ -583,31 +657,23 @@ jQuery(document).ready(function($) {
         }
     });
 
-    if (typeof cf_ajax !== 'undefined' && cf_ajax.logged_in) {
-        $.ajax({
-            url: cf_ajax.ajax_url,
-            type: 'POST',
-            data: {
-                action: 'cf_get_liked_tracks',
-                security: cf_ajax.nonce
-            },
-            success: function(response) {
-                if (response.success && response.data.liked_tracks) {
-                    window.likedTracksArray = response.data.liked_tracks;
-                    $('.cf-like-btn').each(function() {
-                        var trackId = $(this).data('track-id');
-                        if (window.likedTracksArray.indexOf(parseInt(trackId, 10)) !== -1) {
-                            $(this).addClass('active');
-                        }
-                    });
-                    if (window.cfPageTrackId) {
-                        updatePlayerTrackActions(window.cfPageTrackId);
-                    } else if (playBtn.attr('data-track-id')) {
-                        updatePlayerTrackActions(playBtn.attr('data-track-id'));
+    if (window.CF_AUTH && window.CF_AUTH.is_logged_in === '1' && typeof window.CF_Auth !== 'undefined' && window.CF_Auth.getFavorites) {
+        window.CF_Auth.getFavorites().then(function(result) {
+            if (result && result.tracks) {
+                window.likedTracksArray = result.tracks;
+                $('.cf-like-btn').each(function() {
+                    var trackId = $(this).data('track-id');
+                    if (window.likedTracksArray.indexOf(parseInt(trackId, 10)) !== -1) {
+                        $(this).addClass('active');
                     }
+                });
+                if (window.cfPageTrackId) {
+                    updatePlayerTrackActions(window.cfPageTrackId);
+                } else if (playBtn.attr('data-track-id')) {
+                    updatePlayerTrackActions(playBtn.attr('data-track-id'));
                 }
             }
-        });
+        }).catch(function() {});
     }
 
     if (window.cfPageTrackId) {
@@ -617,8 +683,12 @@ jQuery(document).ready(function($) {
     $(document).on('click', '.cf-like-btn', function(e) {
         e.preventDefault();
 
-        if (typeof cf_ajax === 'undefined' || !cf_ajax.logged_in) {
+        if (!window.CF_AUTH || window.CF_AUTH.is_logged_in !== '1') {
             alert('Please log in to add tracks to your favorites.');
+            return;
+        }
+        if (typeof window.CF_Auth === 'undefined' || !window.CF_Auth.toggleFavorite) {
+            alert('An error occurred. Please try again.');
             return;
         }
 
@@ -630,45 +700,36 @@ jQuery(document).ready(function($) {
 
         $('.cf-like-btn[data-track-id="' + trackId + '"]').toggleClass('active');
 
-        $.ajax({
-            url: cf_ajax.ajax_url,
-            type: 'POST',
-            data: {
-                action: 'cf_toggle_like',
-                track_id: trackId,
-                security: cf_ajax.nonce
-            },
-            success: function(response) {
-                if (response.success) {
-                    var isLiked = response.data.status === 'liked';
-                    var index = window.likedTracksArray.indexOf(parseInt(trackId, 10));
+        window.CF_Auth.toggleFavorite(trackId, 'track')
+            .then(function(result) {
+                var isLiked = result.is_favorite;
+                var index = window.likedTracksArray.indexOf(parseInt(trackId, 10));
 
-                    if (isLiked) {
-                        if (index === -1) {
-                            window.likedTracksArray.push(parseInt(trackId, 10));
-                        }
-                        $('.cf-like-btn[data-track-id="' + trackId + '"]').addClass('active');
-                    } else {
-                        if (index !== -1) {
-                            window.likedTracksArray.splice(index, 1);
-                        }
-                        $('.cf-like-btn[data-track-id="' + trackId + '"]').removeClass('active');
+                if (isLiked) {
+                    if (index === -1) {
+                        window.likedTracksArray.push(parseInt(trackId, 10));
                     }
-
-                    $('.live-likes').text(response.data.likes_count);
-                    if ($('#player-like-btn').attr('data-track-id') == trackId) {
-                        $('#player-like-btn').toggleClass('active', isLiked);
-                    }
+                    $('.cf-like-btn[data-track-id="' + trackId + '"]').addClass('active');
                 } else {
-                    $('.cf-like-btn[data-track-id="' + trackId + '"]').toggleClass('active');
-                    alert(response.data.message);
+                    if (index !== -1) {
+                        window.likedTracksArray.splice(index, 1);
+                    }
+                    $('.cf-like-btn[data-track-id="' + trackId + '"]').removeClass('active');
                 }
-            },
-            error: function() {
+
+                $('.live-likes').text(result.likes_count);
+                if ($('#player-like-btn').attr('data-track-id') == trackId) {
+                    $('#player-like-btn').toggleClass('active', isLiked);
+                }
+                if ($('#cf-footer-player-like-btn').attr('data-track-id') == trackId) {
+                    $('#cf-footer-player-like-btn').toggleClass('active', isLiked);
+                }
+            })
+            .catch(function(err) {
                 $('.cf-like-btn[data-track-id="' + trackId + '"]').toggleClass('active');
-                alert('An error occurred. Please try again.');
-            }
-        });
+                var message = (err && err.message) ? err.message : 'An error occurred. Please try again.';
+                alert(message);
+            });
     });
 
     $(document).on('click', '.cf-playlist-btn', function(e) {

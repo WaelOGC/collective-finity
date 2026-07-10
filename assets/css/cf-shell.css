@@ -641,6 +641,7 @@ html.cf-player-collapsed .cf-player-headline { justify-content: center; }
     margin: 56px 34px 0;
     border-top: 1px solid var(--cf-divider);
     padding-top: 36px;
+    padding-bottom: 40px;
     color: var(--cf-text);
     background: transparent;
     box-sizing: border-box;
@@ -668,6 +669,111 @@ html.cf-player-collapsed .cf-player-headline { justify-content: center; }
 .cf-footer-col a { color: var(--cf-text-2); font-size: 13px; text-decoration: none; transition: color var(--cf-transition-speed, 0.2s) ease; }
 .cf-footer-col a:hover { color: #fff; }
 .cf-footer-col a:focus-visible { outline: none; color: var(--cf-accent); text-decoration: underline; text-underline-offset: 3px; }
+.cf-footer-widgets {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--cf-divider);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: flex-start;
+}
+.cf-footer-widgets .cf-footer-widget { flex: 1 1 280px; min-width: 0; }
+
+/* Compact footer player bar (Shell.dc.html footerPlayerStyle) — mobile/tablet only */
+.cf-footer-player-bar {
+    display: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--cf-footer-player-h);
+    border-top: 1px solid var(--cf-divider);
+    background: var(--cf-bg-panel);
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+    z-index: 20;
+    box-sizing: border-box;
+}
+.cf-footer-player-cover {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--cf-bg-elevated, #141414);
+    flex-shrink: 0;
+}
+.cf-footer-player-mid {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.cf-footer-player-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+}
+.cf-footer-player-progress-bg {
+    height: 3px;
+    border-radius: 2px;
+    background: #232323;
+    position: relative;
+    cursor: pointer;
+}
+.cf-footer-player-progress-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background: var(--cf-accent);
+    border-radius: 2px;
+}
+.cf-footer-player-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--cf-text-2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+}
+.cf-footer-player-btn--play {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    background: var(--cf-accent);
+    color: #0d0d0d;
+}
+.cf-footer-player-btn--play:hover { background: #ffc633; }
+.cf-footer-player-btn:active { transform: scale(0.94); }
+.cf-footer-player-like.active { color: var(--cf-accent); }
+.cf-footer-player-like:disabled { opacity: 0.45; cursor: default; }
+
+@media (min-width: 1024px) {
+    .cf-footer-player-bar { display: none; }
+}
+
+@media (max-width: 1023px) {
+    .cf-footer-player-bar { display: flex; }
+    .cf-right-sidebar { display: none; }
+}
+
 .cf-footer-bottom {
     margin-top: 32px;
     padding-top: 20px;
@@ -678,7 +784,7 @@ html.cf-player-collapsed .cf-player-headline { justify-content: center; }
     justify-content: space-between;
     align-items: center;
 }
-.cf-footer-copy { font-size: 12px; color: var(--cf-text-4); margin: 0; }
+.cf-footer-copy { font-size: 12px; color: var(--cf-text-3); margin: 0; }
 .cf-cookie-settings-link { border: none; background: transparent; color: var(--cf-accent); font-size: 13px; cursor: pointer; padding: 0; font-family: var(--cf-body); }
 .cf-cookie-settings-link:hover { color: #fff; }
 
@@ -867,21 +973,6 @@ body.cf-glow-disabled .cf-cta { background: linear-gradient(135deg, rgba(255,183
     .cf-mobile-drawer .cf-nav-row { justify-content: flex-start; padding: 11px 12px; }
     .cf-mobile-drawer .cf-nav-label { display: inline; }
 
-    /* right sidebar becomes the footer player bar */
-    .cf-right-sidebar {
-        position: fixed;
-        top: auto;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: auto;
-        height: var(--cf-footer-player-h);
-        border-left: none;
-        border-top: 1px solid var(--cf-divider);
-        flex-direction: row;
-        align-items: center;
-        overflow: visible;
-    }
     .cf-player-wrap { padding: 0 14px; flex: 1; min-width: 0; }
     #cf-global-audio-player.cf-player { flex-direction: row; align-items: center; gap: 10px; }
     .cf-player-cover { width: 40px; height: 40px; min-width: 40px; aspect-ratio: auto; border-radius: 8px; box-shadow: none; }

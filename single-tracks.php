@@ -529,28 +529,6 @@ $comments_count = count($track_comments);
 <script type="text/javascript">
 jQuery(document).ready(function($) {
     
-    // --- 2. Live Stats Sync Cache-Buster on Load (Bypasses LiteSpeed Caching for Stats) ---
-    if ( cf_ajax.logged_in ) {
-        $.ajax({
-            url: cf_ajax.ajax_url,
-            type: 'POST',
-            data: {
-                action: 'cf_get_liked_tracks',
-                security: cf_ajax.nonce
-            },
-            success: function(response) {
-                if (response.success && response.data.liked_tracks) {
-                    var likedTracks = response.data.liked_tracks;
-                    var trackId = <?php echo intval($track_id); ?>;
-                    if (likedTracks.indexOf(trackId) !== -1) {
-                        $('.live-likes-btn').addClass('active');
-                    }
-                }
-            }
-        });
-    }
-
-
     // --- 3. Interactive Emojis Click Handler ---
     $(document).on('click', '.cf-emoji-btn', function(e) {
         e.preventDefault();

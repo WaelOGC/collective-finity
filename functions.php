@@ -506,6 +506,7 @@ function collective_finity_get_footer_menu_sections() {
                 array( 'label' => __( 'Blog', 'collective-finity' ), 'url' => collective_finity_get_page_link( 'blog', '/blog/' ) ),
                 array( 'label' => __( 'Albums', 'collective-finity' ), 'url' => $albums_url ? $albums_url : home_url( '/albums/' ) ),
                 array( 'label' => __( 'Music Library', 'collective-finity' ), 'url' => $tracks_url ? $tracks_url : home_url( '/tracks/' ) ),
+                array( 'label' => __( 'Donate', 'collective-finity' ), 'url' => collective_finity_get_page_link( 'donate', '/donate/' ) ),
             ),
         ),
         'community' => array(
@@ -687,7 +688,7 @@ function collective_finity_scripts() {
 
     wp_enqueue_style( 'dashicons' );
     wp_enqueue_script( 'jquery' );
-    wp_enqueue_script( 'music-player-js', get_template_directory_uri() . '/js/music-player.js', array( 'jquery' ), $player_ver, true );
+    wp_enqueue_script( 'music-player-js', get_template_directory_uri() . '/js/music-player.js', array( 'jquery', 'cf-auth-script' ), $player_ver, true );
 
     $shell_js_path = get_template_directory() . '/assets/js/cf-shell.js';
     $shell_js_ver  = file_exists( $shell_js_path ) ? filemtime( $shell_js_path ) : $theme_version;
@@ -1550,4 +1551,4 @@ error_log( 'CF DEBUG: before music library require' );
 require get_template_directory() . '/inc/cf-music-library-shortcode.php';
 error_log( 'CF DEBUG: after music library require, before latest releases require' );
 require get_template_directory() . '/inc/cf-latest-releases-shortcode.php';
-error_log( 'CF DEBUG: after latest releases require. shortcode_exists = ' . ( shortcode_exists( 'cf_latest_releases' ) ? 'YES' : 'NO' ) );
+require get_template_directory() . '/inc/cf-footer-player-shortcode.php';
