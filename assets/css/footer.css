@@ -5,8 +5,6 @@
 
 .cf-site-footer {
     position: relative;
-    margin-top: 64px;
-    padding: 0 28px 36px;
     color: rgba(255, 255, 255, 0.72);
     font-family: 'Space Mono', sans-serif;
     overflow: hidden;
@@ -53,6 +51,12 @@
 /* ─── Brand column ─── */
 .cf-footer-brand {
     max-width: 400px;
+}
+
+.cf-footer-brand-logo-img {
+    display: inline-block;
+    object-fit: contain;
+    flex-shrink: 0;
 }
 
 .cf-footer-logo-link {
@@ -327,11 +331,6 @@
 }
 
 @media (max-width: 768px) {
-    .cf-site-footer {
-        margin-top: 48px;
-        padding: 0 18px 28px;
-    }
-
     .cf-site-footer::before {
         left: 18px;
         right: 18px;

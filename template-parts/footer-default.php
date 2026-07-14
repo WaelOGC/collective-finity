@@ -26,7 +26,7 @@ $cf_description = $cf_description ? $cf_description : __( 'Welcome to Collective
     <div class="cf-footer-inner">
         <div class="cf-footer-brand">
             <a class="cf-footer-brand-link" href="<?php echo esc_url( home_url( '/' ) ); ?>">
-                <span class="cf-footer-brand-mark" aria-hidden="true"></span>
+                <?php echo collective_finity_footer_logo_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 <span class="cf-footer-brand-word"><?php echo esc_html( strtoupper( collective_finity_brand_name() ) ); ?></span>
             </a>
             <p class="cf-footer-eyebrow"><?php echo esc_html( $cf_tagline ); ?></p>

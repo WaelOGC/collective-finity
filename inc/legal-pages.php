@@ -71,6 +71,96 @@ add_action( 'after_switch_theme', 'collective_finity_maybe_create_legal_pages' )
 add_action( 'admin_init', 'collective_finity_maybe_create_legal_pages' );
 
 /**
+ * Theme-bundled legal page HTML (slug => relative path under inc/).
+ *
+ * @return array<string, string>
+ */
+function collective_finity_get_legal_page_content_paths() {
+    return array(
+        'privacy-policy'   => 'legal-content-privacy-policy.html',
+        'terms-of-service' => 'legal-content-terms-of-service.html',
+        'cookie-policy'    => 'legal-content-cookie-policy.html',
+        'copyright-policy' => 'legal-content-copyright-policy.html',
+    );
+}
+
+/**
+ * Load finalized legal page HTML from the theme bundle.
+ *
+ * @param string $slug Page slug.
+ * @return string
+ */
+function collective_finity_get_bundled_legal_page_content( $slug ) {
+    $paths = collective_finity_get_legal_page_content_paths();
+    if ( ! isset( $paths[ $slug ] ) ) {
+        return '';
+    }
+
+    $path = get_template_directory() . '/inc/' . $paths[ $slug ];
+    if ( ! is_readable( $path ) ) {
+        return '';
+    }
+
+    $content = file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+    return is_string( $content ) ? trim( $content ) : '';
+}
+
+/**
+ * Sync bundled legal page content into WordPress pages (idempotent).
+ */
+function collective_finity_sync_legal_page_content() {
+    $target_version = 2;
+    if ( (int) get_option( 'cf_legal_pages_content_version', 0 ) >= $target_version ) {
+        return;
+    }
+
+    $modified_local = '2026-07-11 12:00:00';
+    $modified_gmt   = '2026-07-11 10:00:00';
+
+    foreach ( collective_finity_get_legal_page_definitions() as $slug => $title ) {
+        $content = collective_finity_get_bundled_legal_page_content( $slug );
+        if ( '' === $content ) {
+            continue;
+        }
+
+        $page = get_page_by_path( $slug, OBJECT, 'page' );
+        if ( ! $page ) {
+            wp_insert_post(
+                array(
+                    'post_title'        => $title,
+                    'post_name'         => $slug,
+                    'post_content'      => $content,
+                    'post_status'       => 'publish',
+                    'post_type'         => 'page',
+                    'post_modified'     => $modified_local,
+                    'post_modified_gmt' => $modified_gmt,
+                    'meta_input'        => array(
+                        '_wp_page_template' => 'page-legal.php',
+                    ),
+                )
+            );
+            continue;
+        }
+
+        wp_update_post(
+            array(
+                'ID'                => $page->ID,
+                'post_content'      => $content,
+                'post_modified'     => $modified_local,
+                'post_modified_gmt' => $modified_gmt,
+            )
+        );
+
+        update_post_meta( $page->ID, '_wp_page_template', 'page-legal.php' );
+    }
+
+    update_option( 'cf_legal_pages_content_version', $target_version );
+}
+add_action( 'after_switch_theme', 'collective_finity_sync_legal_page_content' );
+add_action( 'admin_init', 'collective_finity_sync_legal_page_content' );
+add_action( 'init', 'collective_finity_sync_legal_page_content', 20 );
+
+/**
  * Published legal page links formatted for footer menus.
  *
  * @return array<int, array{label: string, url: string}>
@@ -108,6 +198,30 @@ function collective_finity_get_published_legal_links() {
     }
 
     return $links;
+}
+
+/**
+ * Inline SVG icon for a legal page hero (slug-keyed).
+ *
+ * @param string $slug Page slug.
+ * @return string
+ */
+function collective_finity_get_legal_page_icon_svg( $slug ) {
+    $icons = array(
+        'privacy-policy'   => '<path d="M12 3 4 6.5V12c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V6.5z"/><rect x="9" y="11" width="6" height="5" rx="1"/><path d="M10.5 11V9a1.5 1.5 0 0 1 3 0v2"/>',
+        'terms-of-service' => '<path d="M8 3h8l2 2v16H6V3z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/><path d="M4 20h16"/><path d="M8 20V17"/><path d="M16 20V17"/><circle cx="8" cy="15" r="2.5"/><circle cx="16" cy="15" r="2.5"/>',
+        'cookie-policy'    => '<path d="M12 3a9 9 0 1 0 9 9c0-.34-.02-.67-.05-1"/><circle cx="9" cy="10" r="0.9" fill="currentColor" stroke="none"/><circle cx="14" cy="9" r="0.9" fill="currentColor" stroke="none"/><circle cx="11" cy="14" r="0.9" fill="currentColor" stroke="none"/><circle cx="15.5" cy="13" r="0.9" fill="currentColor" stroke="none"/>',
+        'copyright-policy' => '<path d="M12 3 4 6.5V12c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V6.5z"/><circle cx="12" cy="12" r="3.5"/><path d="M14.2 10.8a2.8 2.8 0 1 0 0 4.4"/>',
+    );
+
+    if ( ! isset( $icons[ $slug ] ) ) {
+        return '';
+    }
+
+    return sprintf(
+        '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">%s</svg>',
+        $icons[ $slug ]
+    );
 }
 
 /**

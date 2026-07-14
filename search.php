@@ -54,16 +54,6 @@ $search_query = get_search_query();
 </main>
 
 <style>
-    .cf-page-shell { padding: 90px 20px 140px; }
-    .cf-page-container { max-width: 980px; margin: 0 auto; }
-    .cf-page-kicker {
-        margin: 0 0 8px;
-        color: var(--primary-color, #FFB700);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.24em;
-        text-transform: uppercase;
-    }
     .cf-search-header h1 { color: #fff; margin: 0 0 28px; font-size: clamp(24px, 2.5vw, 34px); }
     .cf-search-header h1 span { color: var(--primary-color, #FFB700); }
     .cf-search-results { display: grid; gap: 16px; }

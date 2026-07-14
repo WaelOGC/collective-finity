@@ -10,7 +10,8 @@ get_header();
 ?>
 
 <main id="primary" class="site-main cf-page-shell cf-legal-page">
-    <div class="cf-legal-layout">
+    <div class="cf-page-container">
+        <div class="cf-legal-layout">
         <?php
         while ( have_posts() ) :
             the_post();
@@ -25,16 +26,14 @@ get_header();
                 }
             );
             ?>
-            <nav class="cf-legal-breadcrumb" aria-label="<?php esc_attr_e( 'Breadcrumb', 'collective-finity' ); ?>">
-                <ol>
-                    <li><a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Home', 'collective-finity' ); ?></a></li>
-                    <li aria-current="page"><?php the_title(); ?></li>
-                </ol>
-            </nav>
-
-            <article class="cf-legal-article">
-                <header class="cf-legal-header">
-                    <h1 class="cf-legal-title"><?php the_title(); ?></h1>
+            <section class="cf-legal-hero" aria-labelledby="cf-legal-hero-heading">
+                <?php if ( $hero_icon = collective_finity_get_legal_page_icon_svg( $current_slug ) ) : ?>
+                    <div class="cf-legal-hero__icon" aria-hidden="true">
+                        <?php echo $hero_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    </div>
+                <?php endif; ?>
+                <div class="cf-legal-hero__content">
+                    <h1 id="cf-legal-hero-heading" class="cf-legal-title"><?php the_title(); ?></h1>
                     <p class="cf-legal-updated">
                         <?php
                         printf(
@@ -44,7 +43,10 @@ get_header();
                         );
                         ?>
                     </p>
-                </header>
+                </div>
+            </section>
+
+            <article class="cf-legal-article">
 
                 <?php if ( $toc_data['toc'] ) : ?>
                     <?php echo $toc_data['toc']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
@@ -66,6 +68,7 @@ get_header();
                 </aside>
             <?php endif; ?>
         <?php endwhile; ?>
+        </div>
     </div>
 </main>
 

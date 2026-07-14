@@ -20,19 +20,96 @@
 
 .cf-contact-page,
 .cf-community-page,
-.cf-about-page.cf-page-shell {
+.cf-about-page.cf-page-shell,
+.cf-legal-page.cf-page-shell {
 	min-width: 0;
 	max-width: 100%;
 }
 
 .cf-contact-page__inner,
-.cf-community-page__inner,
-.cf-about-page .cf-page-container.cf-about {
+.cf-community-page__inner {
 	max-width: min(1100px, 100%);
 }
 
+/* ---- Generic page shell (page.php, single.php, search.php) ---- */
+.cf-page-shell {
+	padding: 2.5rem 20px 140px;
+	box-sizing: border-box;
+}
+
+/* page.php only — account/auth and other generic WP pages */
+.cf-page-shell.cf-page-template {
+	padding: 2.5px 20px 0;
+	box-sizing: border-box;
+}
+
+.cf-app-content:has(> .cf-page-shell.cf-page-template) + .cf-site-footer {
+	margin-top: 5px !important;
+}
+
 .cf-page-shell .cf-page-container {
+	max-width: min(1200px, 100%);
+	margin: 0 auto;
+	min-width: 0;
+}
+
+.cf-about-page .cf-page-container.cf-about {
 	max-width: min(980px, 100%);
+}
+
+.cf-page-shell .cf-page-container:has(.cf-profile-page) {
+	max-width: min(1200px, 100%);
+}
+
+.cf-page-card {
+	background: linear-gradient(180deg, rgba(18, 18, 18, 0.95), rgba(8, 8, 8, 0.95));
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 18px;
+	padding: 36px;
+	box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
+}
+
+.cf-page-header {
+	margin-bottom: 24px;
+	padding-bottom: 18px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cf-page-kicker {
+	margin: 0 0 8px;
+	color: var(--primary-color, #ffb700);
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.24em;
+	text-transform: uppercase;
+}
+
+.cf-page-header h1 {
+	margin: 0;
+	color: #fff;
+	font-size: clamp(26px, 2.5vw, 34px);
+}
+
+.cf-page-shell .entry-content p,
+.cf-page-shell .entry-content li {
+	line-height: 1.8;
+	color: #cfcfcf;
+}
+
+.cf-page-shell .entry-content a {
+	color: var(--primary-color, #ffb700);
+}
+
+.cf-post-meta {
+	margin: 12px 0 0;
+	color: #888;
+	font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+	.cf-page-card {
+		padding: 24px;
+	}
 }
 
 .cf-home,

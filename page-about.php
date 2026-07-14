@@ -9,25 +9,26 @@ if ( ! $cf_tracks_url ) {
     $cf_tracks_url = home_url( '/tracks/' );
 }
 
-$cf_hero_portal_url = 'https://collectivefinity.com/wp-content/uploads/2026/06/AI-Music-Creation-Portal-FF-CHRONICLE.png';
+$cf_hero_portrait_url = 'https://collectivefinity.com/wp-content/uploads/2026/07/Wael-Safan-%E2%80%94-Founder-of-Collective-Finity.jpg';
+$cf_bts_image_url     = 'https://collectivefinity.com/wp-content/uploads/2026/07/Wael-Safan-behind-the-camera-Amsterdam.jpg';
 
 $cf_about_pillars = array(
     array(
         'number' => '01',
-        'title'  => 'Cinematic Lyrics',
-        'text'   => 'Every track begins with a pure human spark. Original lyrics written by hand, conceptual storytelling, and profound narratives that establish a deep emotional connection before a single note is synthesized.',
+        'title'  => 'Cinematic at Heart',
+        'text'   => "'Cinematic' isn't a genre limit here — it's how I approach production. Whether it's electronic, classical, rock, or traditional Arabic vocal music, every track is built to feel like it's telling a story, not just filling space.",
         'accent' => false,
     ),
     array(
         'number' => '02',
-        'title'  => 'Human Artistry',
-        'text'   => 'Strict artistic direction and meticulous human composition guide advanced production instruments. Technology never drives our process; it executes our deep, multi-layered cinematic vision.',
+        'title'  => 'A Real Musical Ear',
+        'text'   => "I'm not a trained musician — but years of playing piano, messing with guitar, and building tracks by ear taught me what actually sounds right. Every track goes through real iteration until it holds up, not just the first AI output.",
         'accent' => true,
     ),
     array(
         'number' => '03',
-        'title'  => 'Sonic Innovation',
-        'text'   => 'Building a limitless digital ecosystem where music and technology evolve together. We push boundaries to craft immersive soundscapes and unforgettable auditory journeys.',
+        'title'  => 'Built in the Open',
+        'text'   => "I write about the actual process — prompts, decisions, what worked and what didn't — so other people learning to generate music with AI can skip some of the trial and error I went through.",
         'accent' => false,
     ),
 );
@@ -35,37 +36,41 @@ $cf_about_pillars = array(
 $cf_about_timeline = array(
     array(
         'quarter' => 'Q1 2025',
-        'title'   => 'The Genesis',
-        'text'    => 'The human spark is ignited. Collective Finity began as a conceptual movement to challenge standard digital music production, focusing entirely on original, handwritten lyrics and deep cinematic themes.',
+        'title'   => 'The Foundation',
+        'text'    => 'Years of loving and playing music by ear, then years of hands-on experimentation with AI music generation — refining prompts and workflow long before Collective Finity had a name.',
     ),
     array(
         'quarter' => 'Q3 2025',
-        'title'   => 'Synthesis Protocol',
-        'text'    => 'Integrating advanced production instruments. We developed our proprietary creative methodology, proving that modern tech can amplify raw human artistry without destroying its emotional core.',
+        'title'   => 'Collective Finity Takes Shape',
+        'text'    => 'Built the catalog, the site, and started writing about the process — turning thousands of generated tracks into a curated, cinematic library.',
     ),
     array(
         'quarter' => 'Q1 2026',
-        'title'   => 'The Infinite Expansion',
-        'text'    => 'Launching a limitless digital universe where immersive orchestration, dark-themed visual design, and multi-layered soundscapes evolve continuously beyond imagination.',
+        'title'   => 'Building the Platform',
+        'text'    => 'The next phase: growing the music catalog and article library toward a real community, as the groundwork for an app open to other AI-assisted artists.',
     ),
 );
 
 $cf_about_faq = array(
     array(
-        'question' => 'What makes Collective Finity different from other music platforms?',
-        'answer'   => 'Unlike traditional automated platforms, Collective Finity bridges raw human artistry with advanced technology. Every project begins with handcrafted, original lyrics and structured cinematic concepts, ensuring that the emotional core of independent music remains entirely authentic and deeply impactful.',
+        'question' => 'Is Collective Finity made by one person or a team?',
+        'answer'   => "Right now, it's just me — Wael Safan. I write, produce, and publish everything myself. The name 'Collective' reflects where this is headed: a platform other AI-assisted artists can eventually join, not where it is today.",
     ),
     array(
-        'question' => 'Are the lyrics and musical themes fully original?',
-        'answer'   => 'Yes, completely. We follow a strict creative protocol where all lyrical narratives, poetic structures, and thematic concepts are generated directly from genuine human inspiration. Technology is utilized strictly as an advanced production tool to execute and scale this cinematic vision.',
+        'question' => 'Do you only make cinematic music?',
+        'answer'   => "No — I produce across genres: electronic, classical, rock, metal, traditional Arabic vocal music, and more. 'Cinematic' describes the emotional, story-driven approach I bring to all of it, not a single genre.",
     ),
     array(
-        'question' => 'How does this platform support independent digital artists?',
-        'answer'   => 'We provide an immersive, limitless ecosystem tailored for independent audio creators. By offering high-tier multi-layered soundscapes, persistent web players, and sophisticated visual frameworks, we empower artists to showcase their work within a premium, high-fidelity environment.',
+        'question' => 'Are you a trained musician?',
+        'answer'   => "No — I'm self-taught. I play piano, I've practiced guitar, and I've always had a good ear for music, but I have no formal training. That's part of why I care about getting AI-generated music right: I know what sounds real even without the theory to explain it.",
     ),
     array(
-        'question' => 'Can I integrate these cinematic tracks into my own external projects?',
-        'answer'   => 'Absolutely. Our digital compositions and orchestration parameters are designed to seamlessly integrate with modern technical agencies, web architectures, and multimedia productions looking for elite, atmospheric, and continuous sound design.',
+        'question' => 'Will other artists be able to join Collective Finity?',
+        'answer'   => "That's the plan. The long-term goal is a dedicated app where any artist using AI to make music can publish their own work and reach listeners. This site and its community come first.",
+    ),
+    array(
+        'question' => 'Do you offer courses or paid content?',
+        'answer'   => "Not yet. Everything — the music and the articles — is free. Down the line, once there's a solid library of articles and tracks here, I plan to add affordable courses on AI music prompt engineering for people who want to go deeper.",
     ),
 );
 
@@ -81,50 +86,61 @@ get_header();
                     <div class="cf-about-hero__copy">
                         <p class="cf-about-eyebrow">ABOUT COLLECTIVE FINITY</p>
                         <h1 id="cf-about-heading" class="cf-about-hero__title">About Collective Finity</h1>
-                        <p class="cf-about-hero__tagline">Where Human Artistry Meets AI Innovation</p>
-                        <p class="cf-about-hero__lead">Collective Finity is a cinematic music universe shaping the future of sound. By combining human emotional lyrics with advanced AI synthesis, we craft immersive sonic journeys.</p>
+                        <p class="cf-about-hero__tagline">One Musician, One Mission: Cinematic Sound Through AI</p>
+                        <p class="cf-about-hero__lead">I'm Wael Safan — someone who's loved music my whole life, long before AI music generation existed, and one of the earliest people to take it seriously as a real creative tool. Collective Finity is where that comes together: a genuine ear for music, real hands-on instinct, and AI as an instrument I direct — not a shortcut.</p>
                         <div class="cf-about-hero__actions">
                             <a class="cf-about-btn cf-about-btn--primary" href="<?php echo esc_url( $cf_tracks_url ); ?>">Explore Music</a>
-                            <a class="cf-about-btn cf-about-btn--ghost" href="#cf-about-chronicle">Our Story</a>
+                            <a class="cf-about-btn cf-about-btn--ghost" href="#cf-about-who-i-am">Read My Story</a>
                         </div>
                     </div>
 
-                    <div class="cf-about-hero__visual" aria-hidden="true">
+                    <div class="cf-about-hero__visual">
                         <div class="cf-about-hero__visual-frame">
-                            <div class="cf-about-hero__disc-wrap">
-                                <div class="cf-about-hero__glow"></div>
-                                <div class="cf-about-hero__disc">
-                                    <img
-                                        class="cf-about-hero__portal"
-                                        src="<?php echo esc_url( $cf_hero_portal_url ); ?>"
-                                        alt=""
-                                        width="280"
-                                        height="280"
-                                        loading="lazy"
-                                        decoding="async"
-                                    >
-                                </div>
+                            <div class="cf-about-hero__portrait-wrap">
+                                <div class="cf-about-hero__portrait-glow" aria-hidden="true"></div>
+                                <img
+                                    class="cf-about-hero__portrait"
+                                    src="<?php echo esc_url( $cf_hero_portrait_url ); ?>"
+                                    alt="Portrait of Wael Safan, musician and founder of Collective Finity"
+                                    width="220"
+                                    height="220"
+                                    loading="lazy"
+                                    decoding="async"
+                                >
                             </div>
-                            <span class="cf-about-hero__badge cf-about-hero__badge--sound">Original Sound</span>
-                            <span class="cf-about-hero__badge cf-about-hero__badge--stories">Cinematic Stories</span>
                         </div>
                     </div>
                 </div>
             </section>
 
             <div class="cf-about-story-grid">
-                <section id="cf-about-chronicle" class="cf-about-section">
-                    <p class="cf-about-section__label">01 / THE CHRONICLE</p>
-                    <h2 class="cf-about-section__title">The Story Behind The Sound</h2>
-                    <p class="cf-about-section__body">Collective Finity was born from a desire to redefine cinematic music. Every creation begins with a pure human spark—original lyrics written by hand, conceptual themes, and strict artistic direction.</p>
-                    <blockquote class="cf-about-quote">“We guide advanced AI technology not as a simple shortcut, but as a complex production instrument to execute deep, multi-layered soundscapes.”</blockquote>
+                <section id="cf-about-who-i-am" class="cf-about-section">
+                    <div class="cf-about-section__intro">
+                        <div class="cf-about-section__intro-copy">
+                            <p class="cf-about-section__label">01 / THE ARTIST</p>
+                            <h2 class="cf-about-section__title">Who I Am</h2>
+                        </div>
+                        <figure class="cf-about-section__accent">
+                            <img
+                                src="<?php echo esc_url( $cf_bts_image_url ); ?>"
+                                alt="Black and white photo of Wael Safan holding a camera"
+                                width="140"
+                                height="105"
+                                loading="lazy"
+                                decoding="async"
+                            >
+                        </figure>
+                    </div>
+                    <p class="cf-about-section__body">I've never been a professional or formally trained musician — but I've always had a genuine love for music and a good ear for it. I play piano, I've practiced guitar, and long before AI music generation existed, I was already building tracks myself with music software and a keyboard. That hands-on background — knowing what actually sounds right, even without formal training — is exactly what lets me get real results from AI music tools instead of just generating generic output. I've generated more than ten thousand pieces of music since I started. What you'll find on this site is the roughly 1,500 I consider genuinely worth sharing.</p>
+                    <blockquote class="cf-about-quote">“AI doesn't replace the ear. It just needs someone who has one.”</blockquote>
                 </section>
 
                 <section id="cf-about-future" class="cf-about-section">
                     <p class="cf-about-section__label">02 / THE FUTURE</p>
-                    <h2 class="cf-about-section__title">Our Creative Vision</h2>
-                    <p class="cf-about-section__body">Our vision is to build a limitless digital ecosystem where music and technology evolve together. By combining meticulous human composition with AI synthesis, we prove that innovation has no boundaries.</p>
-                    <blockquote class="cf-about-quote">“Every track is a curated balance of professional musical direction and modern technology.”</blockquote>
+                    <h2 class="cf-about-section__title">Where This Is Going</h2>
+                    <p class="cf-about-section__body">Right now, Collective Finity is me: writing, producing, and publishing alone, plus a growing set of articles on how I actually get good results from AI music generation — real prompt techniques, not surface-level tips. Everything here is free, and stays free.</p>
+                    <p class="cf-about-section__body">The bigger plan is a dedicated app — not just for my own music, but a place where any artist making AI-assisted music can publish theirs too, and listeners can discover it. This website, and the community forming around it, is the foundation that comes first.</p>
+                    <blockquote class="cf-about-quote">“This site is the beginning. The platform is the plan.”</blockquote>
                 </section>
             </div>
 
@@ -149,8 +165,8 @@ get_header();
             <section class="cf-about-timeline" aria-labelledby="cf-about-timeline-heading">
                 <header class="cf-about-section-head">
                     <p class="cf-about-section-head__eyebrow">THE CHRONOLOGY</p>
-                    <h2 id="cf-about-timeline-heading" class="cf-about-section-head__title">The Universe &amp; Timeline</h2>
-                    <p class="cf-about-section-head__sub">Our Evolutionary Journey</p>
+                    <h2 id="cf-about-timeline-heading" class="cf-about-section-head__title">The Journey So Far</h2>
+                    <p class="cf-about-section-head__sub">Where This Started, Where It's Headed</p>
                 </header>
                 <div class="cf-about-timeline__track">
                     <div class="cf-about-timeline__line" aria-hidden="true"></div>
@@ -210,7 +226,7 @@ get_header();
 
 <style>
     .cf-about-page.cf-page-shell {
-        padding: 90px clamp(16px, 3vw, 20px) 140px;
+        padding: 2.5rem clamp(16px, 3vw, 20px) 140px;
         max-width: 100%;
         min-width: 0;
         box-sizing: border-box;
@@ -296,85 +312,42 @@ get_header();
 
     .cf-about-hero__visual-frame {
         position: relative;
-        width: min(100%, 340px);
+        width: min(100%, 240px);
         margin: 0 auto;
-        padding: 16px 0 32px;
+        padding: 8px 0 0;
     }
 
-    .cf-about-hero__disc-wrap {
+    .cf-about-hero__portrait-wrap {
         position: relative;
-        width: min(100%, 300px);
+        width: min(100%, 220px);
         margin: 0 auto;
     }
 
-    .cf-about-hero__glow {
+    .cf-about-hero__portrait-glow {
         position: absolute;
-        inset: 8%;
+        inset: 6%;
         z-index: 0;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(255, 183, 0, 0.24) 0%, rgba(255, 183, 0, 0.08) 45%, transparent 72%);
-        filter: blur(20px);
+        background: radial-gradient(circle, rgba(255, 183, 0, 0.28) 0%, rgba(255, 183, 0, 0.1) 45%, transparent 72%);
+        filter: blur(18px);
         pointer-events: none;
     }
 
-    .cf-about-hero__disc {
+    .cf-about-hero__portrait {
         position: relative;
         z-index: 1;
+        display: block;
         width: 100%;
+        max-width: 220px;
         aspect-ratio: 1;
         margin: 0 auto;
         border-radius: 50%;
-        overflow: hidden;
-        box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.65);
-    }
-
-    .cf-about-hero__portal {
-        display: block;
-        width: 100%;
-        height: 100%;
+        border: 1px solid rgba(255, 183, 0, 0.3);
         object-fit: cover;
-        animation: cf-about-disc-spin 25s linear infinite;
-        transform-origin: center center;
-    }
-
-    @keyframes cf-about-disc-spin {
-        from {
-            transform: rotate(0deg);
-        }
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .cf-about-hero__portal {
-            animation: none;
-        }
-    }
-
-    .cf-about-hero__badge {
-        position: absolute;
-        z-index: 2;
-        padding: 8px 14px;
-        border: 1px solid #262626;
-        border-radius: 999px;
-        background: rgba(20, 20, 20, 0.94);
-        color: #fff;
-        font-size: 12px;
-        font-weight: 600;
-        line-height: 1.2;
-        white-space: nowrap;
-        box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.55);
-    }
-
-    .cf-about-hero__badge--sound {
-        top: 4%;
-        right: 0;
-    }
-
-    .cf-about-hero__badge--stories {
-        bottom: 8%;
-        left: 0;
+        box-shadow:
+            0 0 24px rgba(255, 183, 0, 0.22),
+            0 0 48px rgba(255, 183, 0, 0.1),
+            0 16px 32px -12px rgba(0, 0, 0, 0.55);
     }
 
     .cf-about-btn {
@@ -421,6 +394,36 @@ get_header();
         display: grid;
         grid-template-columns: 1fr;
         gap: 40px;
+    }
+
+    .cf-about-section__intro {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 12px;
+    }
+
+    .cf-about-section__intro-copy {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .cf-about-section__accent {
+        flex: 0 0 auto;
+        margin: 0;
+        width: min(100%, 120px);
+        max-width: 140px;
+    }
+
+    .cf-about-section__accent img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.55);
+        opacity: 0.92;
     }
 
     .cf-about-section__label {
@@ -665,7 +668,7 @@ get_header();
     @media (min-width: 768px) {
         .cf-about-hero__grid {
             display: grid;
-            grid-template-columns: minmax(0, 1.05fr) minmax(240px, 0.95fr);
+            grid-template-columns: minmax(0, 1.2fr) minmax(180px, 0.8fr);
             gap: 32px;
             align-items: center;
         }

@@ -16,6 +16,11 @@ jQuery(document).ready(function($) {
     window.cfSpeedRates = [0.5, 0.75, 1, 1.25, 1.5, 2];
     window.cfLastVolume = 0.72;
     window.cfIsMuted = false;
+    var cfLastLoggedTrackId = null;
+    var CF_PLAYER_STATE_KEY = 'cf_player_state';
+    var CF_PLAYER_STATE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+    var CF_PLAYER_SAVE_COOLDOWN = 4000;
+    var cfLastPlayerStateSave = 0;
 
     if (!audio) {
         console.warn('Collective Finity: audio element not found.');
@@ -143,6 +148,173 @@ jQuery(document).ready(function($) {
         };
     }
 
+    function clearPlayerState() {
+        try {
+            window.localStorage.removeItem(CF_PLAYER_STATE_KEY);
+        } catch (e) {}
+    }
+
+    function isValidPlayerState(state) {
+        if (!state || typeof state !== 'object') {
+            return false;
+        }
+        if (typeof state.savedAt !== 'number' || isNaN(state.savedAt)) {
+            return false;
+        }
+        if (Date.now() - state.savedAt > CF_PLAYER_STATE_MAX_AGE) {
+            return false;
+        }
+        if (!Array.isArray(state.queue) || !state.queue.length) {
+            return false;
+        }
+        if (typeof state.queueIndex !== 'number' || state.queueIndex < 0 || state.queueIndex >= state.queue.length) {
+            return false;
+        }
+        for (var i = 0; i < state.queue.length; i++) {
+            var item = state.queue[i];
+            if (!item || typeof item !== 'object' || !item.url) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function buildPlayerState() {
+        return {
+            queue: (window.cfPlayerQueue || []).map(normalizeTrack),
+            queueIndex: window.cfPlayerQueueIndex,
+            currentTime: audio.currentTime || 0,
+            isPlaying: !audio.paused && !!audio.src,
+            volume: window.cfIsMuted ? (window.cfLastVolume || 0.72) : audio.volume,
+            isMuted: window.cfIsMuted,
+            playbackRate: window.cfPlaybackRate,
+            savedAt: Date.now()
+        };
+    }
+
+    function savePlayerState() {
+        if (!window.cfPlayerQueue.length) {
+            clearPlayerState();
+            return;
+        }
+        try {
+            window.localStorage.setItem(CF_PLAYER_STATE_KEY, JSON.stringify(buildPlayerState()));
+            cfLastPlayerStateSave = Date.now();
+        } catch (e) {}
+    }
+
+    function maybeSavePlayerStateThrottled() {
+        if (!window.cfPlayerQueue.length) {
+            return;
+        }
+        var now = Date.now();
+        if (now - cfLastPlayerStateSave < CF_PLAYER_SAVE_COOLDOWN) {
+            return;
+        }
+        savePlayerState();
+    }
+
+    function applyQueueTrackUI(track) {
+        track = normalizeTrack(track);
+        $('#player-track-title').text(track.title);
+        $('#player-track-artist').text(track.artist);
+
+        if (track.art) {
+            $('.cf-player-cover').css('background-image', 'url("' + escapeCssUrl(track.art) + '")');
+        }
+
+        var $footerTitle = $('#cf-footer-player-title');
+        if ($footerTitle.length) {
+            $footerTitle.text(track.title);
+            if (track.art) {
+                $('#cf-footer-player-cover').css('background-image', 'url("' + escapeCssUrl(track.art) + '")');
+            }
+        }
+
+        if (track.id) {
+            playBtn.attr('data-track-id', track.id);
+        } else {
+            playBtn.removeAttr('data-track-id');
+        }
+    }
+
+    function restorePlayerState() {
+        if (window.cfPlayerQueue.length) {
+            return false;
+        }
+
+        var saved;
+        try {
+            var raw = window.localStorage.getItem(CF_PLAYER_STATE_KEY);
+            if (!raw) {
+                return false;
+            }
+            saved = JSON.parse(raw);
+        } catch (e) {
+            clearPlayerState();
+            return false;
+        }
+
+        if (!isValidPlayerState(saved)) {
+            clearPlayerState();
+            return false;
+        }
+
+        window.cfPlayerQueue = saved.queue.map(normalizeTrack).filter(function(item) {
+            return !!item.url;
+        });
+        if (!window.cfPlayerQueue.length) {
+            clearPlayerState();
+            return false;
+        }
+
+        window.cfPlayerQueueIndex = saved.queueIndex;
+        if (window.cfPlayerQueueIndex >= window.cfPlayerQueue.length) {
+            window.cfPlayerQueueIndex = 0;
+        }
+
+        if (typeof saved.playbackRate === 'number' && !isNaN(saved.playbackRate)) {
+            window.cfPlaybackRate = saved.playbackRate;
+            audio.playbackRate = saved.playbackRate;
+        }
+
+        if (typeof saved.volume === 'number' && !isNaN(saved.volume)) {
+            window.cfLastVolume = saved.volume;
+            if (!saved.isMuted) {
+                audio.volume = saved.volume;
+            }
+        }
+        if (typeof saved.isMuted === 'boolean') {
+            window.cfIsMuted = saved.isMuted;
+            if (saved.isMuted) {
+                audio.volume = 0;
+            }
+        }
+
+        var track = normalizeTrack(window.cfPlayerQueue[window.cfPlayerQueueIndex]);
+        audio.src = track.url;
+        applyQueueTrackUI(track);
+        updatePlayerTrackActions(track.id || null);
+        highlightQueueRow(track.id, window.cfPlayerQueueIndex);
+        updateQueueIndicator();
+
+        var savedTime = typeof saved.currentTime === 'number' && !isNaN(saved.currentTime) ? saved.currentTime : 0;
+        if (savedTime > 0) {
+            audio.addEventListener('loadedmetadata', function onRestoreMetadata() {
+                audio.removeEventListener('loadedmetadata', onRestoreMetadata);
+                var seekTo = savedTime;
+                if (audio.duration && !isNaN(audio.duration)) {
+                    seekTo = Math.min(savedTime, audio.duration);
+                }
+                audio.currentTime = seekTo;
+                updateProgress();
+            });
+        }
+
+        updatePlayState();
+        return true;
+    }
+
     function showPlayerError(message) {
         $('#player-track-title').text(message || 'Unable to play track');
         var $footerTitle = $('#cf-footer-player-title');
@@ -150,6 +322,24 @@ jQuery(document).ready(function($) {
             $footerTitle.text(message || 'Unable to play track');
         }
         updatePlayState();
+    }
+
+    function maybeLogListening(trackId) {
+        if (!trackId) {
+            return;
+        }
+        var id = String(trackId);
+        if (id === cfLastLoggedTrackId) {
+            return;
+        }
+        if (!window.CF_AUTH || window.CF_AUTH.is_logged_in !== '1') {
+            return;
+        }
+        if (typeof window.CF_Auth === 'undefined' || !window.CF_Auth.logListening) {
+            return;
+        }
+        cfLastLoggedTrackId = id;
+        window.CF_Auth.logListening(trackId);
     }
 
     function updatePlayerTrackActions(trackId) {
@@ -207,31 +397,11 @@ jQuery(document).ready(function($) {
         window.cfPlayerQueueIndex = index;
         audio.src = track.url;
         audio.playbackRate = window.cfPlaybackRate;
-        $('#player-track-title').text(track.title);
-        $('#player-track-artist').text(track.artist);
-
-        if (track.art) {
-            $('.cf-player-cover').css('background-image', 'url("' + escapeCssUrl(track.art) + '")');
-        }
-
-        var $footerTitle = $('#cf-footer-player-title');
-        if ($footerTitle.length) {
-            $footerTitle.text(track.title);
-            if (track.art) {
-                $('#cf-footer-player-cover').css('background-image', 'url("' + escapeCssUrl(track.art) + '")');
-            }
-        }
-
-        if (track.id) {
-            playBtn.attr('data-track-id', track.id);
-        } else {
-            playBtn.removeAttr('data-track-id');
-        }
-
+        applyQueueTrackUI(track);
         updatePlayerTrackActions(track.id || null);
-
         highlightQueueRow(track.id, index);
         updateQueueIndicator();
+        savePlayerState();
 
         audio.play().then(updatePlayState).catch(function() {
             showPlayerError('Playback blocked — try again');
@@ -376,7 +546,10 @@ jQuery(document).ready(function($) {
 
     volumeIcon.on('click', toggleMute);
 
-    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('timeupdate', function() {
+        updateProgress();
+        maybeSavePlayerStateThrottled();
+    });
     audio.addEventListener('loadedmetadata', function() {
         $('#player-duration').text(formatTime(audio.duration));
         updateProgress();
@@ -389,8 +562,15 @@ jQuery(document).ready(function($) {
         }
         playNextTrack();
     });
-    audio.addEventListener('play', updatePlayState);
-    audio.addEventListener('pause', updatePlayState);
+    audio.addEventListener('play', function() {
+        updatePlayState();
+        maybeLogListening(playBtn.attr('data-track-id'));
+        savePlayerState();
+    });
+    audio.addEventListener('pause', function() {
+        updatePlayState();
+        savePlayerState();
+    });
 
     seekBar.on('click', function(e) {
         if (!audio.duration) {
@@ -446,6 +626,23 @@ jQuery(document).ready(function($) {
         audio.currentTime = audio.duration * percent;
         updateProgress();
     });
+
+    function loadTrackLibrary() {
+        return $.ajax({
+            url: cf_ajax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'cf_get_track_library',
+                security: cf_ajax.nonce
+            }
+        }).then(function(response) {
+            if (response.success && response.data && response.data.tracks) {
+                window.cfTrackLibraryCache = response.data.tracks;
+                return response.data.tracks;
+            }
+            return [];
+        });
+    }
 
     window.playTrack = function(fileUrl, title, artist, artUrl, trackId, queue, queueIndex) {
         if (!audio) {
@@ -520,19 +717,17 @@ jQuery(document).ready(function($) {
         }
 
         if (!window.cfTrackLibraryCachePromise) {
-            window.cfTrackLibraryCachePromise = $.ajax({
-                url: cf_ajax.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'cf_get_track_library',
-                    security: cf_ajax.nonce
+            window.cfTrackLibraryCachePromise = loadTrackLibrary().catch(function(jqXHR) {
+                if (!jqXHR || jqXHR.status !== 403) {
+                    return [];
                 }
-            }).then(function(response) {
-                if (response.success && response.data && response.data.tracks) {
-                    window.cfTrackLibraryCache = response.data.tracks;
-                    return response.data.tracks;
-                }
-                return [];
+                return $.post(cf_ajax.ajax_url, { action: 'cf_refresh_nonces' }).then(function(refreshResponse) {
+                    if (!refreshResponse.success || !refreshResponse.data || !refreshResponse.data.interaction_nonce) {
+                        return [];
+                    }
+                    cf_ajax.nonce = refreshResponse.data.interaction_nonce;
+                    return loadTrackLibrary();
+                });
             }).catch(function() {
                 return [];
             });
@@ -595,9 +790,15 @@ jQuery(document).ready(function($) {
         }
     });
 
+    restorePlayerState();
+
     playBtn.html('<span class="cf-icon cf-icon-play" aria-hidden="true"></span>');
     updateSpeedLabel();
     updateVolumeUI();
+
+    window.addEventListener('beforeunload', function() {
+        savePlayerState();
+    });
 
     // Cold load / hard refresh: never autoplay when the queue is empty (browser policy + idle player).
     if (!window.cfPlayerQueue.length && !audio.src) {
@@ -732,10 +933,109 @@ jQuery(document).ready(function($) {
             });
     });
 
+    function getPlaylistModalContext() {
+        return {
+            itemId: $('#cf-target-track-id').val(),
+            itemType: $('#cf-target-item-type').val() || 'track'
+        };
+    }
+
+    function setPlaylistModalContext(itemId, itemType) {
+        $('#cf-target-track-id').val(itemId || '');
+        $('#cf-target-item-type').val(itemType || 'track');
+    }
+
+    function clearPlaylistModalErrors() {
+        $('#cf-playlist-list-error, #cf-playlist-create-error').prop('hidden', true).text('');
+    }
+
+    function showPlaylistListError(message) {
+        $('#cf-playlist-list-error').text(message).prop('hidden', false);
+    }
+
+    function showPlaylistCreateError(message) {
+        $('#cf-playlist-create-error').text(message).prop('hidden', false);
+    }
+
+    function markPlaylistRow($row, added) {
+        $row.toggleClass('added', !!added);
+        var $status = $row.find('.cf-playlist-status');
+        if (added) {
+            $status.removeClass('dashicons-no').addClass('dashicons-yes');
+        } else {
+            $status.removeClass('dashicons-yes').addClass('dashicons-no');
+        }
+    }
+
+    function buildPlaylistRow(playlist) {
+        var playlistId = playlist.id || playlist.playlist_id;
+        var $row = $('<div class="cf-playlist-item"></div>')
+            .attr('data-playlist-id', playlistId);
+        $row.append('<span class="dashicons dashicons-media-text"></span>');
+        $row.append($('<span class="cf-playlist-name"></span>').text(playlist.name || 'Playlist'));
+        $row.append('<span class="cf-playlist-status dashicons"></span>');
+        markPlaylistRow($row, parseInt(playlist.contains_item, 10) === 1);
+        return $row;
+    }
+
+    function renderPlaylistModalList(playlists) {
+        var $list = $('.cf-playlists-list');
+        $list.empty();
+        clearPlaylistModalErrors();
+
+        if (!playlists.length) {
+            $list.append('<p class="cf-playlist-empty-state">You don\'t have any playlists yet — create one below.</p>');
+            return;
+        }
+
+        playlists.forEach(function(playlist) {
+            $list.append(buildPlaylistRow(playlist));
+        });
+    }
+
+    function loadPlaylistModalData() {
+        var ctx = getPlaylistModalContext();
+        if (!ctx.itemId) {
+            return;
+        }
+
+        $('.cf-playlists-list').html('<p class="cf-playlist-loading">Loading your playlists…</p>');
+        clearPlaylistModalErrors();
+
+        window.CF_Auth.getUserPlaylists(ctx.itemId, ctx.itemType)
+            .then(function(result) {
+                var playlists = (result && result.playlists) ? result.playlists : [];
+                renderPlaylistModalList(playlists);
+            })
+            .catch(function(err) {
+                $('.cf-playlists-list').empty();
+                showPlaylistListError((err && err.message) ? err.message : 'Unable to load playlists.');
+            });
+    }
+
     $(document).on('click', '.cf-playlist-btn', function(e) {
         e.preventDefault();
-        $('#cf-target-track-id').val($(this).data('track-id'));
+
+        if (!window.CF_AUTH || window.CF_AUTH.is_logged_in !== '1') {
+            alert('Please log in to add tracks to your favorites.');
+            return;
+        }
+        if (typeof window.CF_Auth === 'undefined' || !window.CF_Auth.getUserPlaylists) {
+            alert('An error occurred. Please try again.');
+            return;
+        }
+
+        var $btn = $(this);
+        var itemId = $btn.data('item-id') || $btn.data('track-id');
+        var itemType = $btn.data('item-type') || 'track';
+
+        if (!itemId) {
+            return;
+        }
+
+        setPlaylistModalContext(itemId, itemType);
         $('#cf-playlist-modal').fadeIn(200);
+        loadPlaylistModalData();
     });
 
     $(document).on('click', '#cf-close-playlist-modal, .cf-playlist-modal-overlay', function(e) {
@@ -744,29 +1044,97 @@ jQuery(document).ready(function($) {
         }
     });
 
-    $(document).on('click', '.cf-playlist-item', function() {
-        $(this).toggleClass('added');
-        var statusIcon = $(this).find('.cf-playlist-status');
-        if ($(this).hasClass('added')) {
-            statusIcon.removeClass('dashicons-no').addClass('dashicons-yes');
-        } else {
-            statusIcon.removeClass('dashicons-yes').addClass('dashicons-no');
+    $(document).on('click', '.cf-playlist-item', function(e) {
+        e.preventDefault();
+
+        var $row = $(this);
+        if ($row.hasClass('is-busy')) {
+            return;
         }
+
+        var playlistId = $row.data('playlist-id');
+        var ctx = getPlaylistModalContext();
+        if (!playlistId || !ctx.itemId) {
+            return;
+        }
+
+        var isAdded = $row.hasClass('added');
+        var request = isAdded
+            ? window.CF_Auth.removeFromPlaylist(playlistId, ctx.itemId, ctx.itemType)
+            : window.CF_Auth.addToPlaylist(playlistId, ctx.itemId, ctx.itemType);
+
+        if (!request || typeof request.then !== 'function') {
+            showPlaylistListError('An error occurred. Please try again.');
+            return;
+        }
+
+        $row.addClass('is-busy');
+        clearPlaylistModalErrors();
+
+        request
+            .then(function() {
+                markPlaylistRow($row, !isAdded);
+            })
+            .catch(function(err) {
+                showPlaylistListError((err && err.message) ? err.message : 'Unable to update playlist.');
+            })
+            .then(function() {
+                $row.removeClass('is-busy');
+            });
     });
 
     $(document).on('click', '#cf-create-playlist-btn', function(e) {
         e.preventDefault();
+
         var playlistName = $('#cf-new-playlist-input').val().trim();
-        if (playlistName !== '') {
-            var randomId = Math.floor(Math.random() * 1000);
-            var newItem = $('<div class="cf-playlist-item" data-playlist-id="' + randomId + '">' +
-                '<span class="dashicons dashicons-media-text"></span>' +
-                '<span class="cf-playlist-name">' + playlistName + '</span>' +
-                '<span class="cf-playlist-status dashicons dashicons-no"></span>' +
-                '</div>');
-            $('.cf-playlists-list').append(newItem);
-            $('#cf-new-playlist-input').val('');
+        if (!playlistName) {
+            return;
         }
+
+        if (typeof window.CF_Auth === 'undefined' || !window.CF_Auth.createPlaylist || !window.CF_Auth.addToPlaylist) {
+            showPlaylistCreateError('An error occurred. Please try again.');
+            return;
+        }
+
+        var $btn = $(this);
+        var ctx = getPlaylistModalContext();
+        if ($btn.prop('disabled') || !ctx.itemId) {
+            return;
+        }
+
+        $btn.prop('disabled', true);
+        clearPlaylistModalErrors();
+
+        window.CF_Auth.createPlaylist(playlistName)
+            .then(function(result) {
+                var playlist = (result && result.playlist) ? result.playlist : result;
+                var playlistId = playlist.id || playlist.playlist_id;
+
+                if (!playlistId) {
+                    throw new Error('Unable to create playlist.');
+                }
+
+                $('.cf-playlist-empty-state, .cf-playlist-loading').remove();
+
+                var $row = buildPlaylistRow({
+                    id: playlistId,
+                    name: playlist.name || playlistName,
+                    contains_item: 0
+                });
+                $('.cf-playlists-list').append($row);
+                $('#cf-new-playlist-input').val('');
+
+                return window.CF_Auth.addToPlaylist(playlistId, ctx.itemId, ctx.itemType)
+                    .then(function() {
+                        markPlaylistRow($row, true);
+                    });
+            })
+            .catch(function(err) {
+                showPlaylistCreateError((err && err.message) ? err.message : 'Unable to create playlist.');
+            })
+            .then(function() {
+                $btn.prop('disabled', false);
+            });
     });
 
     $(document).on('click', '.cf-share-copy-btn', function() {

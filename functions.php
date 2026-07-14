@@ -229,6 +229,33 @@ function collective_finity_brand_logo_markup( $context = 'sidebar' ) {
 }
 
 /**
+ * Brand mark markup for the site footer.
+ *
+ * Returns a custom uploaded logo image when the Footer Logo Theme Option is set,
+ * otherwise falls back to the default CSS diamond mark.
+ *
+ * @return string
+ */
+function collective_finity_footer_logo_markup() {
+    $logo_id = absint( collective_finity_get_theme_option( 'footer_logo' ) );
+    $size    = absint( collective_finity_get_theme_option( 'footer_logo_size' ) ) ?: 40;
+
+    if ( $logo_id ) {
+        $src = wp_get_attachment_image_url( $logo_id, 'thumbnail' );
+        if ( $src ) {
+            return sprintf(
+                '<img class="cf-footer-brand-logo-img" src="%s" alt="" aria-hidden="true" style="width:%dpx;height:%dpx;">',
+                esc_url( $src ),
+                $size,
+                $size
+            );
+        }
+    }
+
+    return '<span class="cf-footer-brand-mark" aria-hidden="true"></span>';
+}
+
+/**
  * Build the Google Fonts stylesheet URL for the selected body + heading fonts.
  *
  * @return string Empty string when both selections are system fonts.
@@ -369,7 +396,7 @@ function collective_finity_get_shell_nav() {
     $is_albums = is_post_type_archive( 'albums' ) || is_singular( 'albums' );
 
     $favorites_url = is_user_logged_in() ? home_url( '/cf-profile#favorites' ) : home_url( '/cf-login' );
-    $playlists_url = is_user_logged_in() ? home_url( '/cf-profile#history' ) : home_url( '/cf-register' );
+    $playlists_url = is_user_logged_in() ? home_url( '/cf-profile#playlists' ) : home_url( '/cf-register' );
 
     $main = array(
         array(
@@ -535,23 +562,47 @@ function collective_finity_get_footer_menu_sections() {
  */
 function collective_finity_get_footer_social_links() {
     $map = array(
-        'instagram' => array(
+        'instagram'           => array(
             'label'  => 'Instagram',
             'option' => 'social_instagram',
         ),
-        'youtube'   => array(
+        'instagram_community' => array(
+            'label'  => 'Instagram Community',
+            'option' => 'social_instagram_community',
+        ),
+        'youtube'             => array(
             'label'  => 'YouTube',
             'option' => 'social_youtube',
         ),
-        'spotify'   => array(
+        'spotify'             => array(
             'label'  => 'Spotify',
             'option' => 'social_spotify',
         ),
-        'facebook'  => array(
+        'facebook'            => array(
             'label'  => 'Facebook',
             'option' => 'social_facebook',
         ),
-        'x'         => array(
+        'facebook_group'      => array(
+            'label'  => 'Facebook Group',
+            'option' => 'social_facebook_group',
+        ),
+        'discord'             => array(
+            'label'  => 'Discord',
+            'option' => 'social_discord',
+        ),
+        'tiktok'              => array(
+            'label'  => 'TikTok',
+            'option' => 'social_tiktok',
+        ),
+        'soundcloud'          => array(
+            'label'  => 'SoundCloud',
+            'option' => 'social_soundcloud',
+        ),
+        'amazon'              => array(
+            'label'  => 'Amazon Music',
+            'option' => 'social_amazon',
+        ),
+        'x'                   => array(
             'label'  => 'X',
             'option' => 'social_x',
         ),
@@ -583,8 +634,15 @@ function collective_finity_footer_social_icon( $icon ) {
         'youtube'   => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
         'spotify'   => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>',
         'facebook'  => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.971H15.83c-1.491 0-1.956.93-1.956 1.886v2.268h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>',
+        'discord'   => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.664-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>',
+        'tiktok'    => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>',
+        'soundcloud' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.175 12.225c-.051 0-.094.046-.101.1l-.233 2.154.233 2.105c.007.058.05.098.101.098.05 0 .09-.04.099-.098l.255-2.105-.27-2.154c0-.057-.045-.1-.09-.1m-.9.828c-.05 0-.09.04-.099.098L0 14.479l.176 1.378c.008.06.05.098.099.098.05 0 .09-.04.099-.098l.39-1.378-.39-1.376c0-.06-.045-.1-.09-.1m1.83-.789c-.061 0-.105.045-.112.104l-.215 2.416.215 2.45c.007.06.051.104.112.104.061 0 .105-.045.112-.104l.24-2.45-.24-2.416c-.007-.06-.051-.104-.112-.104m.95-.859c-.069 0-.119.054-.13.122l-.193 3.275.193 3.325c.011.071.061.122.13.122.069 0 .119-.054.13-.122l.217-3.325-.217-3.275c-.011-.068-.061-.122-.13-.122m.949-.748c-.079 0-.135.063-.147.144l-.18 4.023.18 4.078c.012.081.068.144.147.144.079 0 .135-.063.147-.144l.203-4.078-.203-4.023c-.012-.081-.068-.144-.147-.144m.94-.671c-.085 0-.146.071-.158.162l-.17 4.694.17 4.748c.012.091.073.162.158.162.085 0 .146-.071.158-.162l.192-4.748-.192-4.694c-.012-.091-.073-.162-.158-.162m.96-.584c-.093 0-.16.078-.173.176l-.157 5.278.157 5.332c.013.098.08.176.173.176.093 0 .16-.078.173-.176l.178-5.332-.178-5.278c-.013-.098-.08-.176-.173-.176m.96-.49c-.097 0-.167.082-.18.187l-.14 5.768.14 5.821c.013.105.083.187.18.187.097 0 .167-.082.18-.187l.158-5.821-.158-5.768c-.013-.105-.083-.187-.18-.187m.99-.403c-.105 0-.18.088-.194.199l-.121 6.171.121 6.223c.014.111.089.199.194.199.105 0 .18-.088.194-.199l.14-6.223-.14-6.171c-.014-.111-.089-.199-.194-.199m1-.3c-.114 0-.195.096-.208.217l-.1 6.471.1 6.523c.013.121.094.217.208.217.114 0 .195-.096.208-.217l.114-6.523-.114-6.471c-.013-.121-.094-.217-.208-.217m1.01-.187c-.119 0-.204.1-.218.229l-.079 6.658.079 6.709c.014.129.099.229.218.229.119 0 .204-.1.218-.229l.09-6.709-.09-6.658c-.014-.129-.099-.229-.218-.229m1.06-.088c-.127 0-.217.107-.232.241l-.058 6.746.058 6.798c.015.134.105.241.232.241.127 0 .217-.107.232-.241l.066-6.798-.066-6.746c-.015-.134-.105-.241-.232-.241m1.1-.072c-.136 0-.232.114-.248.256l-.042 6.818.042 6.87c.016.142.112.256.248.256.136 0 .232-.114.248-.256l.048-6.87-.048-6.818c-.016-.142-.112-.256-.248-.256m2.89 4.857c-.4 0-.76.118-1.07.313-.45-.87-1.36-1.47-2.4-1.47-1.5 0-2.71 1.22-2.71 2.72 0 1.5 1.21 2.72 2.71 2.72 1.04 0 1.95-.6 2.4-1.47.31.195.67.313 1.07.313 1.04 0 1.88-.84 1.88-1.87 0-1.03-.84-1.87-1.88-1.87m4.62.01c-.8 0-1.45.65-1.45 1.45s.65 1.45 1.45 1.45 1.45-.65 1.45-1.45-.65-1.45-1.45-1.45"/></svg>',
+        'amazon'    => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.525.13.12.172.09.336-.12.48-.256.19-.76.385-1.51.585-.797.252-1.597.504-2.402.754-3.158 1.006-6.626 1.51-10.406 1.51-4.324 0-8.162-.734-11.52-2.203-.176-.072-.296-.16-.36-.256-.1-.133-.076-.27.073-.41 3.23-2.89 6.746-4.81 10.552-5.78 3.753-.988 7.626-1.48 11.617-1.48 4.124 0 7.82.615 11.088 1.85 3.266 1.231 5.868 2.88 7.802 4.94.173.19.26.37.26.54 0 .13-.058.195-.174.195-.046 0-.14-.03-.28-.088-3.026-1.34-6.5-2.01-10.42-2.01-4.29 0-8.04.8-11.25 2.4-3.01 1.51-5.65 3.55-7.92 6.12-.12.14-.2.21-.24.21-.07 0-.07-.09 0-.27z"/></svg>',
         'x'         => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
     );
+
+    $icons['instagram_community'] = $icons['instagram']; // same glyph, different link.
+    $icons['facebook_group']      = $icons['facebook'];  // same glyph, different link.
 
     return isset( $icons[ $icon ] ) ? $icons[ $icon ] : $icons['x'];
 }
@@ -1397,76 +1455,6 @@ function collective_finity_render_album_tracks_meta_box( $post ) {
     </div>
     <?php
 }
-
-
-/**
- * 10. SECURE AJAX HANDLER FOR TRACK LIKES / FAVORITES (With Cache-Busting retrieval)
- */
-function cf_ajax_toggle_like() {
-    // Check security Nonce
-    check_ajax_referer( 'cf_interaction_nonce', 'security' );
-
-    if ( ! is_user_logged_in() ) {
-        wp_send_json_error( array( 'message' => __( 'Please log in to add tracks to your favorites.', 'collective-finity' ) ) );
-    }
-
-    $user_id  = get_current_user_id();
-    $track_id = isset( $_POST['track_id'] ) ? intval( $_POST['track_id'] ) : 0;
-
-    if ( ! $track_id ) {
-        wp_send_json_error( array( 'message' => __( 'Invalid Track Selection.', 'collective-finity' ) ) );
-    }
-
-    $liked_tracks = get_user_meta( $user_id, '_cf_liked_tracks', true );
-    if ( ! is_array( $liked_tracks ) ) {
-        $liked_tracks = array();
-    }
-
-    $current_likes = intval( get_post_meta( $track_id, '_cf_total_likes_count', true ) ) ?: 0;
-
-    if ( in_array( $track_id, $liked_tracks, true ) ) {
-        // Unlike: Remove track ID from the array
-        $liked_tracks = array_diff( $liked_tracks, array( $track_id ) );
-        $status = 'unliked';
-        $current_likes = max( 0, $current_likes - 1 ); // Decrement total likes counter safely
-    } else {
-        // Like: Add track ID to the array
-        $liked_tracks[] = $track_id;
-        $status = 'liked';
-        $current_likes = $current_likes + 1; // Increment total likes counter
-    }
-
-    // Update both user metadata and post metadata counters
-    update_user_meta( $user_id, '_cf_liked_tracks', $liked_tracks );
-    update_post_meta( $track_id, '_cf_total_likes_count', $current_likes );
-
-    wp_send_json_success( array( 
-        'status' => $status, 
-        'likes_count' => $current_likes,
-        'message' => __( 'Success', 'collective-finity' ) 
-    ) );
-}
-add_action( 'wp_ajax_cf_toggle_like', 'cf_ajax_toggle_like' );
-
-
-// 11. CACHE BUSTER AJAX: Retrieve live states directly from Database (Bypasses LiteSpeed Caching)
-function cf_ajax_get_liked_tracks() {
-    check_ajax_referer( 'cf_interaction_nonce', 'security' );
-
-    $liked_tracks = array();
-    if ( is_user_logged_in() ) {
-        $liked_tracks = get_user_meta( get_current_user_id(), '_cf_liked_tracks', true );
-        if ( ! is_array( $liked_tracks ) ) {
-            $liked_tracks = array();
-        }
-    }
-
-    // Force array elements to integers and respond
-    wp_send_json_success( array( 
-        'liked_tracks' => array_values( array_map( 'intval', $liked_tracks ) ) 
-    ) );
-}
-add_action( 'wp_ajax_cf_get_liked_tracks', 'cf_ajax_get_liked_tracks' );
 
 
 /**

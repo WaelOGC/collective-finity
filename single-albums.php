@@ -167,6 +167,13 @@ get_header();
                                 <span class="cf-icon cf-icon-play" aria-hidden="true"></span>
                                 <?php esc_html_e( 'Play All', 'collective-finity' ); ?>
                             </button>
+                            <button type="button" class="cf-interaction-btn cf-playlist-btn"
+                                data-item-id="<?php echo esc_attr( (string) $album_id ); ?>"
+                                data-item-type="album"
+                                title="<?php esc_attr_e( 'Add Album to Playlist', 'collective-finity' ); ?>"
+                                aria-label="<?php esc_attr_e( 'Add Album to Playlist', 'collective-finity' ); ?>">
+                                <span class="dashicons dashicons-playlist-audio"></span>
+                            </button>
                             <?php if ( $playable_count < $track_total && $track_total > 0 ) : ?>
                                 <span class="cf-album-play-note"><?php esc_html_e( 'Some tracks have no audio file yet.', 'collective-finity' ); ?></span>
                             <?php endif; ?>
@@ -773,92 +780,6 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $album_queue ); ?>;
 .cf-icon-play {
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E");
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E");
-}
-.cf-playlist-modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.75);
-    z-index: 10000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(8px);
-}
-.cf-playlist-modal-content {
-    width: min(400px, 92%);
-    padding: 24px;
-    border-radius: 16px;
-    background: rgba(18, 18, 18, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
-}
-.cf-playlist-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-.cf-playlist-modal-header h3 {
-    margin: 0;
-    color: #fff;
-    font-size: 1rem;
-}
-.cf-close-modal-btn {
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 1.5rem;
-    cursor: pointer;
-    line-height: 1;
-}
-.cf-playlist-item {
-    display: flex;
-    align-items: center;
-    padding: 10px 12px;
-    border-radius: 8px;
-    margin-bottom: 6px;
-    cursor: pointer;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: background 0.15s;
-}
-.cf-playlist-item:hover {
-    background: rgba(255, 255, 255, 0.06);
-}
-.cf-playlist-name {
-    flex-grow: 1;
-    color: #fff;
-    font-size: 0.88rem;
-    margin-left: 8px;
-}
-.cf-playlist-item.added .cf-playlist-status {
-    color: var(--primary-color, #FFB700);
-}
-.cf-create-playlist-row {
-    display: flex;
-    gap: 8px;
-    margin-top: 16px;
-}
-#cf-new-playlist-input {
-    flex-grow: 1;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 0.88rem;
-}
-.cf-btn-secondary {
-    background: var(--primary-color, #FFB700);
-    border: none;
-    color: #0a0a0a;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-weight: 700;
-    cursor: pointer;
-    font-size: 0.85rem;
 }
 @media (max-width: 768px) {
     .cf-album-hero {

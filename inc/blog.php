@@ -490,22 +490,10 @@ function collective_finity_get_popular_posts( $exclude_id, $limit = 3 ) {
 }
 
 /**
- * Sidebar ad slot for blog posts (reuses album sidebar zone + preview fallback).
+ * Sidebar ad slot for blog posts (uses the single_post zone from Ad Manager).
  */
 function collective_finity_render_blog_sidebar_ad() {
-    ob_start();
     if ( function_exists( 'collective_finity_ad_slot' ) ) {
-        collective_finity_ad_slot( 'album_sidebar' );
+        collective_finity_ad_slot( 'single_post' );
     }
-    $rendered = trim( ob_get_clean() );
-
-    if ( $rendered ) {
-        echo $rendered; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- ad slot markup is escaped internally.
-        return;
-    }
-
-    printf(
-        '<div class="cf-ad-slot cf-ad-slot--preview" data-zone="blog_sidebar">%s</div>',
-        esc_html__( 'AD ZONE — 300×250', 'collective-finity' )
-    );
 }

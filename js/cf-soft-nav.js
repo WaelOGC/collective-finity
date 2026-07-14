@@ -112,7 +112,73 @@
         });
     }
 
-    function finishPageSwap(container, doc, url, push) {
+    var STYLESHEET_LOAD_TIMEOUT_MS = 10000;
+
+    function waitForStylesheet(link) {
+        return new Promise(function (resolve, reject) {
+            if (link.sheet) {
+                resolve();
+                return;
+            }
+
+            var settled = false;
+            var timer = setTimeout(function () {
+                if (settled) {
+                    return;
+                }
+                settled = true;
+                reject(new Error('Stylesheet load timeout'));
+            }, STYLESHEET_LOAD_TIMEOUT_MS);
+
+            function finish(err) {
+                if (settled) {
+                    return;
+                }
+                settled = true;
+                clearTimeout(timer);
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            }
+
+            link.addEventListener('load', function () {
+                finish(null);
+            });
+            link.addEventListener('error', function () {
+                finish(new Error('Stylesheet failed to load'));
+            });
+        });
+    }
+
+    function syncHeadAssetsFromDoc(doc) {
+        var fetchedHead = doc.head;
+        if (!fetchedHead) {
+            return Promise.resolve();
+        }
+
+        var pending = [];
+        var nodes = fetchedHead.querySelectorAll('link[rel="stylesheet"], style[id]');
+
+        Array.prototype.forEach.call(nodes, function (node) {
+            var id = node.getAttribute('id');
+            if (!id || document.getElementById(id)) {
+                return;
+            }
+
+            var clone = node.cloneNode(true);
+            document.head.appendChild(clone);
+
+            if (clone.tagName === 'LINK' && /\bstylesheet\b/i.test(clone.getAttribute('rel') || '')) {
+                pending.push(waitForStylesheet(clone));
+            }
+        });
+
+        return Promise.all(pending);
+    }
+
+    function revealPageSwap(container, doc, url, push) {
         var newContent = doc.querySelector(CONTENT_SELECTOR);
         if (!newContent) {
             window.location.href = url;
@@ -129,6 +195,8 @@
         syncShellFromDoc(doc);
 
         if (push) {
+            // Update the address bar (including any #hash) before post-swap hooks run so
+            // listeners on cf:page-loaded / cfOnPageSwap can read window.location.hash.
             history.pushState({ cfSoftNav: true, url: url }, '', url);
         }
 
@@ -141,6 +209,26 @@
         }
 
         document.dispatchEvent(new CustomEvent('cf:page-loaded', { detail: { url: url } }));
+    }
+
+    function finishPageSwap(container, doc, url, push) {
+        var newContent = doc.querySelector(CONTENT_SELECTOR);
+        if (!newContent) {
+            window.location.href = url;
+            return;
+        }
+
+        try {
+            syncHeadAssetsFromDoc(doc)
+                .then(function () {
+                    revealPageSwap(container, doc, url, push);
+                })
+                .catch(function () {
+                    window.location.href = url;
+                });
+        } catch (e) {
+            window.location.href = url;
+        }
     }
 
     function loadPage(url, push) {
@@ -203,7 +291,27 @@
         loadPage(link.href, true);
     }
 
+    function scrollToCurrentHash() {
+        var hash = window.location.hash;
+        if (!hash || hash.length < 2) {
+            return;
+        }
+
+        var target = document.getElementById(hash.slice(1));
+        if (target) {
+            target.scrollIntoView({ block: 'start' });
+        }
+    }
+
     function onPopState() {
+        // Same-document hash changes (e.g. legal-page TOC) fire popstate because the
+        // shell seeds history with replaceState. Reloading the page resets scroll to
+        // the top and fights the browser's anchor jump — skip soft-nav for hashes.
+        if (window.location.hash) {
+            scrollToCurrentHash();
+            return;
+        }
+
         loadPage(window.location.href, false);
     }
 

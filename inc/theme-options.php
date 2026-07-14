@@ -54,6 +54,8 @@ function collective_finity_default_theme_options() {
         'footer_copyright'   => '',
         'footer_tagline'     => 'Experience Music Beyond Imagination',
         'footer_description' => 'Welcome to Collective Finity — a cinematic world where emotional sound, visual stories and creativity connect in one immersive universe.',
+        'footer_logo'        => '',
+        'footer_logo_size'   => 40,
         'social_instagram'           => '',
         'social_instagram_community' => '',
         'social_youtube'             => '',
@@ -399,6 +401,8 @@ function collective_finity_sanitize_theme_options( $input ) {
         $output['footer_tagline']     = sanitize_text_field( $input['footer_tagline'] ?? $defaults['footer_tagline'] );
         $desc                         = sanitize_text_field( $input['footer_description'] ?? '' );
         $output['footer_description'] = mb_substr( $desc ?: $defaults['footer_description'], 0, 140 );
+        $output['footer_logo']        = absint( $input['footer_logo'] ?? 0 );
+        $output['footer_logo_size']   = min( 120, max( 16, absint( $input['footer_logo_size'] ?? $defaults['footer_logo_size'] ) ) );
         $social_fields                = array(
             'social_instagram',
             'social_instagram_community',
@@ -864,6 +868,20 @@ function collective_finity_render_theme_options_footer_content_tab( $options ) {
     <h2><?php esc_html_e( 'Footer Branding', 'collective-finity' ); ?></h2>
     <p class="description"><?php esc_html_e( 'Logo uses your site logo from Customizer. Description is limited to 140 characters.', 'collective-finity' ); ?></p>
     <table class="form-table" role="presentation">
+        <?php
+        collective_finity_render_theme_options_logo_field(
+            'footer_logo',
+            __( 'Footer Logo', 'collective-finity' ),
+            $options['footer_logo'],
+            __( 'Replaces the diamond mark next to the brand name in the footer. Leave empty to use the default diamond icon.', 'collective-finity' )
+        );
+        ?>
+        <tr>
+            <th scope="row"><label for="cf_footer_logo_size"><?php esc_html_e( 'Footer Logo Size (px)', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="number" min="16" max="120" id="cf_footer_logo_size" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[footer_logo_size]" value="<?php echo esc_attr( $options['footer_logo_size'] ); ?>">
+            </td>
+        </tr>
         <tr>
             <th scope="row"><label for="cf_footer_tagline"><?php esc_html_e( 'Tagline', 'collective-finity' ); ?></label></th>
             <td><input type="text" class="regular-text" id="cf_footer_tagline" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[footer_tagline]" value="<?php echo esc_attr( $options['footer_tagline'] ); ?>"></td>
