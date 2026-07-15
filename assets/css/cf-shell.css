@@ -49,6 +49,12 @@
 }
 
 /* ----- base layout ----- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 html {
     overflow-x: hidden;
 }
@@ -97,6 +103,8 @@ html.cf-player-collapsed body { padding-right: var(--cf-right-w-collapsed) !impo
     container-name: cf-main;
 }
 
+.cf-app-content > .content-area,
+.cf-app-content > #primary,
 .site-main {
     box-sizing: border-box;
     width: 100%;
@@ -123,12 +131,14 @@ body a:hover { color: var(--cf-link-hover, #ffde99); }
     top: 0;
     bottom: 0;
     width: var(--cf-left-w);
+    box-sizing: border-box;
     background: var(--cf-bg-panel);
     border-right: 1px solid var(--cf-divider);
     display: flex;
     flex-direction: column;
     padding: 18px 12px;
     z-index: 30;
+    overflow-x: hidden;
     overflow-y: auto;
     transition: width var(--cf-transition-speed, 0.2s) ease;
 }
@@ -252,11 +262,13 @@ html.cf-sidebar-collapsed .cf-left-sidebar .cf-collapse-btn .cf-chevron { transf
     top: 0;
     bottom: 0;
     width: var(--cf-right-w);
+    box-sizing: border-box;
     border-left: 1px solid var(--cf-divider);
     background: var(--cf-bg-panel);
     display: flex;
     flex-direction: column;
     z-index: 30;
+    overflow-x: hidden;
     overflow-y: auto;
     transition: width var(--cf-transition-speed, 0.2s) ease;
 }
@@ -1006,18 +1018,35 @@ body[data-btn-hover="lift"] .cf-cta-secondary:hover { transform: translateY(-2px
 /* ----- design control: card hovers ----- */
 body[data-card-hover="lift"] .cf-album-tile:hover,
 body[data-card-hover="lift"] .cf-pillar:hover,
-body[data-card-hover="lift"] .cf-blog-card:hover { transform: translateY(-4px); }
+body[data-card-hover="lift"] .cf-blog-card:hover,
+body[data-card-hover="lift"] .cf-card:not(.cf-card--ad):hover { transform: translateY(-4px); }
 body[data-card-hover="lift"] .cf-pillar:hover,
 body[data-card-hover="lift"] .cf-blog-card:hover { box-shadow: 0 16px 32px -12px rgba(255,183,0,0.25); border-color: rgba(255,183,0,0.5); }
+/* Music library cards: soft accent spotlight behind the card (template CSS owns the full glow stack). */
+body[data-card-hover="lift"] .cf-card:not(.cf-card--ad):hover,
+body[data-card-hover="glow"] .cf-card:not(.cf-card--ad):hover,
+body[data-card-hover="scale"] .cf-card:not(.cf-card--ad):hover {
+    border-color: color-mix(in srgb, var(--cf-accent, #FFB700) 55%, transparent);
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--cf-accent, #FFB700) 40%, transparent),
+        0 14px 28px -10px rgba(0, 0, 0, 0.55),
+        0 0 28px 4px color-mix(in srgb, var(--cf-accent, #FFB700) 24%, transparent),
+        0 0 64px 16px color-mix(in srgb, var(--cf-accent, #FFB700) 12%, transparent);
+}
 body[data-card-hover="glow"] .cf-album-tile:hover,
 body[data-card-hover="glow"] .cf-pillar:hover,
-body[data-card-hover="glow"] .cf-blog-card:hover { transform: translateY(-2px); box-shadow: 0 18px 36px -10px rgba(255,183,0,0.35); border-color: rgba(255,183,0,0.45); }
+body[data-card-hover="glow"] .cf-blog-card:hover,
+body[data-card-hover="glow"] .cf-card:not(.cf-card--ad):hover { transform: translateY(-2px); }
+body[data-card-hover="glow"] .cf-pillar:hover,
+body[data-card-hover="glow"] .cf-blog-card:hover { box-shadow: 0 18px 36px -10px rgba(255,183,0,0.35); border-color: rgba(255,183,0,0.45); }
 body[data-card-hover="scale"] .cf-album-tile:hover,
 body[data-card-hover="scale"] .cf-pillar:hover,
-body[data-card-hover="scale"] .cf-blog-card:hover { transform: scale(1.02); }
+body[data-card-hover="scale"] .cf-blog-card:hover,
+body[data-card-hover="scale"] .cf-card:not(.cf-card--ad):hover { transform: scale(1.02); }
 body[data-card-hover="none"] .cf-album-tile:hover,
 body[data-card-hover="none"] .cf-pillar:hover,
-body[data-card-hover="none"] .cf-blog-card:hover { transform: none; }
+body[data-card-hover="none"] .cf-blog-card:hover,
+body[data-card-hover="none"] .cf-card:not(.cf-card--ad):hover { transform: none; }
 
 /* ----- design control: glow toggle ----- */
 body.cf-glow-disabled .cf-hero-glow,
@@ -1032,7 +1061,7 @@ body.cf-glow-disabled .cf-cta { background: linear-gradient(135deg, rgba(255,183
     body { padding: 0 0 var(--cf-footer-player-h) 0 !important; }
 
     .cf-left-sidebar { display: none; }
-    .cf-right-icons, .cf-right-collapse-btn, .cf-dropdown, .cf-dropdown-scrim { display: none !important; }
+    .cf-right-icons, .cf-right-collapse-btn { display: none !important; }
     .cf-right-sidebar .cf-sidebar-spacer { display: none; }
 
     .cf-mobile-topbar {

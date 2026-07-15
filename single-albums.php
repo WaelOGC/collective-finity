@@ -183,10 +183,8 @@ get_header();
                         </div>
                     <?php endif; ?>
 
-                    <?php if ( function_exists( 'collective_finity_ad_slot' ) ) : ?>
-                        <div class="cf-album-ad-sidebar">
-                            <?php collective_finity_ad_slot( 'album_sidebar' ); ?>
-                        </div>
+                    <?php if ( function_exists( 'collective_finity_ad_slot_wrapped' ) ) : ?>
+                        <?php collective_finity_ad_slot_wrapped( 'album_sidebar', '<div class="cf-album-ad-sidebar">', '</div>' ); ?>
                     <?php endif; ?>
                 </div>
             </header>

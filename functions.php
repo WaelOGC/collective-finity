@@ -15,6 +15,7 @@ require_once get_template_directory() . '/inc/ad-manager.php';
 require_once get_template_directory() . '/inc/theme-options.php';
 require_once get_template_directory() . '/inc/admin-theme-builder.php';
 require_once get_template_directory() . '/inc/customizer-theme-parts.php';
+require_once get_template_directory() . '/inc/customizer-theme-options.php';
 require_once get_template_directory() . '/inc/legal-pages.php';
 require_once get_template_directory() . '/inc/blog.php';
 
@@ -90,6 +91,105 @@ function collective_finity_track_show_key( $track_id ) {
 function collective_finity_track_views( $track_id ) {
     return (int) get_post_meta( $track_id, '_cf_track_plays', true );
 }
+
+/**
+ * Admin-configurable minimum views for Popular Music Library section.
+ *
+ * @return int
+ */
+function collective_finity_popular_min_views() {
+    return max( 0, absint( collective_finity_get_theme_option( 'popular_min_views', 50 ) ) );
+}
+
+/**
+ * Current tracks-archive sub-view: '', 'all', or 'popular'.
+ *
+ * @return string
+ */
+function collective_finity_get_tracks_archive_view() {
+    $view = get_query_var( 'cf_tracks_view', '' );
+    if ( ! is_string( $view ) || '' === $view ) {
+        $view = isset( $_GET['view'] ) ? sanitize_key( wp_unslash( $_GET['view'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    }
+    return in_array( $view, array( 'all', 'popular' ), true ) ? $view : '';
+}
+
+/**
+ * URL for the full tracks listing ("Show all" on Latest Tracks).
+ *
+ * @return string
+ */
+function collective_finity_get_tracks_all_url() {
+    $base = get_post_type_archive_link( 'tracks' );
+    if ( ! $base ) {
+        $base = home_url( '/tracks/' );
+    }
+    return trailingslashit( $base ) . 'all/';
+}
+
+/**
+ * URL for the Popular tracks archive ("Show all" on Popular).
+ *
+ * @return string
+ */
+function collective_finity_get_tracks_popular_url() {
+    $base = get_post_type_archive_link( 'tracks' );
+    if ( ! $base ) {
+        $base = home_url( '/tracks/' );
+    }
+    return trailingslashit( $base ) . 'popular/';
+}
+
+/**
+ * Pretty URL rewrites for Music Library sub-views.
+ */
+function collective_finity_register_tracks_view_rewrites() {
+    add_rewrite_rule( '^tracks/all/?$', 'index.php?post_type=tracks&cf_tracks_view=all', 'top' );
+    add_rewrite_rule( '^tracks/popular/?$', 'index.php?post_type=tracks&cf_tracks_view=popular', 'top' );
+}
+add_action( 'init', 'collective_finity_register_tracks_view_rewrites', 20 );
+
+/**
+ * @param array<int, string> $vars Query vars.
+ * @return array<int, string>
+ */
+function collective_finity_tracks_view_query_vars( $vars ) {
+    $vars[] = 'cf_tracks_view';
+    return $vars;
+}
+add_filter( 'query_vars', 'collective_finity_tracks_view_query_vars' );
+
+/**
+ * Flush rewrite rules once after adding tracks view endpoints.
+ */
+function collective_finity_maybe_flush_tracks_view_rewrites() {
+    if ( '1' === get_option( 'cf_tracks_view_rewrite_v1' ) ) {
+        return;
+    }
+    flush_rewrite_rules( false );
+    update_option( 'cf_tracks_view_rewrite_v1', '1' );
+}
+add_action( 'init', 'collective_finity_maybe_flush_tracks_view_rewrites', 99 );
+
+/**
+ * Document titles for Music Library sub-views.
+ *
+ * @param array<string, string> $parts Title parts.
+ * @return array<string, string>
+ */
+function collective_finity_tracks_view_document_title( $parts ) {
+    if ( ! is_post_type_archive( 'tracks' ) ) {
+        return $parts;
+    }
+    $view = collective_finity_get_tracks_archive_view();
+    if ( 'all' === $view ) {
+        $parts['title'] = __( 'All Tracks', 'collective-finity' );
+    } elseif ( 'popular' === $view ) {
+        $parts['title'] = __( 'Popular Tracks', 'collective-finity' );
+    }
+    return $parts;
+}
+add_filter( 'document_title_parts', 'collective_finity_tracks_view_document_title' );
 
 /**
  * Approved comment count for a track.
@@ -419,13 +519,6 @@ function collective_finity_get_shell_nav() {
             'url'    => collective_finity_get_page_link( 'blog', '/blog/' ),
             'icon'   => 'blog',
             'active' => is_home() || is_singular( 'post' ) || is_category() || is_tag() || is_page( 'blog' ),
-        ),
-        array(
-            'id'     => 'albums',
-            'label'  => __( 'Albums & Collections', 'collective-finity' ),
-            'url'    => $albums_url ? $albums_url : home_url( '/albums/' ),
-            'icon'   => 'albums',
-            'active' => $is_albums,
         ),
         array(
             'id'     => 'community',
@@ -843,6 +936,343 @@ add_action( 'init', 'register_albums_custom_post_type' );
 /**
  * 5. CUSTOM TAXONOMIES & AUTO-POPULATE DEFAULT GENRES
  */
+
+/**
+ * Canonical Music Genres parent → children map.
+ *
+ * @return array<string, string[]>
+ */
+function collective_finity_music_genre_defaults() {
+    return array(
+        'Ambient' => array(
+            'Dark Ambient',
+            'Emotional Ambient',
+            'Atmospheric Ambient',
+        ),
+        'Cinematic' => array(
+            'Cinematic Ambient',
+            'Neo Cinematic',
+            'Hybrid Score',
+        ),
+        'Electronic' => array(
+            'Melodic Electronic',
+            'Atmospheric Electronic',
+            'Techno',
+            'Minimal Techno',
+            'Downtempo',
+            'Chill Electronic',
+        ),
+        'Industrial' => array(
+            'Industrial Electronic',
+            'Cyberpunk',
+        ),
+        'Experimental' => array(
+            'AI Music',
+            'Sound Design',
+            'Drone',
+        ),
+        'Hybrid Electronic' => array(
+            'Futuristic Soundscape',
+            'Electronic Score',
+        ),
+        'Arabic' => array(
+            'Arabic Classical',
+        ),
+        'Metal' => array(
+            'Symphonic Metal',
+            'Gothic Metal',
+            'Doom Metal',
+            'Industrial Metal',
+            'Cinematic Metal',
+        ),
+        'Mood & Focus' => array(
+            'Meditation',
+            'Study',
+            'Focus',
+            'Relaxation',
+            'Sleep',
+        ),
+    );
+}
+
+/**
+ * Flat list of every allowed genre name (parents + children).
+ *
+ * @return string[]
+ */
+function collective_finity_music_genre_allowed_names() {
+    $allowed = array();
+    foreach ( collective_finity_music_genre_defaults() as $parent => $children ) {
+        $allowed[] = $parent;
+        foreach ( $children as $child ) {
+            $allowed[] = $child;
+        }
+    }
+    return $allowed;
+}
+
+/**
+ * Ensure a music_genre term exists by name; return its term_id.
+ *
+ * @param string $name   Term name.
+ * @param int    $parent Parent term ID (0 for top-level).
+ * @return int Term ID, or 0 on failure.
+ */
+function collective_finity_ensure_music_genre_term( $name, $parent = 0 ) {
+    $term = get_term_by( 'name', $name, 'music_genre' );
+    if ( $term && ! is_wp_error( $term ) ) {
+        $updates = array();
+        if ( (int) $term->parent !== (int) $parent ) {
+            $updates['parent'] = (int) $parent;
+        }
+        if ( ! empty( $updates ) ) {
+            $updated = wp_update_term( (int) $term->term_id, 'music_genre', $updates );
+            if ( is_wp_error( $updated ) ) {
+                return (int) $term->term_id;
+            }
+        }
+        return (int) $term->term_id;
+    }
+
+    $inserted = wp_insert_term( $name, 'music_genre', array( 'parent' => (int) $parent ) );
+    if ( is_wp_error( $inserted ) ) {
+        // Name/slug collision — fall back to lookup by slug.
+        $by_slug = get_term_by( 'slug', sanitize_title( $name ), 'music_genre' );
+        return ( $by_slug && ! is_wp_error( $by_slug ) ) ? (int) $by_slug->term_id : 0;
+    }
+
+    return (int) $inserted['term_id'];
+}
+
+/**
+ * Move all object relationships from one music_genre term onto another,
+ * preserving any additional genres already on those objects.
+ *
+ * @param int $from_term_id Source term ID.
+ * @param int $to_term_id   Destination term ID.
+ */
+function collective_finity_reassign_music_genre_term( $from_term_id, $to_term_id ) {
+    $from_term_id = (int) $from_term_id;
+    $to_term_id   = (int) $to_term_id;
+    if ( $from_term_id < 1 || $to_term_id < 1 || $from_term_id === $to_term_id ) {
+        return;
+    }
+
+    $object_ids = get_objects_in_term( $from_term_id, 'music_genre' );
+    if ( empty( $object_ids ) || is_wp_error( $object_ids ) ) {
+        return;
+    }
+
+    foreach ( $object_ids as $object_id ) {
+        $current = wp_get_object_terms( (int) $object_id, 'music_genre', array( 'fields' => 'ids' ) );
+        if ( is_wp_error( $current ) ) {
+            continue;
+        }
+        $current   = array_map( 'intval', (array) $current );
+        $current   = array_diff( $current, array( $from_term_id ) );
+        $current[] = $to_term_id;
+        wp_set_object_terms( (int) $object_id, array_values( array_unique( $current ) ), 'music_genre', false );
+    }
+}
+
+/**
+ * Rename a genre in place (keeps term_id / assignments). Merges if the new name already exists.
+ *
+ * @param string $old_name Current term name.
+ * @param string $new_name Desired term name.
+ * @return int Resulting term ID, or 0 if old term missing.
+ */
+function collective_finity_rename_music_genre( $old_name, $new_name ) {
+    if ( $old_name === $new_name ) {
+        $term = get_term_by( 'name', $new_name, 'music_genre' );
+        return ( $term && ! is_wp_error( $term ) ) ? (int) $term->term_id : 0;
+    }
+
+    $old = get_term_by( 'name', $old_name, 'music_genre' );
+    if ( ! $old || is_wp_error( $old ) ) {
+        return 0;
+    }
+
+    $existing = get_term_by( 'name', $new_name, 'music_genre' );
+    if ( $existing && ! is_wp_error( $existing ) && (int) $existing->term_id !== (int) $old->term_id ) {
+        collective_finity_reassign_music_genre_term( (int) $old->term_id, (int) $existing->term_id );
+        // Promote children of the old term under the surviving term.
+        $children = get_terms( array(
+            'taxonomy'   => 'music_genre',
+            'hide_empty' => false,
+            'parent'     => (int) $old->term_id,
+            'fields'     => 'ids',
+        ) );
+        if ( ! is_wp_error( $children ) ) {
+            foreach ( $children as $child_id ) {
+                wp_update_term( (int) $child_id, 'music_genre', array( 'parent' => (int) $existing->term_id ) );
+            }
+        }
+        wp_delete_term( (int) $old->term_id, 'music_genre' );
+        return (int) $existing->term_id;
+    }
+
+    $updated = wp_update_term(
+        (int) $old->term_id,
+        'music_genre',
+        array(
+            'name' => $new_name,
+            'slug' => sanitize_title( $new_name ),
+        )
+    );
+
+    return is_wp_error( $updated ) ? (int) $old->term_id : (int) $updated['term_id'];
+}
+
+/**
+ * One-time migration onto the cleaned Music Genres structure.
+ */
+function collective_finity_migrate_music_genres_v2() {
+    $flagged = array();
+
+    // Renames that preserve existing track/album assignments via the same term_id.
+    $renames = array(
+        'AI Art Music'              => 'AI Music',
+        'Experimental Sound Design' => 'Sound Design',
+    );
+    foreach ( $renames as $old_name => $new_name ) {
+        collective_finity_rename_music_genre( $old_name, $new_name );
+    }
+
+    // Seed the canonical tree first so reassignment targets exist.
+    foreach ( collective_finity_music_genre_defaults() as $parent_name => $children ) {
+        $parent_id = collective_finity_ensure_music_genre_term( $parent_name, 0 );
+        if ( $parent_id < 1 ) {
+            continue;
+        }
+        foreach ( $children as $child_name ) {
+            collective_finity_ensure_music_genre_term( $child_name, $parent_id );
+        }
+    }
+
+    // Old umbrella parent → Ambient; keep assignments, then remove the old term.
+    $legacy_reassignments = array(
+        'Ambient & Cinematic'            => 'Ambient',
+        'Cinematic & Ambient'            => 'Cinematic',
+        'Cyberpunk & Industrial Beats'   => 'Industrial',
+        'Electronic & Techno'            => 'Electronic',
+        'High-Energy Tech & Electronic'  => 'Electronic',
+    );
+    foreach ( $legacy_reassignments as $old_name => $new_name ) {
+        $old = get_term_by( 'name', $old_name, 'music_genre' );
+        $new = get_term_by( 'name', $new_name, 'music_genre' );
+        if ( ! $old || is_wp_error( $old ) || ! $new || is_wp_error( $new ) ) {
+            continue;
+        }
+        collective_finity_reassign_music_genre_term( (int) $old->term_id, (int) $new->term_id );
+        $children = get_terms( array(
+            'taxonomy'   => 'music_genre',
+            'hide_empty' => false,
+            'parent'     => (int) $old->term_id,
+            'fields'     => 'ids',
+        ) );
+        if ( ! is_wp_error( $children ) ) {
+            foreach ( $children as $child_id ) {
+                // Leave children under 0 for now; ensure_term sync below will reparent them.
+                wp_update_term( (int) $child_id, 'music_genre', array( 'parent' => 0 ) );
+            }
+        }
+        wp_delete_term( (int) $old->term_id, 'music_genre' );
+    }
+
+    // Re-apply correct nesting (moves Cinematic Ambient under Cinematic, etc.).
+    foreach ( collective_finity_music_genre_defaults() as $parent_name => $children ) {
+        $parent_id = collective_finity_ensure_music_genre_term( $parent_name, 0 );
+        if ( $parent_id < 1 ) {
+            continue;
+        }
+        foreach ( $children as $child_name ) {
+            collective_finity_ensure_music_genre_term( $child_name, $parent_id );
+        }
+    }
+
+    // Remove empty leftover terms; flag any non-canonical terms that still have content.
+    $allowed = collective_finity_music_genre_allowed_names();
+    $all     = get_terms( array(
+        'taxonomy'   => 'music_genre',
+        'hide_empty' => false,
+    ) );
+    if ( ! is_wp_error( $all ) ) {
+        foreach ( $all as $term ) {
+            if ( in_array( $term->name, $allowed, true ) ) {
+                continue;
+            }
+            $count = (int) $term->count;
+            if ( $count < 1 ) {
+                // Also catch terms whose count cache is stale but still linked.
+                $objects = get_objects_in_term( (int) $term->term_id, 'music_genre' );
+                if ( empty( $objects ) || is_wp_error( $objects ) ) {
+                    wp_delete_term( (int) $term->term_id, 'music_genre' );
+                    continue;
+                }
+                $count = count( $objects );
+            }
+            if ( $count > 0 ) {
+                $flagged[] = sprintf(
+                    /* translators: 1: genre name, 2: assigned item count */
+                    __( '"%1$s" (%2$d items) — not in the new genre list; reassign manually.', 'collective-finity' ),
+                    $term->name,
+                    $count
+                );
+            }
+        }
+    }
+
+    if ( ! empty( $flagged ) ) {
+        update_option( 'cf_music_genres_flagged_v2', $flagged, false );
+    } else {
+        delete_option( 'cf_music_genres_flagged_v2' );
+    }
+}
+
+/**
+ * Ensure the canonical genre tree exists and parents are correct.
+ */
+function collective_finity_sync_music_genres() {
+    if ( '1' !== get_option( 'cf_music_genres_structure_v2' ) ) {
+        collective_finity_migrate_music_genres_v2();
+        update_option( 'cf_music_genres_structure_v2', '1', false );
+    }
+
+    foreach ( collective_finity_music_genre_defaults() as $parent_name => $children ) {
+        $parent_id = collective_finity_ensure_music_genre_term( $parent_name, 0 );
+        if ( $parent_id < 1 ) {
+            continue;
+        }
+        foreach ( $children as $child_name ) {
+            collective_finity_ensure_music_genre_term( $child_name, $parent_id );
+        }
+    }
+}
+
+/**
+ * Admin notice when migration left non-canonical genres that still have content.
+ */
+function collective_finity_music_genres_migration_admin_notice() {
+    if ( ! current_user_can( 'manage_categories' ) ) {
+        return;
+    }
+    $flagged = get_option( 'cf_music_genres_flagged_v2', array() );
+    if ( empty( $flagged ) || ! is_array( $flagged ) ) {
+        return;
+    }
+    echo '<div class="notice notice-warning is-dismissible"><p><strong>';
+    echo esc_html__( 'Music Genres migration needs review:', 'collective-finity' );
+    echo '</strong></p><ul style="list-style:disc;margin-left:1.5em;">';
+    foreach ( $flagged as $line ) {
+        echo '<li>' . esc_html( $line ) . '</li>';
+    }
+    echo '</ul><p>';
+    echo esc_html__( 'These terms were kept so track/album assignments are not lost. Reassign them under Tracks → Genres, then remove the old terms.', 'collective-finity' );
+    echo '</p></div>';
+}
+add_action( 'admin_notices', 'collective_finity_music_genres_migration_admin_notice' );
+
 function collective_finity_register_music_genre_taxonomy() {
     $labels = array(
         'name'              => _x( 'Music Genres', 'taxonomy general name', 'collective-finity' ),
@@ -868,74 +1298,8 @@ function collective_finity_register_music_genre_taxonomy() {
         'show_in_rest'      => true,
     );
 
-    register_taxonomy( 'music_genre', array( 'tracks' ), $args );
-
-    // Remove outdated auto-generated genres if they still exist
-    $remove_genres = array(
-        'Ambient & Cinematic',
-        'Cinematic & Ambient',
-        'Cyberpunk & Industrial Beats',
-        'Electronic & Techno',
-        'High-Energy Tech & Electronic'
-    );
-    foreach ( $remove_genres as $term_name ) {
-        $term = get_term_by( 'name', $term_name, 'music_genre' );
-        if ( $term && ! is_wp_error( $term ) ) {
-            wp_delete_term( $term->term_id, 'music_genre' );
-        }
-    }
-
-    // Auto-populate parent genres and their subgenres
-    $genres = array(
-        'Ambient & Cinematic' => array(
-            'Dark Ambient',
-            'Emotional Ambient',
-            'Cinematic Ambient',
-            'Atmospheric Ambient',
-        ),
-        'Electronic' => array(
-            'Melodic Electronic',
-            'Atmospheric Electronic',
-            'Techno',
-            'Minimal Techno',
-            'Downtempo',
-            'Chill Electronic',
-        ),
-        'Cinematic' => array(
-            'Neo Cinematic',
-            'Hybrid Score',
-        ),
-        'Industrial' => array(
-            'Industrial Electronic',
-            'Cyberpunk',
-        ),
-        'Experimental' => array(
-            'AI Art Music',
-            'Experimental Sound Design',
-            'Drone',
-        ),
-        'Hybrid Electronic' => array(
-            'Futuristic Soundscape',
-            'Electronic Score',
-        ),
-    );
-
-    foreach ( $genres as $parent_name => $children ) {
-        $parent_term = get_term_by( 'name', $parent_name, 'music_genre' );
-        if ( ! $parent_term || is_wp_error( $parent_term ) ) {
-            $parent_term = wp_insert_term( $parent_name, 'music_genre' );
-        }
-
-        if ( ! is_wp_error( $parent_term ) ) {
-            $parent_id = is_array( $parent_term ) ? $parent_term['term_id'] : $parent_term->term_id;
-            foreach ( $children as $child_name ) {
-                $child_term = get_term_by( 'name', $child_name, 'music_genre' );
-                if ( ! $child_term || is_wp_error( $child_term ) ) {
-                    wp_insert_term( $child_name, 'music_genre', array( 'parent' => $parent_id ) );
-                }
-            }
-        }
-    }
+    register_taxonomy( 'music_genre', array( 'tracks', 'albums' ), $args );
+    collective_finity_sync_music_genres();
 }
 add_action( 'init', 'collective_finity_register_music_genre_taxonomy' );
 

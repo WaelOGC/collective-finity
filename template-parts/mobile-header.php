@@ -26,9 +26,9 @@ $cf_nav       = collective_finity_get_shell_nav();
     </a>
     <div class="cf-mobile-topbar-actions">
         <?php collective_finity_render_search_trigger(); ?>
-        <a class="cf-icon-btn" href="<?php echo esc_url( is_user_logged_in() ? admin_url( 'profile.php' ) : wp_login_url() ); ?>" aria-label="<?php esc_attr_e( 'Account', 'collective-finity' ); ?>">
+        <button type="button" id="cf-account-btn-mobile" class="cf-icon-btn" aria-haspopup="true" aria-expanded="false" aria-label="<?php esc_attr_e( 'Account', 'collective-finity' ); ?>">
             <?php echo collective_finity_icon( 'user', 18 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-        </a>
+        </button>
     </div>
 </header>
 

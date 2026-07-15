@@ -120,10 +120,8 @@ function collective_finity_music_library_shortcode() {
 			</div>
 		</section>
 
-		<?php if ( function_exists( 'collective_finity_ad_slot' ) ) : ?>
-		<div class="library-section cf-ad-library-top">
-			<?php collective_finity_ad_slot( 'library_top' ); ?>
-		</div>
+		<?php if ( function_exists( 'collective_finity_ad_slot_wrapped' ) ) : ?>
+		<?php collective_finity_ad_slot_wrapped( 'library_top', '<div class="library-section cf-ad-library-top">', '</div>' ); ?>
 		<?php endif; ?>
 
 		<?php if ( ! empty( $genres ) && ! is_wp_error( $genres ) ) : ?>
@@ -186,10 +184,8 @@ function collective_finity_music_library_shortcode() {
 		</section>
 		<?php endif; ?>
 
-		<?php if ( function_exists( 'collective_finity_ad_slot' ) ) : ?>
-		<div class="library-section cf-ad-library-between">
-			<?php collective_finity_ad_slot( 'library_between_sections' ); ?>
-		</div>
+		<?php if ( function_exists( 'collective_finity_ad_slot_wrapped' ) ) : ?>
+		<?php collective_finity_ad_slot_wrapped( 'library_between_sections', '<div class="library-section cf-ad-library-between">', '</div>' ); ?>
 		<?php endif; ?>
 
 		<?php if ( ! empty( $popular_tracks ) ) : ?>

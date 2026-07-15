@@ -51,6 +51,7 @@ function collective_finity_default_theme_options() {
         'enable_back_to_top' => 1,
         'show_global_player' => 1,
         'default_volume'     => 72,
+        'popular_min_views'  => 50,
         'footer_copyright'   => '',
         'footer_tagline'     => 'Experience Music Beyond Imagination',
         'footer_description' => 'Welcome to Collective Finity — a cinematic world where emotional sound, visual stories and creativity connect in one immersive universe.',
@@ -394,6 +395,7 @@ function collective_finity_sanitize_theme_options( $input ) {
     if ( 'player' === $submitted_tab ) {
         $output['show_global_player'] = empty( $input['show_global_player'] ) ? 0 : 1;
         $output['default_volume']     = min( 100, max( 0, absint( $input['default_volume'] ?? $defaults['default_volume'] ) ) );
+        $output['popular_min_views']  = max( 0, absint( $input['popular_min_views'] ?? $defaults['popular_min_views'] ) );
     }
 
     if ( 'footer' === $submitted_tab ) {
@@ -960,16 +962,28 @@ function collective_finity_render_theme_options_part_tab( $part ) {
 }
 
 function collective_finity_render_theme_options_player_tab( $options ) {
+    $option_key = collective_finity_theme_options_key();
     ?>
     <h2><?php esc_html_e( 'Music Player', 'collective-finity' ); ?></h2>
     <table class="form-table" role="presentation">
         <tr>
             <th scope="row"><?php esc_html_e( 'Global Player', 'collective-finity' ); ?></th>
-            <td><label><input type="checkbox" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[show_global_player]" value="1" <?php checked( $options['show_global_player'], 1 ); ?>> <?php esc_html_e( 'Show sticky global audio player', 'collective-finity' ); ?></label></td>
+            <td><label><input type="checkbox" name="<?php echo esc_attr( $option_key ); ?>[show_global_player]" value="1" <?php checked( $options['show_global_player'], 1 ); ?>> <?php esc_html_e( 'Show sticky global audio player', 'collective-finity' ); ?></label></td>
         </tr>
         <tr>
             <th scope="row"><label for="cf_default_volume"><?php esc_html_e( 'Default Volume', 'collective-finity' ); ?></label></th>
-            <td><input type="number" min="0" max="100" id="cf_default_volume" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[default_volume]" value="<?php echo esc_attr( $options['default_volume'] ); ?>"></td>
+            <td><input type="number" min="0" max="100" id="cf_default_volume" name="<?php echo esc_attr( $option_key ); ?>[default_volume]" value="<?php echo esc_attr( $options['default_volume'] ); ?>"></td>
+        </tr>
+    </table>
+
+    <h3 class="cf-options-subhead"><?php esc_html_e( 'Music Library', 'collective-finity' ); ?></h3>
+    <table class="form-table" role="presentation">
+        <tr>
+            <th scope="row"><label for="cf_popular_min_views"><?php esc_html_e( 'Popular Section Minimum Views', 'collective-finity' ); ?></label></th>
+            <td>
+                <input type="number" min="0" step="1" id="cf_popular_min_views" name="<?php echo esc_attr( $option_key ); ?>[popular_min_views]" value="<?php echo esc_attr( (string) ( $options['popular_min_views'] ?? 50 ) ); ?>" class="small-text">
+                <p class="description"><?php esc_html_e( 'Tracks need at least this many views to appear in the Popular carousel and Popular archive. Default: 50.', 'collective-finity' ); ?></p>
+            </td>
         </tr>
     </table>
     <?php

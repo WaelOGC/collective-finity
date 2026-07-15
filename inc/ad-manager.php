@@ -106,6 +106,38 @@ function collective_finity_adsense_head_script() {
 add_action( 'wp_head', 'collective_finity_adsense_head_script' );
 
 /**
+ * Capture ad-slot markup. Empty string when the zone is disabled or has no content.
+ *
+ * @param string $zone_id Zone identifier.
+ * @return string
+ */
+function collective_finity_get_ad_slot( $zone_id ) {
+    ob_start();
+    collective_finity_ad_slot( $zone_id );
+    return trim( (string) ob_get_clean() );
+}
+
+/**
+ * Echo an ad slot only when it produces markup; optionally wrap that markup.
+ * Prevents empty wrapper boxes when a zone is disabled.
+ *
+ * @param string $zone_id Zone identifier.
+ * @param string $before  Markup printed before the slot (only if slot has content).
+ * @param string $after   Markup printed after the slot (only if slot has content).
+ * @return bool True when content was printed.
+ */
+function collective_finity_ad_slot_wrapped( $zone_id, $before = '', $after = '' ) {
+    $html = collective_finity_get_ad_slot( $zone_id );
+    if ( '' === $html ) {
+        return false;
+    }
+    echo $before; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- caller-controlled structural wrappers.
+    echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- from collective_finity_ad_slot.
+    echo $after; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- caller-controlled structural wrappers.
+    return true;
+}
+
+/**
  * Render an ad slot on the frontend.
  *
  * @param string $zone_id Zone identifier.

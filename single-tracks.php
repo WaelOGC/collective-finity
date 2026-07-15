@@ -203,10 +203,8 @@ $comments_count = count($track_comments);
                 </div>
             </div>
 
-            <?php if ( function_exists( 'collective_finity_ad_slot' ) ) : ?>
-            <div class="cf-track-ad-sidebar cf-glass-card">
-                <?php collective_finity_ad_slot( 'track_sidebar' ); ?>
-            </div>
+            <?php if ( function_exists( 'collective_finity_ad_slot_wrapped' ) ) : ?>
+            <?php collective_finity_ad_slot_wrapped( 'track_sidebar', '<div class="cf-track-ad-sidebar cf-glass-card">', '</div>' ); ?>
             <?php endif; ?>
 
             <!-- 6. STORY & AUDIO-TRACKED LYRICS PLAYER SECTION -->
