@@ -72,6 +72,15 @@ function collective_finity_default_theme_options() {
         'custom_css'         => '',
         'ad_preview_mode'    => 0,
         'ad_zones'           => collective_finity_default_ad_zones(),
+        'donate_leadscreen_messages'  => array(
+            'AI Music Guides',
+            'Free Listening',
+            'Community First',
+            'Support Creators',
+            'Music Beyond Imagination',
+        ),
+        'donate_leadscreen_animation' => 'scroll',
+        'donate_leadscreen_position'  => 'middle',
     );
 }
 
@@ -458,6 +467,28 @@ function collective_finity_sanitize_theme_options( $input ) {
         }
     }
 
+    if ( 'donate' === $submitted_tab ) {
+        $raw_messages = isset( $input['donate_leadscreen_messages'] ) && is_array( $input['donate_leadscreen_messages'] )
+            ? $input['donate_leadscreen_messages']
+            : array();
+        $clean_messages = array();
+        foreach ( array_slice( $raw_messages, 0, 5 ) as $msg ) {
+            $msg = sanitize_text_field( $msg );
+            if ( '' !== $msg ) {
+                $clean_messages[] = $msg;
+            }
+        }
+        $output['donate_leadscreen_messages'] = $clean_messages ?: $defaults['donate_leadscreen_messages'];
+
+        $output['donate_leadscreen_animation'] = in_array( $input['donate_leadscreen_animation'] ?? '', collective_finity_donate_leadscreen_animations(), true )
+            ? $input['donate_leadscreen_animation']
+            : $defaults['donate_leadscreen_animation'];
+
+        $output['donate_leadscreen_position'] = in_array( $input['donate_leadscreen_position'] ?? '', array( 'top', 'middle', 'bottom' ), true )
+            ? $input['donate_leadscreen_position']
+            : $defaults['donate_leadscreen_position'];
+    }
+
     if ( 'header' === $submitted_tab && isset( $input['active_header'] ) ) {
         collective_finity_set_theme_part_template_id( 'header', absint( $input['active_header'] ) );
     }
@@ -479,6 +510,7 @@ function collective_finity_theme_options_tabs() {
         'sidebar'  => __( 'Side Panel Settings', 'collective-finity' ),
         'player'   => __( 'Music Player', 'collective-finity' ),
         'ads'      => __( 'Ad Manager', 'collective-finity' ),
+        'donate'   => __( 'Donate Page', 'collective-finity' ),
         'advanced' => __( 'Advanced', 'collective-finity' ),
     );
 }
@@ -540,6 +572,9 @@ function collective_finity_render_theme_options_page() {
                         break;
                     case 'ads':
                         collective_finity_render_theme_options_ads_tab( $options );
+                        break;
+                    case 'donate':
+                        collective_finity_render_theme_options_donate_tab( $options );
                         break;
                     case 'advanced':
                         collective_finity_render_theme_options_advanced_tab( $options );
@@ -1005,6 +1040,56 @@ function collective_finity_render_theme_options_advanced_tab( $options ) {
     <?php
 }
 
+function collective_finity_render_theme_options_donate_tab( $options ) {
+    $option_key = collective_finity_theme_options_key();
+    $messages   = (array) ( $options['donate_leadscreen_messages'] ?? array() );
+    $messages   = array_pad( array_slice( $messages, 0, 5 ), 5, '' );
+    ?>
+    <h2><?php esc_html_e( 'Donate Page — Lead Screen', 'collective-finity' ); ?></h2>
+    <p class="description"><?php esc_html_e( 'The scrolling message panel shown under "Make Music Infinite" on the Donate page.', 'collective-finity' ); ?></p>
+    <table class="form-table" role="presentation">
+        <?php foreach ( $messages as $i => $message ) : ?>
+        <tr>
+            <th scope="row"><label for="cf_leadscreen_msg_<?php echo esc_attr( $i ); ?>"><?php printf( esc_html__( 'Message %d', 'collective-finity' ), $i + 1 ); ?></label></th>
+            <td><input type="text" class="regular-text" id="cf_leadscreen_msg_<?php echo esc_attr( $i ); ?>" maxlength="40" name="<?php echo esc_attr( $option_key ); ?>[donate_leadscreen_messages][]" value="<?php echo esc_attr( $message ); ?>"></td>
+        </tr>
+        <?php endforeach; ?>
+        <tr>
+            <th scope="row"><label for="cf_leadscreen_animation"><?php esc_html_e( 'Animation Type', 'collective-finity' ); ?></label></th>
+            <td>
+                <?php $cf_leadscreen_choices = array(
+                    'scroll'       => __( 'Scrolling Ticker', 'collective-finity' ),
+                    'fade'         => __( 'Fade Cycle', 'collective-finity' ),
+                    'typewriter'   => __( 'Typewriter', 'collective-finity' ),
+                    'slide-up'     => __( 'Slide Up Carousel', 'collective-finity' ),
+                    'glitch'       => __( 'Glitch Flicker', 'collective-finity' ),
+                    'zoom-pulse'   => __( 'Zoom Pulse', 'collective-finity' ),
+                    'flip'         => __( 'Flip Card', 'collective-finity' ),
+                    'wave'         => __( 'Wave Bounce', 'collective-finity' ),
+                    'neon-flicker' => __( 'Neon Sign Flicker', 'collective-finity' ),
+                    'blur-focus'   => __( 'Blur Focus Reveal', 'collective-finity' ),
+                ); ?>
+                <select id="cf_leadscreen_animation" name="<?php echo esc_attr( $option_key ); ?>[donate_leadscreen_animation]">
+                    <?php foreach ( $cf_leadscreen_choices as $cf_val => $cf_label ) : ?>
+                        <option value="<?php echo esc_attr( $cf_val ); ?>" <?php selected( $options['donate_leadscreen_animation'] ?? 'scroll', $cf_val ); ?>><?php echo esc_html( $cf_label ); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><label for="cf_leadscreen_position"><?php esc_html_e( 'Text Position', 'collective-finity' ); ?></label></th>
+            <td>
+                <select id="cf_leadscreen_position" name="<?php echo esc_attr( $option_key ); ?>[donate_leadscreen_position]">
+                    <option value="top" <?php selected( $options['donate_leadscreen_position'] ?? 'middle', 'top' ); ?>><?php esc_html_e( 'Top', 'collective-finity' ); ?></option>
+                    <option value="middle" <?php selected( $options['donate_leadscreen_position'] ?? 'middle', 'middle' ); ?>><?php esc_html_e( 'Middle', 'collective-finity' ); ?></option>
+                    <option value="bottom" <?php selected( $options['donate_leadscreen_position'] ?? 'middle', 'bottom' ); ?>><?php esc_html_e( 'Bottom', 'collective-finity' ); ?></option>
+                </select>
+            </td>
+        </tr>
+    </table>
+    <?php
+}
+
 function collective_finity_render_theme_options_ads_tab( $options ) {
     $zones       = $options['ad_zones'] ?? collective_finity_default_ad_zones();
     $labels      = collective_finity_ad_zone_labels();
@@ -1223,3 +1308,83 @@ function collective_finity_theme_options_admin_bar( $wp_admin_bar ) {
     ) );
 }
 add_action( 'admin_bar_menu', 'collective_finity_theme_options_admin_bar', 75 );
+
+/**
+ * Allowed Donate page Lead Screen animation types.
+ *
+ * @return string[]
+ */
+function collective_finity_donate_leadscreen_animations() {
+    return array( 'scroll', 'fade', 'typewriter', 'slide-up', 'glitch', 'zoom-pulse', 'flip', 'wave', 'neon-flicker', 'blur-focus' );
+}
+
+/**
+ * Render the Donate page "Lead Screen" — an admin-editable scrolling message
+ * strip that fills the space below the Make Music Infinite card.
+ */
+function collective_finity_render_donate_leadscreen() {
+    $options   = collective_finity_get_theme_options();
+    $messages  = array_filter( array_map( 'trim', (array) ( $options['donate_leadscreen_messages'] ?? array() ) ) );
+    $animation = in_array( $options['donate_leadscreen_animation'] ?? 'scroll', collective_finity_donate_leadscreen_animations(), true )
+        ? $options['donate_leadscreen_animation']
+        : 'scroll';
+    $position  = in_array( $options['donate_leadscreen_position'] ?? 'middle', array( 'top', 'middle', 'bottom' ), true )
+        ? $options['donate_leadscreen_position']
+        : 'middle';
+
+    if ( empty( $messages ) ) {
+        return;
+    }
+
+    $cf_leadscreen_slot     = 3; // seconds each message occupies
+    $cf_leadscreen_duration = max( 1, count( $messages ) ) * $cf_leadscreen_slot;
+    ?>
+    <div class="cf-leadscreen cf-leadscreen--<?php echo esc_attr( $animation ); ?> cf-leadscreen--pos-<?php echo esc_attr( $position ); ?>" aria-hidden="false">
+        <div class="cf-leadscreen__grid" aria-hidden="true"></div>
+        <div class="cf-leadscreen__scanlines" aria-hidden="true"></div>
+        <div class="cf-leadscreen__glass" aria-hidden="true"></div>
+
+        <?php if ( 'scroll' === $animation ) : ?>
+
+            <div class="cf-leadscreen__track">
+                <div class="cf-leadscreen__row">
+                    <?php foreach ( array_merge( $messages, $messages ) as $message ) : ?>
+                        <span class="cf-leadscreen__msg"><?php echo esc_html( $message ); ?></span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+        <?php elseif ( 'wave' === $animation ) : ?>
+
+            <div class="cf-leadscreen__cycle">
+                <?php foreach ( $messages as $i => $message ) : ?>
+                    <span class="cf-leadscreen__msg cf-leadscreen__msg--wave" style="animation-duration: <?php echo esc_attr( $cf_leadscreen_duration ); ?>s; animation-delay: <?php echo esc_attr( $i * $cf_leadscreen_slot ); ?>s;">
+                        <?php foreach ( preg_split( '//u', $message, -1, PREG_SPLIT_NO_EMPTY ) as $li => $letter ) : ?>
+                            <span class="cf-leadscreen__letter" style="--i: <?php echo (int) $li; ?>;"><?php echo esc_html( ' ' === $letter ? "\xC2\xA0" : $letter ); ?></span>
+                        <?php endforeach; ?>
+                    </span>
+                <?php endforeach; ?>
+            </div>
+
+        <?php elseif ( 'typewriter' === $animation ) : ?>
+
+            <div class="cf-leadscreen__cycle">
+                <?php foreach ( $messages as $i => $message ) :
+                    $chars = function_exists( 'mb_strlen' ) ? mb_strlen( $message ) : strlen( $message );
+                    ?>
+                    <span class="cf-leadscreen__msg cf-leadscreen__msg--typewriter" style="animation-duration: <?php echo esc_attr( $cf_leadscreen_duration ); ?>s; animation-delay: <?php echo esc_attr( $i * $cf_leadscreen_slot ); ?>s; --cf-chars: <?php echo (int) max( 1, $chars ); ?>;"><?php echo esc_html( $message ); ?></span>
+                <?php endforeach; ?>
+            </div>
+
+        <?php else : ?>
+
+            <div class="cf-leadscreen__cycle">
+                <?php foreach ( $messages as $i => $message ) : ?>
+                    <span class="cf-leadscreen__msg" style="animation-duration: <?php echo esc_attr( $cf_leadscreen_duration ); ?>s; animation-delay: <?php echo esc_attr( $i * $cf_leadscreen_slot ); ?>s"><?php echo esc_html( $message ); ?></span>
+                <?php endforeach; ?>
+            </div>
+
+        <?php endif; ?>
+    </div>
+    <?php
+}

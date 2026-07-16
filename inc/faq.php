@@ -401,7 +401,7 @@ add_action( 'wp_ajax_cf_submit_platform_review', 'collective_finity_ajax_submit_
 function collective_finity_get_faq_sections() {
 	return array(
 		array(
-			'eyebrow' => __( '01 / ABOUT', 'collective-finity' ),
+			'eyebrow' => __( 'ABOUT', 'collective-finity' ),
 			'title'   => __( 'About FF Collective', 'collective-finity' ),
 			'items'   => array(
 				array(
@@ -427,7 +427,7 @@ function collective_finity_get_faq_sections() {
 			),
 		),
 		array(
-			'eyebrow' => __( '02 / USING THE SITE', 'collective-finity' ),
+			'eyebrow' => __( 'USING THE SITE', 'collective-finity' ),
 			'title'   => __( 'How to Use', 'collective-finity' ),
 			'items'   => array(
 				array(
@@ -453,7 +453,7 @@ function collective_finity_get_faq_sections() {
 			),
 		),
 		array(
-			'eyebrow' => __( '03 / FEATURES', 'collective-finity' ),
+			'eyebrow' => __( 'FEATURES', 'collective-finity' ),
 			'title'   => __( 'Features & Technical', 'collective-finity' ),
 			'items'   => array(
 				array(
@@ -479,4 +479,66 @@ function collective_finity_get_faq_sections() {
 			),
 		),
 	);
+}
+
+/**
+ * Render one FAQ category (eyebrow + title + accordion list).
+ * Shared by the split layout (About / How to Use) and the standalone
+ * Features & Technical section so the markup only lives in one place.
+ *
+ * @param int   $cf_section_i Index of the section (used for stable element IDs).
+ * @param array $cf_section   Section data: eyebrow, title, items[].
+ */
+function collective_finity_render_faq_section_group( $cf_section_i, $cf_section ) {
+	?>
+	<section
+		id="cf-faq-section-<?php echo esc_attr( (string) $cf_section_i ); ?>"
+		class="cf-faq-section"
+		aria-labelledby="cf-faq-section-title-<?php echo esc_attr( (string) $cf_section_i ); ?>"
+	>
+		<header class="cf-faq-section__head">
+			<p class="cf-faq-section__eyebrow"><?php echo esc_html( $cf_section['eyebrow'] ); ?></p>
+			<h2 id="cf-faq-section-title-<?php echo esc_attr( (string) $cf_section_i ); ?>" class="cf-faq-section__title">
+				<?php echo esc_html( $cf_section['title'] ); ?>
+			</h2>
+		</header>
+
+		<div
+			class="cf-faq-accordion"
+			data-cf-faq-accordion
+			role="list"
+			aria-label="<?php echo esc_attr( $cf_section['title'] ); ?>"
+		>
+			<?php foreach ( $cf_section['items'] as $cf_item_i => $cf_item ) : ?>
+				<?php
+				$cf_trigger_id = 'cf-faq-t-' . $cf_section_i . '-' . $cf_item_i;
+				$cf_panel_id   = 'cf-faq-p-' . $cf_section_i . '-' . $cf_item_i;
+				?>
+				<div class="cf-faq-accordion__item" role="listitem">
+					<button
+						type="button"
+						id="<?php echo esc_attr( $cf_trigger_id ); ?>"
+						class="cf-faq-accordion__trigger"
+						aria-expanded="false"
+						aria-controls="<?php echo esc_attr( $cf_panel_id ); ?>"
+					>
+						<span class="cf-faq-accordion__question"><?php echo esc_html( $cf_item['question'] ); ?></span>
+						<span class="cf-faq-accordion__chevron" aria-hidden="true">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+						</span>
+					</button>
+					<div
+						id="<?php echo esc_attr( $cf_panel_id ); ?>"
+						class="cf-faq-accordion__panel"
+						role="region"
+						aria-labelledby="<?php echo esc_attr( $cf_trigger_id ); ?>"
+						hidden
+					>
+						<p><?php echo esc_html( $cf_item['answer'] ); ?></p>
+					</div>
+				</div>
+			<?php endforeach; ?>
+		</div>
+	</section>
+	<?php
 }

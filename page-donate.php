@@ -59,20 +59,23 @@ get_header();
 		<div class="cf-donate-split__form">
 			<?php echo do_shortcode( '[cf_donation_form]' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		</div>
-		<div class="cf-donate-split__copy">
-			<h2 class="cf-donate-split__title"><?php esc_html_e( 'Make Music Infinite', 'collective-finity' ); ?></h2>
-			<p class="cf-donate-split__text">
-				<?php esc_html_e( 'Every contribution you make fuels something bigger than music — it fuels freedom, creativity, and boundless possibility.', 'collective-finity' ); ?>
-			</p>
-			<p class="cf-donate-split__text">
-				<?php esc_html_e( 'Your support keeps Collective Finity alive. It means we can host thousands of tracks, publish in-depth guides for producers navigating AI composition, and build a thriving community where creators and listeners connect without walls or limits.', 'collective-finity' ); ?>
-			</p>
-			<p class="cf-donate-split__text">
-				<?php esc_html_e( 'When you support us, you\'re not just enabling a platform — you\'re saying "I believe in a world where imagination has no ceiling." You\'re part of something that matters.', 'collective-finity' ); ?>
-			</p>
-			<p class="cf-donate-split__text cf-donate-split__text--signoff">
-				<?php esc_html_e( 'Thank you for making music infinite.', 'collective-finity' ); ?>
-			</p>
+		<div class="cf-donate-split__right">
+			<div class="cf-donate-split__copy">
+				<h2 class="cf-donate-split__title"><?php esc_html_e( 'Make Music Infinite', 'collective-finity' ); ?></h2>
+				<p class="cf-donate-split__text">
+					<?php esc_html_e( 'Every contribution you make fuels something bigger than music — it fuels freedom, creativity, and boundless possibility.', 'collective-finity' ); ?>
+				</p>
+				<p class="cf-donate-split__text">
+					<?php esc_html_e( 'Your support keeps Collective Finity alive. It means we can host thousands of tracks, publish in-depth guides for producers navigating AI composition, and build a thriving community where creators and listeners connect without walls or limits.', 'collective-finity' ); ?>
+				</p>
+				<p class="cf-donate-split__text">
+					<?php esc_html_e( 'When you support us, you\'re not just enabling a platform — you\'re saying "I believe in a world where imagination has no ceiling." You\'re part of something that matters.', 'collective-finity' ); ?>
+				</p>
+				<p class="cf-donate-split__text cf-donate-split__text--signoff">
+					<?php esc_html_e( 'Thank you for making music infinite.', 'collective-finity' ); ?>
+				</p>
+			</div>
+			<?php collective_finity_render_donate_leadscreen(); ?>
 		</div>
 	</section>
 
@@ -323,13 +326,21 @@ get_header();
 @media (min-width: 860px) {
 	.cf-donate-split {
 		grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
-		align-items: start;
+		align-items: stretch;
 	}
 }
 .cf-donate-split__form {
 	min-width: 0;
 }
+.cf-donate-split__right {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	min-width: 0;
+	height: 100%;
+}
 .cf-donate-split__copy {
+	flex: 0 0 auto;
 	min-width: 0;
 	display: flex;
 	flex-direction: column;
@@ -354,6 +365,262 @@ get_header();
 .cf-donate-split__text--signoff {
 	color: var(--cf-accent, #FFB700);
 	font-weight: 600;
+}
+
+/* Lead Screen panel — LED display look */
+.cf-leadscreen {
+	position: relative;
+	flex: 1 1 auto;
+	min-height: 140px;
+	border-radius: 18px;
+	overflow: hidden;
+	background: radial-gradient(ellipse at center, #0d0d0d 0%, #060606 70%, #030303 100%);
+	border: 1px solid rgba(255, 183, 0, 0.2);
+	display: flex;
+	box-shadow:
+		inset 0 0 50px rgba(0, 0, 0, 0.85),
+		inset 0 0 3px rgba(255, 183, 0, 0.25),
+		inset 0 1px 0 rgba(255, 255, 255, 0.05),
+		0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* Pixel-sized grid — LED matrix feel */
+.cf-leadscreen__grid {
+	position: absolute;
+	inset: 0;
+	background-image:
+		linear-gradient(rgba(255, 183, 0, 0.12) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(255, 183, 0, 0.12) 1px, transparent 1px);
+	background-size: 8px 8px;
+	-webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 88%);
+	mask-image: radial-gradient(ellipse at center, black 40%, transparent 88%);
+	pointer-events: none;
+	z-index: 1;
+}
+
+/* Fine CRT scanlines for extra depth */
+.cf-leadscreen__scanlines {
+	position: absolute;
+	inset: 0;
+	background: repeating-linear-gradient(
+		to bottom,
+		rgba(0, 0, 0, 0.4) 0px,
+		rgba(0, 0, 0, 0.4) 1px,
+		transparent 2px,
+		transparent 3px
+	);
+	mix-blend-mode: multiply;
+	pointer-events: none;
+	opacity: 0.55;
+	z-index: 2;
+}
+
+/* Glass reflection sheen — top-left light, bottom-right shadow */
+.cf-leadscreen__glass {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, transparent 30%, transparent 70%, rgba(0, 0, 0, 0.3) 100%);
+	pointer-events: none;
+	z-index: 3;
+}
+
+.cf-leadscreen__track,
+.cf-leadscreen__cycle {
+	position: relative;
+	z-index: 4;
+	width: 100%;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+.cf-leadscreen--pos-top .cf-leadscreen__track,
+.cf-leadscreen--pos-top .cf-leadscreen__cycle { justify-content: flex-start; padding-top: 20px; }
+.cf-leadscreen--pos-middle .cf-leadscreen__track,
+.cf-leadscreen--pos-middle .cf-leadscreen__cycle { justify-content: center; }
+.cf-leadscreen--pos-bottom .cf-leadscreen__track,
+.cf-leadscreen--pos-bottom .cf-leadscreen__cycle { justify-content: flex-end; padding-bottom: 20px; }
+
+.cf-leadscreen__row {
+	display: flex;
+	align-items: center;
+	gap: 48px;
+	white-space: nowrap;
+	animation: cfLeadscreenScroll 22s linear infinite;
+	padding: 0 24px;
+}
+
+.cf-leadscreen__msg {
+	font-family: var(--cf-mono-font, 'Space Mono', monospace);
+	font-size: 15px;
+	letter-spacing: 0.06em;
+	color: #FFC94D;
+	text-shadow: 0 0 6px rgba(255, 183, 0, 0.65), 0 0 14px rgba(255, 183, 0, 0.35);
+}
+
+@keyframes cfLeadscreenScroll {
+	from { transform: translateX(0); }
+	to   { transform: translateX(-50%); }
+}
+
+.cf-leadscreen__cycle {
+	align-items: center;
+	justify-content: center;
+	padding: 0 24px;
+	text-align: center;
+	perspective: 600px;
+}
+.cf-leadscreen__cycle .cf-leadscreen__msg {
+	position: absolute;
+	font-size: 16px;
+	opacity: 0;
+}
+
+/* Fade */
+.cf-leadscreen--fade .cf-leadscreen__msg {
+	animation: cfLeadscreenFade 15s ease-in-out infinite;
+}
+@keyframes cfLeadscreenFade {
+	0%   { opacity: 0; }
+	3%   { opacity: 1; }
+	16%  { opacity: 1; }
+	18%  { opacity: 0; }
+	100% { opacity: 0; }
+}
+
+/* Glitch */
+.cf-leadscreen--glitch .cf-leadscreen__msg {
+	animation: cfLeadscreenGlitch 15s steps(1) infinite;
+}
+@keyframes cfLeadscreenGlitch {
+	0%    { opacity: 0; transform: translate(0,0); text-shadow: none; }
+	3%    { opacity: 1; transform: translate(-2px, 1px); text-shadow: 2px 0 #ff2b6b, -2px 0 #00e5ff; }
+	4%    { transform: translate(2px, -1px); text-shadow: -2px 0 #ff2b6b, 2px 0 #00e5ff; }
+	5%    { transform: translate(0,0); text-shadow: 0 0 8px rgba(255,183,0,0.7); }
+	16%   { opacity: 1; transform: translate(0,0); text-shadow: 0 0 8px rgba(255,183,0,0.7); }
+	17%   { opacity: 1; transform: translate(2px,0); text-shadow: 2px 0 #ff2b6b, -2px 0 #00e5ff; }
+	18%   { opacity: 0; transform: translate(0,0); text-shadow: none; }
+	100%  { opacity: 0; }
+}
+
+/* Slide up */
+.cf-leadscreen--slide-up .cf-leadscreen__msg {
+	animation: cfLeadscreenSlideUp 15s ease-in-out infinite;
+}
+@keyframes cfLeadscreenSlideUp {
+	0%   { opacity: 0; transform: translateY(24px); }
+	3%   { opacity: 1; transform: translateY(0); }
+	16%  { opacity: 1; transform: translateY(0); }
+	18%  { opacity: 0; transform: translateY(-24px); }
+	100% { opacity: 0; }
+}
+
+/* Zoom pulse */
+.cf-leadscreen--zoom-pulse .cf-leadscreen__msg {
+	animation: cfLeadscreenZoomPulse 15s ease-in-out infinite;
+}
+@keyframes cfLeadscreenZoomPulse {
+	0%   { opacity: 0; transform: scale(0.7); }
+	3%   { opacity: 1; transform: scale(1.08); }
+	5%   { transform: scale(1); }
+	16%  { opacity: 1; transform: scale(1); }
+	18%  { opacity: 0; transform: scale(1.15); }
+	100% { opacity: 0; }
+}
+
+/* Flip */
+.cf-leadscreen--flip .cf-leadscreen__msg {
+	animation: cfLeadscreenFlip 15s ease-in-out infinite;
+	transform-origin: center;
+	backface-visibility: hidden;
+}
+@keyframes cfLeadscreenFlip {
+	0%   { opacity: 0; transform: rotateX(90deg); }
+	3%   { opacity: 1; transform: rotateX(0deg); }
+	16%  { opacity: 1; transform: rotateX(0deg); }
+	18%  { opacity: 0; transform: rotateX(-90deg); }
+	100% { opacity: 0; }
+}
+
+/* Neon flicker */
+.cf-leadscreen--neon-flicker .cf-leadscreen__msg {
+	animation: cfLeadscreenNeonFlicker 15s ease-in-out infinite;
+	text-shadow: 0 0 6px rgba(255,183,0,0.85), 0 0 16px rgba(255,183,0,0.5);
+}
+@keyframes cfLeadscreenNeonFlicker {
+	0%    { opacity: 0; }
+	3%    { opacity: 1; }
+	3.6%  { opacity: 0.4; }
+	4.2%  { opacity: 1; }
+	4.5%  { opacity: 0.3; }
+	4.8%  { opacity: 1; }
+	16%   { opacity: 1; }
+	16.6% { opacity: 0.3; }
+	17%   { opacity: 1; }
+	18%   { opacity: 0; }
+	100%  { opacity: 0; }
+}
+
+/* Blur focus */
+.cf-leadscreen--blur-focus .cf-leadscreen__msg {
+	animation: cfLeadscreenBlurFocus 15s ease-in-out infinite;
+}
+@keyframes cfLeadscreenBlurFocus {
+	0%   { opacity: 0; filter: blur(8px); }
+	3%   { opacity: 1; filter: blur(0); }
+	16%  { opacity: 1; filter: blur(0); }
+	18%  { opacity: 0; filter: blur(8px); }
+	100% { opacity: 0; }
+}
+
+/* Wave (letter-by-letter bounce) */
+.cf-leadscreen__msg--wave {
+	position: absolute;
+	animation: cfLeadscreenWaveShow 15s ease-in-out infinite;
+}
+@keyframes cfLeadscreenWaveShow {
+	0%   { opacity: 0; }
+	3%   { opacity: 1; }
+	16%  { opacity: 1; }
+	18%  { opacity: 0; }
+	100% { opacity: 0; }
+}
+.cf-leadscreen__letter {
+	display: inline-block;
+	animation: cfLeadscreenWaveBounce 1.2s ease-in-out infinite;
+	animation-delay: calc(var(--i, 0) * 0.05s);
+}
+@keyframes cfLeadscreenWaveBounce {
+	0%, 100% { transform: translateY(0); }
+	50%      { transform: translateY(-6px); }
+}
+
+/* Typewriter (character reveal) */
+.cf-leadscreen__msg--typewriter {
+	position: absolute;
+	display: inline-block;
+	overflow: hidden;
+	white-space: nowrap;
+	max-width: 0;
+	border-right: 2px solid #FFC94D;
+	animation: cfLeadscreenTypewriter 15s steps(var(--cf-chars, 24), end) infinite;
+}
+@keyframes cfLeadscreenTypewriter {
+	0%   { opacity: 0; max-width: 0; }
+	3%   { opacity: 1; max-width: 0; }
+	12%  { opacity: 1; max-width: 100%; }
+	16%  { opacity: 1; max-width: 100%; }
+	18%  { opacity: 0; max-width: 100%; }
+	100% { opacity: 0; max-width: 0; }
+}
+
+@media (max-width: 859px) {
+	.cf-donate-split__right {
+		height: auto;
+	}
+	.cf-leadscreen {
+		min-height: 90px;
+	}
 }
 .cf-donate-wall {
 	text-align: center;
@@ -565,6 +832,22 @@ get_header();
 	.cf-donate-hero__icon {
 		animation: none;
 		opacity: 0.08;
+	}
+	.cf-leadscreen__row,
+	.cf-leadscreen__cycle .cf-leadscreen__msg,
+	.cf-leadscreen__letter {
+		animation: none !important;
+	}
+	.cf-leadscreen__cycle .cf-leadscreen__msg {
+		position: static;
+		opacity: 1;
+		display: none;
+		max-width: none;
+		filter: none;
+		transform: none;
+	}
+	.cf-leadscreen__cycle .cf-leadscreen__msg:first-child {
+		display: block;
 	}
 }
 @media (max-width: 767px) {

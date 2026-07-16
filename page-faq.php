@@ -39,106 +39,65 @@ get_header();
 ?>
 
 <main id="primary" class="site-main cf-page-shell cf-faq-page">
-	<div class="cf-page-container cf-faq">
-		<div class="cf-faq__inner">
 
-			<section class="cf-faq-hero" aria-labelledby="cf-faq-heading">
-				<div class="cf-faq-hero__border" aria-hidden="true"></div>
-				<div class="cf-faq-hero__center-glow" aria-hidden="true"></div>
-				<div class="cf-faq-hero__icons" aria-hidden="true">
-					<?php
-					$cf_faq_icon_uri  = get_template_directory_uri() . '/assets/images/dancing/';
-					$cf_faq_icon_imgs = array(
-						'faq-person-thought-bubble.png',
-						'faq-question-mark-circle.png',
-						'faq-stick-figure-leaning.png',
-						'faq-thinking-shadow.png',
-						'faq-mixed-reactions.png',
-					);
-					foreach ( $cf_faq_icon_imgs as $cf_faq_icon_i => $cf_faq_icon_file ) :
-						?>
-						<span
-							class="cf-faq-hero__icon cf-faq-hero__icon--<?php echo esc_attr( (string) ( $cf_faq_icon_i + 1 ) ); ?>"
-							style="--cf-faq-icon-img: url('<?php echo esc_url( $cf_faq_icon_uri . $cf_faq_icon_file ); ?>');"
-						></span>
-					<?php endforeach; ?>
-				</div>
-				<div class="cf-faq-hero__freq" aria-hidden="true"></div>
-				<div class="cf-faq-hero__content">
-					<p class="cf-faq-eyebrow"><?php esc_html_e( 'HELP CENTER', 'collective-finity' ); ?></p>
-					<h1 id="cf-faq-heading" class="cf-faq-hero__title"><?php esc_html_e( 'Frequently Asked Questions', 'collective-finity' ); ?></h1>
-					<p class="cf-faq-hero__lead">
-						<?php esc_html_e( 'Answers about Collective Finity — the project, how to use the site, and how the platform works. Still stuck? Leave a review or reach out through Contact.', 'collective-finity' ); ?>
-					</p>
-					<nav class="cf-faq-jump" aria-label="<?php esc_attr_e( 'FAQ sections', 'collective-finity' ); ?>">
-						<?php foreach ( $cf_faq_sections as $cf_jump_i => $cf_jump_section ) : ?>
-							<a class="cf-faq-jump__link" href="#cf-faq-section-<?php echo esc_attr( (string) $cf_jump_i ); ?>">
-								<?php echo esc_html( $cf_jump_section['title'] ); ?>
-							</a>
-						<?php endforeach; ?>
-						<a class="cf-faq-jump__link cf-faq-jump__link--accent" href="#cf-platform-reviews">
-							<?php esc_html_e( 'Platform Reviews', 'collective-finity' ); ?>
-						</a>
-					</nav>
-				</div>
-			</section>
-
-			<?php foreach ( $cf_faq_sections as $cf_section_i => $cf_section ) : ?>
-				<section
-					id="cf-faq-section-<?php echo esc_attr( (string) $cf_section_i ); ?>"
-					class="cf-faq-section"
-					aria-labelledby="cf-faq-section-title-<?php echo esc_attr( (string) $cf_section_i ); ?>"
-				>
-					<header class="cf-faq-section__head">
-						<p class="cf-faq-section__eyebrow"><?php echo esc_html( $cf_section['eyebrow'] ); ?></p>
-						<h2 id="cf-faq-section-title-<?php echo esc_attr( (string) $cf_section_i ); ?>" class="cf-faq-section__title">
-							<?php echo esc_html( $cf_section['title'] ); ?>
-						</h2>
-					</header>
-
-					<div
-						class="cf-faq-accordion"
-						data-cf-faq-accordion
-						role="list"
-						aria-label="<?php echo esc_attr( $cf_section['title'] ); ?>"
-					>
-						<?php foreach ( $cf_section['items'] as $cf_item_i => $cf_item ) : ?>
-							<?php
-							$cf_trigger_id = 'cf-faq-t-' . $cf_section_i . '-' . $cf_item_i;
-							$cf_panel_id   = 'cf-faq-p-' . $cf_section_i . '-' . $cf_item_i;
-							?>
-							<div class="cf-faq-accordion__item" role="listitem">
-								<button
-									type="button"
-									id="<?php echo esc_attr( $cf_trigger_id ); ?>"
-									class="cf-faq-accordion__trigger"
-									aria-expanded="false"
-									aria-controls="<?php echo esc_attr( $cf_panel_id ); ?>"
-								>
-									<span class="cf-faq-accordion__question"><?php echo esc_html( $cf_item['question'] ); ?></span>
-									<span class="cf-faq-accordion__chevron" aria-hidden="true">
-										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-									</span>
-								</button>
-								<div
-									id="<?php echo esc_attr( $cf_panel_id ); ?>"
-									class="cf-faq-accordion__panel"
-									role="region"
-									aria-labelledby="<?php echo esc_attr( $cf_trigger_id ); ?>"
-									hidden
-								>
-									<p><?php echo esc_html( $cf_item['answer'] ); ?></p>
-								</div>
-							</div>
-						<?php endforeach; ?>
-					</div>
-				</section>
+	<section class="cf-faq-hero" aria-labelledby="cf-faq-heading">
+		<div class="cf-faq-hero__border" aria-hidden="true"></div>
+		<div class="cf-faq-hero__center-glow" aria-hidden="true"></div>
+		<div class="cf-faq-hero__icons" aria-hidden="true">
+			<?php
+			$cf_faq_icon_uri  = get_template_directory_uri() . '/assets/images/dancing/';
+			$cf_faq_icon_imgs = array(
+				'faq-person-thought-bubble.png',
+				'faq-question-mark-circle.png',
+				'faq-stick-figure-leaning.png',
+				'faq-thinking-shadow.png',
+				'faq-mixed-reactions.png',
+			);
+			foreach ( $cf_faq_icon_imgs as $cf_faq_icon_i => $cf_faq_icon_file ) :
+				?>
+				<span
+					class="cf-faq-hero__icon cf-faq-hero__icon--<?php echo esc_attr( (string) ( $cf_faq_icon_i + 1 ) ); ?>"
+					style="--cf-faq-icon-img: url('<?php echo esc_url( $cf_faq_icon_uri . $cf_faq_icon_file ); ?>');"
+				></span>
 			<?php endforeach; ?>
+		</div>
+		<div class="cf-faq-hero__freq" aria-hidden="true"></div>
+		<div class="cf-faq-hero__content">
+			<p class="cf-faq-eyebrow"><?php esc_html_e( 'HELP CENTER', 'collective-finity' ); ?></p>
+			<h1 id="cf-faq-heading" class="cf-faq-hero__title"><?php esc_html_e( 'Frequently Asked Questions', 'collective-finity' ); ?></h1>
+			<p class="cf-faq-hero__lead">
+				<?php esc_html_e( 'Answers about Collective Finity — the project, how to use the site, and how the platform works. Still stuck? Leave a review or reach out through Contact.', 'collective-finity' ); ?>
+			</p>
+			<nav class="cf-faq-jump" aria-label="<?php esc_attr_e( 'FAQ sections', 'collective-finity' ); ?>">
+				<?php foreach ( $cf_faq_sections as $cf_jump_i => $cf_jump_section ) : ?>
+					<a class="cf-faq-jump__link" href="#cf-faq-section-<?php echo esc_attr( (string) $cf_jump_i ); ?>">
+						<?php echo esc_html( $cf_jump_section['title'] ); ?>
+					</a>
+				<?php endforeach; ?>
+				<a class="cf-faq-jump__link cf-faq-jump__link--accent" href="#cf-platform-reviews">
+					<?php esc_html_e( 'Platform Reviews', 'collective-finity' ); ?>
+				</a>
+			</nav>
+		</div>
+	</section>
 
-			<section id="cf-platform-reviews" class="cf-faq-reviews" aria-labelledby="cf-faq-reviews-heading">
-				<header class="cf-faq-section__head">
-					<p class="cf-faq-section__eyebrow"><?php esc_html_e( '04 / FEEDBACK', 'collective-finity' ); ?></p>
-					<h2 id="cf-faq-reviews-heading" class="cf-faq-section__title"><?php esc_html_e( 'Platform Reviews', 'collective-finity' ); ?></h2>
+			<div class="cf-faq-split">
+				<div class="cf-faq-split__col">
+					<?php collective_finity_render_faq_section_group( 0, $cf_faq_sections[0] ); ?>
+				</div>
+				<div class="cf-faq-split__col">
+					<?php collective_finity_render_faq_section_group( 1, $cf_faq_sections[1] ); ?>
+				</div>
+			</div>
+
+			<div class="cf-faq-page__inner">
+
+				<?php collective_finity_render_faq_section_group( 2, $cf_faq_sections[2] ); ?>
+
+				<section id="cf-platform-reviews" class="cf-faq-reviews" aria-labelledby="cf-faq-reviews-heading">
+					<header class="cf-faq-section__head">
+						<p class="cf-faq-section__eyebrow"><?php esc_html_e( 'FEEDBACK', 'collective-finity' ); ?></p>
+						<h2 id="cf-faq-reviews-heading" class="cf-faq-section__title"><?php esc_html_e( 'Platform Reviews', 'collective-finity' ); ?></h2>
 					<p class="cf-faq-reviews__sub">
 						<?php esc_html_e( 'Share what you think about Collective Finity — design, ease of use, features, audio, and more.', 'collective-finity' ); ?>
 					</p>
@@ -267,8 +226,8 @@ get_header();
 				</div>
 			</section>
 
-		</div>
-	</div>
+			</div>
+
 </main>
 
 <style>
@@ -277,19 +236,39 @@ get_header();
 		max-width: 100%;
 		min-width: 0;
 		box-sizing: border-box;
-	}
-
-	.cf-faq-page .cf-page-container.cf-faq {
-		max-width: min(820px, 100%);
-		margin: 0 auto;
-		min-width: 0;
-	}
-
-	.cf-faq__inner {
 		display: flex;
 		flex-direction: column;
 		gap: 48px;
+	}
+
+	.cf-faq-split {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 32px;
+		width: 100%;
 		min-width: 0;
+	}
+
+	@media (min-width: 860px) {
+		.cf-faq-split {
+			grid-template-columns: 1fr 1fr;
+			gap: 40px;
+		}
+	}
+
+	.cf-faq-split__col {
+		min-width: 0;
+	}
+
+	.cf-faq-page__inner {
+		display: flex;
+		flex-direction: column;
+		gap: 48px;
+		width: 100%;
+		max-width: min(900px, 100%);
+		margin: 0 auto;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.cf-faq-eyebrow,
@@ -1080,7 +1059,8 @@ get_header();
 	.cf-faq-page .cf-star.is-on { color: var(--cf-accent, #FFB700); }
 
 	@media (max-width: 767px) {
-		.cf-faq__inner {
+		.cf-faq-page.cf-page-shell,
+		.cf-faq-page__inner {
 			gap: 36px;
 		}
 

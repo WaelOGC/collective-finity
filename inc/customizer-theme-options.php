@@ -1039,6 +1039,109 @@ function collective_finity_customize_register_theme_options( $wp_customize ) {
 add_action( 'customize_register', 'collective_finity_customize_register_theme_options' );
 
 /**
+ * Register Donate page Lead Screen controls in the Customizer.
+ *
+ * @param WP_Customize_Manager $wp_customize Customizer manager.
+ */
+function collective_finity_customize_register_donate_leadscreen( $wp_customize ) {
+    $option_key = collective_finity_theme_options_key();
+    $defaults   = collective_finity_default_theme_options();
+
+    $wp_customize->add_section(
+        'cf_donate_leadscreen',
+        array(
+            'title'    => __( 'Donate Page — Lead Screen', 'collective-finity' ),
+            'priority' => 160,
+        )
+    );
+
+    for ( $i = 0; $i < 5; $i++ ) {
+        $setting_id = $option_key . '[donate_leadscreen_messages][' . $i . ']';
+        $wp_customize->add_setting(
+            $setting_id,
+            array(
+                'type'              => 'option',
+                'capability'        => 'edit_theme_options',
+                'default'           => $defaults['donate_leadscreen_messages'][ $i ] ?? '',
+                'sanitize_callback' => 'sanitize_text_field',
+                'transport'         => 'refresh',
+            )
+        );
+        $wp_customize->add_control(
+            'cf_leadscreen_msg_' . $i,
+            array(
+                'label'    => sprintf( __( 'Message %d', 'collective-finity' ), $i + 1 ),
+                'section'  => 'cf_donate_leadscreen',
+                'settings' => $setting_id,
+                'type'     => 'text',
+            )
+        );
+    }
+
+    $wp_customize->add_setting(
+        $option_key . '[donate_leadscreen_animation]',
+        array(
+            'type'              => 'option',
+            'capability'        => 'edit_theme_options',
+            'default'           => $defaults['donate_leadscreen_animation'],
+            'sanitize_callback' => function ( $value ) {
+                return in_array( $value, collective_finity_donate_leadscreen_animations(), true ) ? $value : 'scroll';
+            },
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'cf_leadscreen_animation',
+        array(
+            'label'    => __( 'Animation Type', 'collective-finity' ),
+            'section'  => 'cf_donate_leadscreen',
+            'settings' => $option_key . '[donate_leadscreen_animation]',
+            'type'     => 'select',
+            'choices'  => array(
+                'scroll'       => __( 'Scrolling Ticker', 'collective-finity' ),
+                'fade'         => __( 'Fade Cycle', 'collective-finity' ),
+                'typewriter'   => __( 'Typewriter', 'collective-finity' ),
+                'slide-up'     => __( 'Slide Up Carousel', 'collective-finity' ),
+                'glitch'       => __( 'Glitch Flicker', 'collective-finity' ),
+                'zoom-pulse'   => __( 'Zoom Pulse', 'collective-finity' ),
+                'flip'         => __( 'Flip Card', 'collective-finity' ),
+                'wave'         => __( 'Wave Bounce', 'collective-finity' ),
+                'neon-flicker' => __( 'Neon Sign Flicker', 'collective-finity' ),
+                'blur-focus'   => __( 'Blur Focus Reveal', 'collective-finity' ),
+            ),
+        )
+    );
+
+    $wp_customize->add_setting(
+        $option_key . '[donate_leadscreen_position]',
+        array(
+            'type'              => 'option',
+            'capability'        => 'edit_theme_options',
+            'default'           => $defaults['donate_leadscreen_position'],
+            'sanitize_callback' => function ( $value ) {
+                return in_array( $value, array( 'top', 'middle', 'bottom' ), true ) ? $value : 'middle';
+            },
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'cf_leadscreen_position',
+        array(
+            'label'    => __( 'Text Position', 'collective-finity' ),
+            'section'  => 'cf_donate_leadscreen',
+            'settings' => $option_key . '[donate_leadscreen_position]',
+            'type'     => 'select',
+            'choices'  => array(
+                'top'    => __( 'Top', 'collective-finity' ),
+                'middle' => __( 'Middle', 'collective-finity' ),
+                'bottom' => __( 'Bottom', 'collective-finity' ),
+            ),
+        )
+    );
+}
+add_action( 'customize_register', 'collective_finity_customize_register_donate_leadscreen' );
+
+/**
  * Enqueue Customizer preview script for live option updates.
  */
 function collective_finity_customize_preview_enqueue() {
