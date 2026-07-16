@@ -18,6 +18,7 @@ require_once get_template_directory() . '/inc/customizer-theme-parts.php';
 require_once get_template_directory() . '/inc/customizer-theme-options.php';
 require_once get_template_directory() . '/inc/legal-pages.php';
 require_once get_template_directory() . '/inc/blog.php';
+require_once get_template_directory() . '/inc/faq.php';
 
 /**
  * 1. BASIC THEME SUPPORT & MENUS
@@ -629,14 +630,15 @@ function collective_finity_get_footer_menu_sections() {
                 array( 'label' => __( 'Donate', 'collective-finity' ), 'url' => collective_finity_get_page_link( 'donate', '/donate/' ) ),
             ),
         ),
-        'community' => array(
-            'title' => __( 'Community', 'collective-finity' ),
-            'links' => array(
-                array( 'label' => __( 'About', 'collective-finity' ), 'url' => collective_finity_get_page_link( 'about', '/about/' ) ),
-                array( 'label' => __( 'Join Community', 'collective-finity' ), 'url' => collective_finity_get_page_link( 'join-community', '/join-community/' ) ),
-                array( 'label' => __( 'Contact', 'collective-finity' ), 'url' => collective_finity_get_page_link( array( 'contact', 'contact-us' ), '/contact/' ) ),
-            ),
-        ),
+		'community' => array(
+			'title' => __( 'Community', 'collective-finity' ),
+			'links' => array(
+				array( 'label' => __( 'About', 'collective-finity' ), 'url' => collective_finity_get_page_link( 'about', '/about/' ) ),
+				array( 'label' => __( 'FAQ', 'collective-finity' ), 'url' => collective_finity_get_page_link( 'faq', '/faq/' ) ),
+				array( 'label' => __( 'Join Community', 'collective-finity' ), 'url' => collective_finity_get_page_link( 'join-community', '/join-community/' ) ),
+				array( 'label' => __( 'Contact', 'collective-finity' ), 'url' => collective_finity_get_page_link( array( 'contact', 'contact-us' ), '/contact/' ) ),
+			),
+		),
         'legal' => array(
             'title' => __( 'Legal', 'collective-finity' ),
             'links' => collective_finity_get_published_legal_links_for_footer(),

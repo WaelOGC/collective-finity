@@ -111,8 +111,19 @@ $cf_categories = get_categories(
                         // Output the sequence twice so the translateX(-50%) loop is seamless.
                         for ( $cf_ticker_copy = 0; $cf_ticker_copy < 2; $cf_ticker_copy++ ) :
                             foreach ( $cf_ticker_items as $cf_ticker_item ) :
+                                $cf_ticker_words = preg_split( '/\s+/u', trim( (string) $cf_ticker_item['title'] ) );
+                                if ( ! is_array( $cf_ticker_words ) || empty( $cf_ticker_words ) ) {
+                                    $cf_ticker_words = array( (string) $cf_ticker_item['title'] );
+                                }
                                 ?>
-                                <a class="cf-bh-ticker-item" href="<?php echo esc_url( get_permalink( $cf_ticker_item['id'] ) ); ?>"<?php echo 1 === $cf_ticker_copy ? ' aria-hidden="true" tabindex="-1"' : ''; ?>><?php echo esc_html( $cf_ticker_item['title'] ); ?></a>
+                                <a class="cf-bh-ticker-item" href="<?php echo esc_url( get_permalink( $cf_ticker_item['id'] ) ); ?>"<?php echo 1 === $cf_ticker_copy ? ' aria-hidden="true" tabindex="-1"' : ''; ?>><?php
+                                foreach ( $cf_ticker_words as $cf_ticker_word_i => $cf_ticker_word ) :
+                                    if ( $cf_ticker_word_i > 0 ) {
+                                        echo ' ';
+                                    }
+                                    ?><span class="cf-bh-ticker-word" style="--cf-bh-word-delay: <?php echo esc_attr( (string) ( $cf_ticker_word_i * 0.18 ) ); ?>s"><?php echo esc_html( $cf_ticker_word ); ?></span><?php
+                                endforeach;
+                                ?></a>
                                 <span class="cf-bh-ticker-sep" aria-hidden="true">&bull;</span>
                                 <?php
                             endforeach;
@@ -223,12 +234,35 @@ $cf_categories = get_categories(
     .cf-bh-ticker-divider { flex-shrink: 0; width: 1px; height: 16px; background: var(--cf-accent); opacity: 0.5; }
     .cf-bh-ticker-viewport { flex: 1 1 auto; min-width: 0; overflow: hidden; }
     .cf-bh-ticker-track { display: inline-flex; align-items: center; white-space: nowrap; will-change: transform; animation: cf-bh-ticker-scroll 18s linear infinite; }
-    .cf-bh-ticker-item { font-size: 12.5px; color: var(--cf-accent); padding: 0 6px; text-decoration: none; }
+    .cf-bh-ticker-item { font-size: 12.5px; color: #fff; padding: 0 6px; text-decoration: none; }
     .cf-bh-ticker-item:hover { text-decoration: underline; }
+    .cf-bh-ticker-word {
+        display: inline-block;
+        color: #fff;
+        animation: cfBhTickerWordFlicker 3.2s ease-in-out infinite;
+        animation-delay: var(--cf-bh-word-delay, 0s);
+    }
+    @keyframes cfBhTickerWordFlicker {
+        0%, 12%, 100% {
+            color: #fff;
+            text-shadow: none;
+        }
+        4%, 8% {
+            color: #FFD060;
+            text-shadow: 0 0 8px rgba(255, 183, 0, 0.55), 0 0 16px rgba(255, 183, 0, 0.22);
+        }
+    }
     .cf-bh-ticker-sep { color: var(--cf-accent); opacity: 0.7; }
     .cf-bh-ticker-arrow { flex-shrink: 0; font-size: 15px; line-height: 1; color: var(--cf-accent); }
     @keyframes cf-bh-ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-    @media (prefers-reduced-motion: reduce) { .cf-bh-ticker-track { animation: none; } }
+    @media (prefers-reduced-motion: reduce) {
+        .cf-bh-ticker-track { animation: none; }
+        .cf-bh-ticker-word {
+            animation: none;
+            color: #fff;
+            text-shadow: none;
+        }
+    }
 
     /* featured card */
     .cf-bh-featured { display: flex; flex-direction: row; text-decoration: none; border: 1px solid var(--cf-border); background: var(--cf-bg-card); border-radius: 14px; overflow: hidden; color: #fff; transition: border-color 0.2s ease; min-width: 0; max-width: 100%; }

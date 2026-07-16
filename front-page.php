@@ -35,15 +35,53 @@ $cf_featured_albums = new WP_Query(
     )
 );
 
-$cf_recent_posts = new WP_Query(
-    array(
-        'post_type'           => 'post',
-        'posts_per_page'      => 8,
-        'post_status'         => 'publish',
-        'ignore_sticky_posts' => true,
-        'no_found_rows'       => true,
+$cf_blog_available = max( 0, (int) $cf_article_count );
+$cf_blog_limit     = min( 8, $cf_blog_available );
+
+$cf_recent_posts = ( $cf_blog_limit > 0 )
+    ? new WP_Query(
+        array(
+            'post_type'           => 'post',
+            'posts_per_page'      => $cf_blog_limit,
+            'post_status'         => 'publish',
+            'ignore_sticky_posts' => true,
+            'no_found_rows'       => true,
+        )
     )
-);
+    : new WP_Query( array( 'post__in' => array( 0 ) ) );
+
+/* Preload published tracks + articles for hero live search (homepage only). */
+$cf_hero_search_items = array();
+if ( $cf_track_count > 0 || $cf_article_count > 0 ) {
+    $cf_hero_search_query = new WP_Query(
+        array(
+            'post_type'              => array( 'post', 'tracks' ),
+            'posts_per_page'         => 200,
+            'post_status'            => 'publish',
+            'ignore_sticky_posts'    => true,
+            'no_found_rows'          => true,
+            'update_post_meta_cache' => false,
+            'update_post_term_cache' => false,
+            'orderby'                => 'date',
+            'order'                  => 'DESC',
+        )
+    );
+    while ( $cf_hero_search_query->have_posts() ) {
+        $cf_hero_search_query->the_post();
+        $cf_sid   = get_the_ID();
+        $cf_stype = ( 'tracks' === get_post_type( $cf_sid ) ) ? 'track' : 'article';
+        $cf_excerpt = wp_trim_words( get_the_excerpt( $cf_sid ), 14, '&hellip;' );
+        $cf_content = wp_strip_all_tags( get_post_field( 'post_content', $cf_sid ) );
+        $cf_hero_search_items[] = array(
+            'type'    => $cf_stype,
+            'title'   => get_the_title( $cf_sid ),
+            'excerpt' => $cf_excerpt,
+            'url'     => get_permalink( $cf_sid ),
+            'search'  => wp_trim_words( $cf_content, 40, '' ),
+        );
+    }
+    wp_reset_postdata();
+}
 
 $cf_blog_url = get_option( 'page_for_posts' ) ? get_permalink( get_option( 'page_for_posts' ) ) : '';
 
@@ -108,13 +146,43 @@ function collective_finity_home_album_cover_style( $album_id ) {
 
     <!-- HERO -->
     <section class="cf-hero">
-        <div class="cf-hero-orb cf-hero-orb--1" aria-hidden="true"></div>
-        <div class="cf-hero-orb cf-hero-orb--2" aria-hidden="true"></div>
-        <div class="cf-hero-dots cf-home-dotbg" aria-hidden="true"></div>
+        <div class="cf-hero-center-glow" aria-hidden="true"></div>
+        <div class="cf-hero-freq" aria-hidden="true"></div>
+        <div class="cf-hero-eq" aria-hidden="true">
+            <?php
+            $cf_hero_eq_bars = array( 28, 52, 38, 72, 44, 86, 34, 64, 48, 90, 40, 58, 76, 32, 68, 46, 82, 36, 60, 74, 42, 88, 30, 56, 70, 50, 84, 38, 66, 44, 78, 54 );
+            foreach ( $cf_hero_eq_bars as $cf_eq_i => $cf_eq_h ) :
+                $cf_eq_dur   = 1.1 + ( ( $cf_eq_i % 7 ) * 0.18 );
+                $cf_eq_delay = ( $cf_eq_i % 11 ) * 0.12;
+                ?>
+                <span
+                    class="cf-hero-eq-bar"
+                    style="--cf-eq-h: <?php echo esc_attr( (string) $cf_eq_h ); ?>%; --cf-eq-dur: <?php echo esc_attr( (string) $cf_eq_dur ); ?>s; --cf-eq-delay: -<?php echo esc_attr( (string) $cf_eq_delay ); ?>s;"
+                ></span>
+            <?php endforeach; ?>
+        </div>
         <div class="cf-hero-inner">
-            <span class="cf-hero-badge">&#10022; <?php esc_html_e( 'Music Beyond Imagination', 'collective-finity' ); ?></span>
-            <h1 class="cf-hero-title"><?php esc_html_e( 'Where Sound Becomes ', 'collective-finity' ); ?><span class="cf-hero-cinema"><?php esc_html_e( 'Cinema', 'collective-finity' ); ?></span></h1>
-            <p class="cf-hero-tagline"><?php esc_html_e( 'Collective Finity is a cinematic music universe pairing human songwriting with AI-assisted production — new releases, deep-dive articles, and a growing catalog built for late-night listening.', 'collective-finity' ); ?></p>
+            <span class="cf-hero-badge">&#10022; <?php esc_html_e( 'FF Collective', 'collective-finity' ); ?></span>
+            <h1 class="cf-hero-title"><?php esc_html_e( 'Experience Music Beyond Imagination', 'collective-finity' ); ?></h1>
+            <p class="cf-hero-tagline"><?php esc_html_e( 'A collective universe where artists, producers, and listeners converge in harmony.', 'collective-finity' ); ?></p>
+            <div class="cf-hero-search" data-cf-hero-search>
+                <label class="screen-reader-text" for="cf-hero-search-input"><?php esc_html_e( 'Search tracks and articles', 'collective-finity' ); ?></label>
+                <div class="cf-hero-search-field">
+                    <span class="cf-hero-search-icon" aria-hidden="true"><?php echo collective_finity_icon( 'search', 18 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+                    <input
+                        type="search"
+                        id="cf-hero-search-input"
+                        class="cf-hero-search-input"
+                        placeholder="<?php esc_attr_e( 'Search tracks & articles…', 'collective-finity' ); ?>"
+                        autocomplete="off"
+                        aria-autocomplete="list"
+                        aria-controls="cf-hero-search-results"
+                        aria-expanded="false"
+                    >
+                </div>
+                <div id="cf-hero-search-results" class="cf-hero-search-results" role="listbox" hidden></div>
+            </div>
+            <script type="application/json" id="cf-hero-search-data"><?php echo wp_json_encode( $cf_hero_search_items, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></script>
             <div class="cf-hero-actions">
                 <a class="cf-btn-primary-lg cf-home-btn" href="<?php echo esc_url( $cf_tracks_url ); ?>"><?php esc_html_e( 'Start Listening', 'collective-finity' ); ?></a>
                 <a class="cf-btn-ghost-lg cf-home-btn" href="<?php echo esc_url( $cf_albums_url ); ?>"><?php esc_html_e( 'Explore Albums', 'collective-finity' ); ?></a>
@@ -216,10 +284,9 @@ function collective_finity_home_album_cover_style( $album_id ) {
             wp_reset_postdata();
             $cf_blog_cards_html = ob_get_clean();
             ?>
-            <div class="cf-scroll-row-wrap cf-scroll-row-wrap--blog">
+            <div class="cf-scroll-row-wrap cf-scroll-row-wrap--blog cf-scroll-row-wrap--static">
                 <div class="cf-scroll-row cf-scroll-row--blog">
                     <div class="cf-scroll-track">
-                        <?php echo $cf_blog_cards_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         <?php echo $cf_blog_cards_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     </div>
                 </div>
@@ -259,18 +326,21 @@ function collective_finity_home_album_cover_style( $album_id ) {
     <section class="cf-home-reviews" aria-labelledby="cf-home-reviews-heading">
         <div class="cf-home-reviews-head">
             <h2 id="cf-home-reviews-heading" class="cf-section-title"><?php esc_html_e( 'Reviews', 'collective-finity' ); ?></h2>
-            <div class="cf-home-reviews-tabs" role="tablist" aria-label="<?php esc_attr_e( 'Filter reviews', 'collective-finity' ); ?>">
-                <button type="button" class="cf-home-reviews-tab is-active" role="tab" aria-selected="true" data-cf-review-filter="all"><?php esc_html_e( 'All', 'collective-finity' ); ?></button>
-                <button type="button" class="cf-home-reviews-tab" role="tab" aria-selected="false" data-cf-review-filter="album"><?php esc_html_e( 'Albums', 'collective-finity' ); ?></button>
-                <button type="button" class="cf-home-reviews-tab" role="tab" aria-selected="false" data-cf-review-filter="article"><?php esc_html_e( 'Articles', 'collective-finity' ); ?></button>
-            </div>
         </div>
 
         <?php
         $cf_review_cards = array();
         foreach ( $cf_home_reviews as $cf_review_comment ) {
             $cf_review_post = get_post( (int) $cf_review_comment->comment_post_ID );
-            if ( ! $cf_review_post || ! in_array( $cf_review_post->post_type, array( 'post', 'albums' ), true ) ) {
+            if ( ! $cf_review_post ) {
+                continue;
+            }
+
+            $cf_is_article  = ( 'post' === $cf_review_post->post_type );
+            $cf_is_platform = ( 'page' === $cf_review_post->post_type && function_exists( 'collective_finity_is_faq_page' ) && collective_finity_is_faq_page( $cf_review_post ) );
+
+            // Article reviews + FAQ platform reviews only.
+            if ( ! $cf_is_article && ! $cf_is_platform ) {
                 continue;
             }
 
@@ -279,34 +349,39 @@ function collective_finity_home_album_cover_style( $album_id ) {
                 continue;
             }
 
-            $cf_review_type = ( 'albums' === $cf_review_post->post_type ) ? 'album' : 'article';
             $cf_review_cards[] = array(
-                'type'    => $cf_review_type,
                 'rating'  => $cf_review_rating,
                 'excerpt' => wp_trim_words( wp_strip_all_tags( $cf_review_comment->comment_content ), 22, '&hellip;' ),
                 'author'  => $cf_review_comment->comment_author,
                 'url'     => get_comment_link( $cf_review_comment ),
+                'source'  => $cf_is_platform ? 'platform' : 'article',
+                'comment' => $cf_review_comment,
             );
         }
         ?>
 
         <?php if ( ! empty( $cf_review_cards ) ) : ?>
-            <div class="cf-home-reviews-grid" data-cf-reviews-grid>
+            <div class="cf-home-reviews-grid">
                 <?php foreach ( $cf_review_cards as $cf_card ) : ?>
-                    <a class="cf-home-review-card" href="<?php echo esc_url( $cf_card['url'] ); ?>" data-cf-review-type="<?php echo esc_attr( $cf_card['type'] ); ?>">
-                        <span class="cf-home-review-tag cf-home-review-tag--<?php echo esc_attr( $cf_card['type'] ); ?>">
-                            <?php echo esc_html( 'album' === $cf_card['type'] ? __( 'ALBUM', 'collective-finity' ) : __( 'ARTICLE', 'collective-finity' ) ); ?>
-                        </span>
+                    <a class="cf-home-review-card" href="<?php echo esc_url( $cf_card['url'] ); ?>">
+                        <?php if ( 'platform' === $cf_card['source'] ) : ?>
+                            <span class="cf-home-review-tag cf-home-review-tag--platform"><?php esc_html_e( 'PLATFORM', 'collective-finity' ); ?></span>
+                        <?php else : ?>
+                            <span class="cf-home-review-tag cf-home-review-tag--article"><?php esc_html_e( 'ARTICLE', 'collective-finity' ); ?></span>
+                        <?php endif; ?>
                         <div class="cf-home-review-stars">
                             <?php echo collective_finity_stars_markup( $cf_card['rating'], 14 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         </div>
                         <p class="cf-home-review-excerpt"><?php echo esc_html( $cf_card['excerpt'] ); ?></p>
-                        <span class="cf-home-review-author"><?php echo esc_html( $cf_card['author'] ); ?></span>
+                        <div class="cf-home-review-author">
+                            <?php echo collective_finity_review_avatar( $cf_card['comment'], 36 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                            <span class="cf-home-review-author__name"><?php echo esc_html( $cf_card['author'] ); ?></span>
+                        </div>
                     </a>
                 <?php endforeach; ?>
             </div>
         <?php else : ?>
-            <div class="cf-home-empty"><?php esc_html_e( 'No reviews yet — be the first to share your thoughts on an article.', 'collective-finity' ); ?></div>
+            <div class="cf-home-empty"><?php esc_html_e( 'No reviews yet — be the first to share your thoughts on an article or the platform.', 'collective-finity' ); ?></div>
         <?php endif; ?>
     </section>
 
@@ -327,7 +402,16 @@ function collective_finity_home_album_cover_style( $album_id ) {
 
 <style>
     /* ---- Hero motion & depth ---- */
-    .cf-home-redesign .cf-hero-glow { display: none; }
+    .cf-home-redesign .cf-hero {
+        background: #0b0b0b;
+        border-color: rgba(30, 30, 30, 0.9);
+    }
+
+    .cf-home-redesign .cf-hero-glow,
+    .cf-home-redesign .cf-hero-dots,
+    .cf-home-redesign .cf-hero-orb {
+        display: none;
+    }
 
     .cf-home-redesign .cf-hero-inner {
         display: flex;
@@ -336,6 +420,8 @@ function collective_finity_home_album_cover_style( $album_id ) {
         justify-content: center;
         text-align: center;
         width: 100%;
+        position: relative;
+        z-index: 1;
     }
 
     .cf-home-redesign .cf-hero-title,
@@ -352,41 +438,82 @@ function collective_finity_home_album_cover_style( $album_id ) {
         margin-inline: auto;
     }
 
-    .cf-home-redesign .cf-hero-orb {
+    .cf-home-redesign .cf-hero-center-glow {
         position: absolute;
-        border-radius: 50%;
+        left: 50%;
+        top: 48%;
+        width: min(72%, 560px);
+        aspect-ratio: 1;
+        transform: translate(-50%, -50%);
         pointer-events: none;
-        filter: blur(72px);
-        opacity: 0.55;
         z-index: 0;
+        border-radius: 50%;
+        background: radial-gradient(
+            circle,
+            rgba(255, 183, 0, 0.16) 0%,
+            rgba(255, 183, 0, 0.06) 38%,
+            transparent 70%
+        );
+        animation: cfHeroCenterGlow 8.2s ease-in-out infinite;
     }
 
-    .cf-home-redesign .cf-hero-orb--1 {
-        width: 420px;
-        height: 420px;
-        left: 8%;
-        top: 12%;
-        background: radial-gradient(circle, rgba(255, 183, 0, 0.42) 0%, rgba(255, 140, 0, 0.18) 42%, transparent 72%);
-        animation: cfHeroOrbFloat1 10s ease-in-out infinite;
+    @keyframes cfHeroCenterGlow {
+        0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.88); }
+        50% { opacity: 0.75; transform: translate(-50%, -50%) scale(1.06); }
     }
 
-    .cf-home-redesign .cf-hero-orb--2 {
-        width: 480px;
-        height: 480px;
-        right: 6%;
-        bottom: 4%;
-        background: radial-gradient(circle, rgba(255, 160, 40, 0.36) 0%, rgba(255, 100, 0, 0.14) 45%, transparent 70%);
-        animation: cfHeroOrbFloat2 11s ease-in-out infinite;
+    .cf-home-redesign .cf-hero-freq {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background-image: repeating-linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent 9px,
+            rgba(255, 183, 0, 0.14) 9px,
+            rgba(255, 183, 0, 0.14) 10px
+        );
+        -webkit-mask-image: radial-gradient(ellipse 62% 52% at 50% 58%, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.5) 34%, transparent 74%);
+        mask-image: radial-gradient(ellipse 62% 52% at 50% 58%, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.5) 34%, transparent 74%);
+        opacity: 0.85;
     }
 
-    @keyframes cfHeroOrbFloat1 {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        50% { transform: translate(28px, -22px) scale(1.08); }
+    .cf-home-redesign .cf-hero-eq {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 78px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 3px;
+        padding: 0 4%;
+        pointer-events: none;
+        z-index: 0;
+        -webkit-mask-image: linear-gradient(to top, #000 18%, transparent 100%);
+        mask-image: linear-gradient(to top, #000 18%, transparent 100%);
     }
 
-    @keyframes cfHeroOrbFloat2 {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        50% { transform: translate(-24px, 18px) scale(1.06); }
+    .cf-home-redesign .cf-hero-eq-bar {
+        display: block;
+        flex: 1 1 0;
+        max-width: 8px;
+        min-width: 2px;
+        height: var(--cf-eq-h, 40%);
+        border-radius: 1px 1px 0 0;
+        background: var(--cf-accent, #ffb700);
+        opacity: 0.28;
+        transform-origin: bottom center;
+        animation: cfHeroEqPulse var(--cf-eq-dur, 1.6s) ease-in-out infinite;
+        animation-delay: var(--cf-eq-delay, 0s);
+    }
+
+    @keyframes cfHeroEqPulse {
+        0%, 100% { transform: scaleY(0.35); opacity: 0.16; }
+        35% { transform: scaleY(1); opacity: 0.34; }
+        65% { transform: scaleY(0.55); opacity: 0.22; }
     }
 
     .cf-home-redesign .cf-hero-badge {
@@ -398,20 +525,148 @@ function collective_finity_home_album_cover_style( $album_id ) {
         50% { box-shadow: 0 0 0 10px rgba(255, 183, 0, 0); }
     }
 
-    .cf-home-redesign .cf-hero-cinema {
-        display: inline-block;
-        background: linear-gradient(90deg, #ffb700 0%, #fff4cc 35%, #ff8c00 65%, #ffb700 100%);
-        background-size: 200% auto;
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-        -webkit-text-fill-color: transparent;
-        animation: cfHeroCinemaShimmer 4s linear infinite;
+    /* ---- Hero live search ---- */
+    .cf-home-redesign .cf-hero-search {
+        position: relative;
+        width: min(100%, 520px);
+        z-index: 2;
+        animation: cfFadeUp 0.6s ease both;
+        animation-delay: 0.2s;
     }
 
-    @keyframes cfHeroCinemaShimmer {
-        0% { background-position: 0% center; }
-        100% { background-position: 200% center; }
+    .cf-home-redesign .cf-hero-search-field {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .cf-home-redesign .cf-hero-search-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.4);
+        display: flex;
+        pointer-events: none;
+    }
+
+    .cf-home-redesign .cf-hero-search-input {
+        width: 100%;
+        padding: 14px 18px 14px 46px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.04);
+        color: #fff;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .cf-home-redesign .cf-hero-search-input::placeholder {
+        color: rgba(255, 255, 255, 0.38);
+    }
+
+    .cf-home-redesign .cf-hero-search-input:focus {
+        border-color: rgba(255, 183, 0, 0.55);
+        background: rgba(255, 183, 0, 0.06);
+        box-shadow: 0 0 24px rgba(255, 183, 0, 0.14);
+    }
+
+    .cf-home-redesign .cf-hero-search-results {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 8px);
+        max-height: 320px;
+        overflow-y: auto;
+        margin: 0;
+        padding: 8px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 183, 0, 0.22);
+        background: rgba(14, 14, 14, 0.96);
+        box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.7);
+        text-align: left;
+        z-index: 5;
+    }
+
+    .cf-home-redesign .cf-hero-search-results[hidden] {
+        display: none;
+    }
+
+    .cf-home-redesign .cf-hero-search-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #fff;
+        transition: background 0.15s ease;
+    }
+
+    .cf-home-redesign .cf-hero-search-item:hover,
+    .cf-home-redesign .cf-hero-search-item:focus-visible,
+    .cf-home-redesign .cf-hero-search-item.is-active {
+        background: rgba(255, 183, 0, 0.1);
+        outline: none;
+    }
+
+    .cf-home-redesign .cf-hero-search-type {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 64px;
+        padding: 4px 8px;
+        margin-top: 2px;
+        border-radius: 999px;
+        font-family: var(--cf-mono, 'Space Mono', monospace);
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .cf-home-redesign .cf-hero-search-type--track {
+        background: rgba(255, 183, 0, 0.12);
+        color: #ffb700;
+        border: 1px solid rgba(255, 183, 0, 0.28);
+    }
+
+    .cf-home-redesign .cf-hero-search-type--article {
+        background: rgba(120, 180, 255, 0.12);
+        color: #8ec5ff;
+        border: 1px solid rgba(120, 180, 255, 0.28);
+    }
+
+    .cf-home-redesign .cf-hero-search-body {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .cf-home-redesign .cf-hero-search-title {
+        font-size: 13.5px;
+        font-weight: 600;
+        line-height: 1.35;
+        margin: 0 0 4px;
+    }
+
+    .cf-home-redesign .cf-hero-search-excerpt {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.45;
+        color: var(--cf-text-3, #888);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .cf-home-redesign .cf-hero-search-empty {
+        padding: 16px 12px;
+        font-size: 13px;
+        color: var(--cf-text-3, #888);
+        text-align: center;
     }
 
     .cf-home-redesign .cf-home-btn {
@@ -447,8 +702,15 @@ function collective_finity_home_album_cover_style( $album_id ) {
         animation: cfScrollAlbums 30s linear infinite;
     }
 
-    .cf-home-redesign .cf-scroll-row--blog .cf-scroll-track {
-        animation: cfScrollBlog 34s linear infinite;
+    .cf-home-redesign .cf-scroll-row-wrap--static {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+
+    .cf-home-redesign .cf-scroll-row-wrap--static .cf-scroll-track {
+        animation: none !important;
+        width: auto;
     }
 
     .cf-home-redesign .cf-scroll-row:hover .cf-scroll-track {
@@ -458,11 +720,6 @@ function collective_finity_home_album_cover_style( $album_id ) {
     @keyframes cfScrollAlbums {
         from { transform: translateX(0); }
         to { transform: translateX(-50%); }
-    }
-
-    @keyframes cfScrollBlog {
-        from { transform: translateX(-50%); }
-        to { transform: translateX(0); }
     }
 
     .cf-home-redesign .cf-album-tile.cf-home-scroll-card,
@@ -548,36 +805,6 @@ function collective_finity_home_album_cover_style( $album_id ) {
         margin-bottom: 20px;
     }
 
-    .cf-home-redesign .cf-home-reviews-tabs {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .cf-home-redesign .cf-home-reviews-tab {
-        padding: 8px 16px;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 183, 0, 0.35);
-        background: transparent;
-        color: var(--cf-text-2, #b3b3b3);
-        font-size: 12.5px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-    }
-
-    .cf-home-redesign .cf-home-reviews-tab:hover,
-    .cf-home-redesign .cf-home-reviews-tab:focus-visible {
-        color: #fff;
-        border-color: rgba(255, 183, 0, 0.55);
-    }
-
-    .cf-home-redesign .cf-home-reviews-tab.is-active {
-        background: var(--cf-accent, #ffb700);
-        border-color: var(--cf-accent, #ffb700);
-        color: #0d0d0d;
-    }
-
     .cf-home-redesign .cf-home-reviews-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -604,10 +831,6 @@ function collective_finity_home_album_cover_style( $album_id ) {
         box-shadow: 0 14px 28px -14px rgba(255, 183, 0, 0.2);
     }
 
-    .cf-home-redesign .cf-home-review-card.is-hidden {
-        display: none;
-    }
-
     .cf-home-redesign .cf-home-review-tag {
         align-self: flex-start;
         padding: 4px 10px;
@@ -618,16 +841,16 @@ function collective_finity_home_album_cover_style( $album_id ) {
         letter-spacing: 0.06em;
     }
 
-    .cf-home-redesign .cf-home-review-tag--album {
-        background: rgba(120, 180, 255, 0.14);
-        color: #8ec5ff;
-        border: 1px solid rgba(120, 180, 255, 0.28);
-    }
-
     .cf-home-redesign .cf-home-review-tag--article {
         background: rgba(255, 183, 0, 0.12);
         color: #ffb700;
         border: 1px solid rgba(255, 183, 0, 0.28);
+    }
+
+    .cf-home-redesign .cf-home-review-tag--platform {
+        background: rgba(255, 255, 255, 0.06);
+        color: #e4e4e4;
+        border: 1px solid rgba(255, 255, 255, 0.14);
     }
 
     .cf-home-redesign .cf-home-review-excerpt {
@@ -639,9 +862,44 @@ function collective_finity_home_album_cover_style( $album_id ) {
     }
 
     .cf-home-redesign .cf-home-review-author {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 2px;
+    }
+
+    .cf-home-redesign .cf-home-review-author .cf-review-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .cf-home-redesign .cf-home-review-author .cf-review-avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .cf-home-redesign .cf-home-review-author .cf-review-avatar--initial {
+        background: linear-gradient(135deg, #FFB700, #8a6200);
+        color: #0D0D0D;
+        font-family: var(--cf-mono, 'Space Mono', monospace);
+        font-weight: 700;
+        font-size: 14px;
+    }
+
+    .cf-home-redesign .cf-home-review-author__name {
         font-size: 12px;
         font-weight: 600;
         color: #fff;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .cf-home-redesign .cf-home-review-stars .cf-star {
@@ -689,18 +947,17 @@ function collective_finity_home_album_cover_style( $album_id ) {
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .cf-home-redesign .cf-hero-orb,
+        .cf-home-redesign .cf-hero-center-glow,
+        .cf-home-redesign .cf-hero-eq-bar,
         .cf-home-redesign .cf-hero-badge,
-        .cf-home-redesign .cf-hero-cinema,
+        .cf-home-redesign .cf-hero-search,
         .cf-home-redesign .cf-scroll-row-wrap .cf-scroll-track,
         .cf-home-redesign .cf-cta--animated {
             animation: none !important;
         }
 
-        .cf-home-redesign .cf-hero-cinema {
-            background: none;
-            -webkit-text-fill-color: var(--cf-accent, #ffb700);
-            color: var(--cf-accent, #ffb700);
+        .cf-home-redesign .cf-hero-search-item {
+            transition: none;
         }
 
         .cf-home-redesign .cf-scroll-row-wrap {
@@ -717,34 +974,166 @@ function collective_finity_home_album_cover_style( $album_id ) {
             transform: none;
         }
     }
+
+    body.cf-glow-disabled .cf-home-redesign .cf-hero-center-glow,
+    body.cf-glow-disabled .cf-home-redesign .cf-hero-freq,
+    body.cf-glow-disabled .cf-home-redesign .cf-hero-eq {
+        display: none !important;
+    }
 </style>
 
 <script>
 (function () {
-    var tabs = document.querySelectorAll('[data-cf-review-filter]');
-    var grid = document.querySelector('[data-cf-reviews-grid]');
-    if (!tabs.length || !grid) {
+    var root = document.querySelector('[data-cf-hero-search]');
+    var input = document.getElementById('cf-hero-search-input');
+    var results = document.getElementById('cf-hero-search-results');
+    var dataEl = document.getElementById('cf-hero-search-data');
+    if (!root || !input || !results || !dataEl) {
         return;
     }
 
-    var cards = grid.querySelectorAll('[data-cf-review-type]');
+    var items = [];
+    try {
+        items = JSON.parse(dataEl.textContent || '[]');
+    } catch (e) {
+        items = [];
+    }
+    if (!Array.isArray(items)) {
+        items = [];
+    }
 
-    tabs.forEach(function (tab) {
-        tab.addEventListener('click', function () {
-            var filter = tab.getAttribute('data-cf-review-filter');
+    var labels = {
+        track: <?php echo wp_json_encode( __( 'Track', 'collective-finity' ) ); ?>,
+        article: <?php echo wp_json_encode( __( 'Article', 'collective-finity' ) ); ?>,
+        empty: <?php echo wp_json_encode( __( 'No results found', 'collective-finity' ) ); ?>
+    };
 
-            tabs.forEach(function (btn) {
-                var active = btn === tab;
-                btn.classList.toggle('is-active', active);
-                btn.setAttribute('aria-selected', active ? 'true' : 'false');
-            });
+    var activeIndex = -1;
+    var debounceTimer = null;
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-            cards.forEach(function (card) {
-                var type = card.getAttribute('data-cf-review-type');
-                var show = filter === 'all' || type === filter;
-                card.classList.toggle('is-hidden', !show);
-            });
+    function normalize(str) {
+        return String(str || '').toLowerCase();
+    }
+
+    function hideResults() {
+        results.hidden = true;
+        results.innerHTML = '';
+        input.setAttribute('aria-expanded', 'false');
+        activeIndex = -1;
+    }
+
+    function render(matches, query) {
+        if (!query) {
+            hideResults();
+            return;
+        }
+
+        results.innerHTML = '';
+        if (!matches.length) {
+            var empty = document.createElement('div');
+            empty.className = 'cf-hero-search-empty';
+            empty.textContent = labels.empty;
+            results.appendChild(empty);
+            results.hidden = false;
+            input.setAttribute('aria-expanded', 'true');
+            activeIndex = -1;
+            return;
+        }
+
+        matches.slice(0, 8).forEach(function (item, index) {
+            var link = document.createElement('a');
+            link.href = item.url;
+            link.className = 'cf-hero-search-item';
+            link.setAttribute('role', 'option');
+            link.setAttribute('data-index', String(index));
+
+            var type = document.createElement('span');
+            type.className = 'cf-hero-search-type cf-hero-search-type--' + (item.type === 'track' ? 'track' : 'article');
+            type.textContent = item.type === 'track' ? labels.track : labels.article;
+
+            var body = document.createElement('div');
+            body.className = 'cf-hero-search-body';
+
+            var title = document.createElement('div');
+            title.className = 'cf-hero-search-title';
+            title.textContent = item.title || '';
+
+            var excerpt = document.createElement('p');
+            excerpt.className = 'cf-hero-search-excerpt';
+            excerpt.textContent = item.excerpt || '';
+
+            body.appendChild(title);
+            body.appendChild(excerpt);
+            link.appendChild(type);
+            link.appendChild(body);
+            results.appendChild(link);
         });
+
+        results.hidden = false;
+        input.setAttribute('aria-expanded', 'true');
+        activeIndex = -1;
+    }
+
+    function search(query) {
+        var q = normalize(query).trim();
+        if (!q) {
+            hideResults();
+            return;
+        }
+
+        var matches = items.filter(function (item) {
+            var hay = normalize(item.title) + ' ' + normalize(item.excerpt) + ' ' + normalize(item.search);
+            return hay.indexOf(q) !== -1;
+        });
+        render(matches, q);
+    }
+
+    function setActive(next) {
+        var options = results.querySelectorAll('.cf-hero-search-item');
+        if (!options.length) {
+            return;
+        }
+        if (activeIndex >= 0 && options[activeIndex]) {
+            options[activeIndex].classList.remove('is-active');
+        }
+        activeIndex = (next + options.length) % options.length;
+        options[activeIndex].classList.add('is-active');
+        options[activeIndex].scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+    }
+
+    input.addEventListener('input', function () {
+        var value = input.value;
+        window.clearTimeout(debounceTimer);
+        debounceTimer = window.setTimeout(function () {
+            search(value);
+        }, reduceMotion ? 0 : 120);
+    });
+
+    input.addEventListener('keydown', function (e) {
+        if (results.hidden) {
+            return;
+        }
+        var options = results.querySelectorAll('.cf-hero-search-item');
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setActive(activeIndex + 1);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setActive(activeIndex - 1);
+        } else if (e.key === 'Enter' && activeIndex >= 0 && options[activeIndex]) {
+            e.preventDefault();
+            window.location.href = options[activeIndex].href;
+        } else if (e.key === 'Escape') {
+            hideResults();
+            input.blur();
+        }
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!root.contains(e.target)) {
+            hideResults();
+        }
     });
 })();
 </script>
