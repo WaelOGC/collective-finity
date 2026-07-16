@@ -368,6 +368,10 @@ function collective_finity_ajax_submit_platform_review() {
 		);
 	}
 
+	if ( class_exists( 'CF_Email' ) ) {
+		CF_Email::send_feedback_confirmation( $user->ID );
+	}
+
 	add_comment_meta( $comment_id, 'cf_rating', $rating, true );
 	add_comment_meta( $comment_id, 'cf_topic_ratings', $topic_ratings, true );
 	add_comment_meta( $comment_id, 'cf_platform_review', 1, true );
