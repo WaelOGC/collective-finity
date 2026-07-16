@@ -165,27 +165,57 @@ get_header();
 							</div>
 						</div>
 
-						<fieldset class="cf-faq-review-form__fieldset">
-							<legend class="cf-faq-review-form__legend"><?php esc_html_e( 'Star rating', 'collective-finity' ); ?></legend>
-							<?php echo collective_finity_star_input_markup( 24 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-						</fieldset>
-
 						<div class="cf-faq-review-form__fieldset">
-							<label class="cf-faq-review-form__legend" for="cf-faq-review-topic">
-								<?php esc_html_e( 'Topics (optional)', 'collective-finity' ); ?>
+							<label class="cf-faq-review-form__legend" id="cf-faq-topics-label">
+								<?php esc_html_e( 'Topics & ratings (optional)', 'collective-finity' ); ?>
 							</label>
-							<div class="cf-faq-select-wrap">
-								<select
-									id="cf-faq-review-topic"
-									name="cf_review_categories[]"
-									class="cf-faq-select"
-									aria-label="<?php esc_attr_e( 'Review topic', 'collective-finity' ); ?>"
+							<div
+								class="cf-faq-topics"
+								data-faq-topics
+								data-label-empty="<?php esc_attr_e( 'Select topics…', 'collective-finity' ); ?>"
+								data-label-one="<?php esc_attr_e( '1 topic selected', 'collective-finity' ); ?>"
+								data-label-many="<?php esc_attr_e( '%d topics selected', 'collective-finity' ); ?>"
+							>
+								<button
+									type="button"
+									class="cf-faq-topics__trigger"
+									aria-expanded="false"
+									aria-haspopup="listbox"
+									aria-labelledby="cf-faq-topics-label cf-faq-topics-trigger-label"
 								>
-									<option value=""><?php esc_html_e( 'Select a topic…', 'collective-finity' ); ?></option>
+									<span id="cf-faq-topics-trigger-label" class="cf-faq-topics__trigger-label"><?php esc_html_e( 'Select topics…', 'collective-finity' ); ?></span>
+									<span class="cf-faq-topics__chevron" aria-hidden="true">
+										<?php echo collective_finity_icon( 'chevronDown', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+									</span>
+								</button>
+								<div class="cf-faq-topics__panel" role="group" hidden>
 									<?php foreach ( $cf_faq_categories as $cf_cat_slug => $cf_cat_label ) : ?>
-										<option value="<?php echo esc_attr( $cf_cat_slug ); ?>"><?php echo esc_html( $cf_cat_label ); ?></option>
+										<div class="cf-faq-topics__row" data-topic-row="<?php echo esc_attr( $cf_cat_slug ); ?>">
+											<label class="cf-faq-topics__check">
+												<input type="checkbox" name="cf_review_categories[]" value="<?php echo esc_attr( $cf_cat_slug ); ?>" data-topic-checkbox>
+												<span><?php echo esc_html( $cf_cat_label ); ?></span>
+											</label>
+											<div
+												class="cf-faq-topics__stars"
+												data-topic-stars
+												role="radiogroup"
+												aria-label="<?php echo esc_attr( sprintf( __( 'Rating for %s', 'collective-finity' ), $cf_cat_label ) ); ?>"
+											>
+												<?php for ( $cf_star_i = 5; $cf_star_i >= 1; $cf_star_i-- ) : ?>
+													<button
+														type="button"
+														class="cf-faq-topics__star"
+														data-star-value="<?php echo esc_attr( (string) $cf_star_i ); ?>"
+														aria-label="<?php echo esc_attr( sprintf( _n( '%d star', '%d stars', $cf_star_i, 'collective-finity' ), $cf_star_i ) ); ?>"
+													>
+														<?php echo collective_finity_icon( 'star', 18, true ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+													</button>
+												<?php endfor; ?>
+											</div>
+											<input type="hidden" name="cf_topic_ratings[<?php echo esc_attr( $cf_cat_slug ); ?>]" value="0" data-topic-rating-input>
+										</div>
 									<?php endforeach; ?>
-								</select>
+								</div>
 							</div>
 						</div>
 
@@ -712,52 +742,170 @@ get_header();
 		color: #fff;
 	}
 
-	.cf-faq-select-wrap {
+	.cf-faq-topics {
 		position: relative;
 	}
 
-	.cf-faq-select-wrap::after {
-		content: '';
-		position: absolute;
-		top: 50%;
-		right: 14px;
-		width: 8px;
-		height: 8px;
-		border-right: 2px solid var(--cf-text-3, #7A7A7A);
-		border-bottom: 2px solid var(--cf-text-3, #7A7A7A);
-		transform: translateY(-60%) rotate(45deg);
-		pointer-events: none;
-	}
-
-	.cf-faq-select {
-		display: block;
+	.cf-faq-topics__trigger {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
 		width: 100%;
-		max-width: 100%;
-		padding: 12px 40px 12px 14px;
+		padding: 12px 14px;
 		border-radius: 9px;
-		border: 1px solid var(--cf-border, #232323);
-		background: var(--cf-bg-dark, #0D0D0D);
+		border: 1px solid rgba(255, 183, 0, 0.35);
+		background: #141414;
 		color: #fff;
 		font-size: 13.5px;
 		font-family: inherit;
 		line-height: 1.4;
 		min-height: 44px;
 		cursor: pointer;
-		appearance: none;
-		-webkit-appearance: none;
 		box-sizing: border-box;
-		transition: border-color 0.15s ease;
+		text-align: left;
+		transition: border-color 0.15s ease, background 0.15s ease;
 	}
 
-	.cf-faq-select:hover,
-	.cf-faq-select:focus {
+	.cf-faq-topics__trigger:hover,
+	.cf-faq-topics__trigger:focus-visible,
+	.cf-faq-topics.is-open .cf-faq-topics__trigger {
 		outline: none;
-		border-color: rgba(255, 183, 0, 0.45);
+		border-color: rgba(255, 183, 0, 0.55);
+		background: #0B0B0B;
 	}
 
-	.cf-faq-select option {
-		background: #141414;
+	.cf-faq-topics__trigger:focus-visible {
+		outline: 2px solid var(--cf-accent, #FFB700);
+		outline-offset: 2px;
+	}
+
+	.cf-faq-topics__trigger-label {
+		flex: 1;
+		min-width: 0;
+		color: var(--cf-text-2, #B3B3B3);
+	}
+
+	.cf-faq-topics.has-selection .cf-faq-topics__trigger-label {
 		color: #fff;
+	}
+
+	.cf-faq-topics__chevron {
+		display: flex;
+		flex-shrink: 0;
+		color: var(--cf-text-3, #7A7A7A);
+		transition: transform 0.2s ease, color 0.15s ease;
+	}
+
+	.cf-faq-topics.is-open .cf-faq-topics__chevron {
+		transform: rotate(180deg);
+		color: var(--cf-accent, #FFB700);
+	}
+
+	.cf-faq-topics__panel {
+		position: absolute;
+		z-index: 20;
+		top: calc(100% + 6px);
+		left: 0;
+		right: 0;
+		display: none;
+		flex-direction: column;
+		gap: 2px;
+		padding: 8px;
+		border-radius: 10px;
+		border: 1px solid rgba(255, 183, 0, 0.35);
+		background: #0B0B0B;
+		box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+		box-sizing: border-box;
+		max-height: min(360px, 70vh);
+		overflow-y: auto;
+	}
+
+	.cf-faq-topics.is-open .cf-faq-topics__panel {
+		display: flex;
+	}
+
+	.cf-faq-topics__row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+		padding: 10px 10px;
+		border-radius: 8px;
+		background: transparent;
+		transition: background 0.12s ease;
+	}
+
+	.cf-faq-topics__row:hover {
+		background: #141414;
+	}
+
+	.cf-faq-topics__check {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		flex: 1;
+		min-width: 0;
+		cursor: pointer;
+		font-size: 13px;
+		font-weight: 600;
+		color: #fff;
+		line-height: 1.3;
+	}
+
+	.cf-faq-topics__check input {
+		width: 16px;
+		height: 16px;
+		flex-shrink: 0;
+		accent-color: var(--cf-accent, #FFB700);
+		cursor: pointer;
+	}
+
+	.cf-faq-topics__stars {
+		display: inline-flex;
+		flex-direction: row-reverse;
+		justify-content: flex-end;
+		gap: 2px;
+		flex-shrink: 0;
+	}
+
+	.cf-faq-topics__star {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 2px;
+		margin: 0;
+		border: none;
+		background: transparent;
+		color: #3a3a3a;
+		cursor: pointer;
+		min-width: 28px;
+		min-height: 28px;
+		border-radius: 4px;
+		transition: color 0.12s ease;
+	}
+
+	.cf-faq-topics__star:hover,
+	.cf-faq-topics__star:hover ~ .cf-faq-topics__star,
+	.cf-faq-topics__star.is-on {
+		color: var(--cf-accent, #FFB700);
+	}
+
+	.cf-faq-topics__star:focus-visible {
+		outline: 2px solid var(--cf-accent, #FFB700);
+		outline-offset: 1px;
+	}
+
+	@media (max-width: 520px) {
+		.cf-faq-topics__row {
+			flex-wrap: wrap;
+			align-items: flex-start;
+		}
+
+		.cf-faq-topics__stars {
+			width: 100%;
+			padding-left: 26px;
+		}
 	}
 
 	.cf-faq-review-form textarea {
@@ -926,17 +1074,10 @@ get_header();
 		margin: 0 0 8px;
 	}
 
-	/* Reuse article star input styles on this page */
+	/* Review card star display */
 	.cf-faq-page .cf-stars { display: inline-flex; gap: 3px; }
 	.cf-faq-page .cf-star { display: inline-flex; color: #3a3a3a; }
 	.cf-faq-page .cf-star.is-on { color: var(--cf-accent, #FFB700); }
-	.cf-faq-page .cf-stars-input { display: inline-flex; flex-direction: row-reverse; justify-content: flex-end; gap: 4px; }
-	.cf-faq-page .cf-stars-input input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-	.cf-faq-page .cf-stars-input label { display: inline-flex; color: #3a3a3a; cursor: pointer; transition: color 0.12s ease; padding: 4px; min-width: 32px; min-height: 32px; align-items: center; justify-content: center; }
-	.cf-faq-page .cf-stars-input label:hover,
-	.cf-faq-page .cf-stars-input label:hover ~ label,
-	.cf-faq-page .cf-stars-input input:checked ~ label { color: var(--cf-accent, #FFB700); }
-	.cf-faq-page .cf-stars-input input:focus-visible + label { outline: 2px solid var(--cf-accent, #FFB700); outline-offset: 2px; border-radius: 4px; }
 
 	@media (max-width: 767px) {
 		.cf-faq__inner {
@@ -1033,6 +1174,10 @@ get_header();
 	var statusEl = document.getElementById('cf-faq-review-status');
 	var submitBtn = document.getElementById('cf-faq-review-submit');
 	var listEl = document.getElementById('cf-faq-review-list');
+	var topicsRoot = form.querySelector('[data-faq-topics]');
+	var topicsTrigger = topicsRoot ? topicsRoot.querySelector('.cf-faq-topics__trigger') : null;
+	var topicsPanel = topicsRoot ? topicsRoot.querySelector('.cf-faq-topics__panel') : null;
+	var topicsTriggerLabel = topicsRoot ? topicsRoot.querySelector('.cf-faq-topics__trigger-label') : null;
 
 	function showStatus(message, type) {
 		if (!statusEl) {
@@ -1046,15 +1191,148 @@ get_header();
 		}
 	}
 
+	function setTopicsOpen(open) {
+		if (!topicsRoot || !topicsTrigger || !topicsPanel) {
+			return;
+		}
+		topicsRoot.classList.toggle('is-open', open);
+		topicsTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+		topicsPanel.hidden = !open;
+	}
+
+	function paintTopicStars(row, rating) {
+		var stars = row.querySelectorAll('.cf-faq-topics__star');
+		stars.forEach(function (star) {
+			var value = parseInt(star.getAttribute('data-star-value') || '0', 10);
+			star.classList.toggle('is-on', value > 0 && value <= rating);
+		});
+	}
+
+	function updateTopicsTriggerLabel() {
+		if (!topicsRoot || !topicsTriggerLabel) {
+			return;
+		}
+		var checked = topicsRoot.querySelectorAll('[data-topic-checkbox]:checked');
+		var count = checked.length;
+		var empty = topicsRoot.getAttribute('data-label-empty') || 'Select topics…';
+		var one = topicsRoot.getAttribute('data-label-one') || '1 topic selected';
+		var many = topicsRoot.getAttribute('data-label-many') || '%d topics selected';
+
+		if (count <= 0) {
+			topicsTriggerLabel.textContent = empty;
+			topicsRoot.classList.remove('has-selection');
+			return;
+		}
+
+		topicsRoot.classList.add('has-selection');
+		topicsTriggerLabel.textContent = count === 1 ? one : many.replace('%d', String(count));
+	}
+
+	function resetTopicsWidget() {
+		if (!topicsRoot) {
+			return;
+		}
+		topicsRoot.querySelectorAll('[data-topic-row]').forEach(function (row) {
+			var ratingInput = row.querySelector('[data-topic-rating-input]');
+			if (ratingInput) {
+				ratingInput.value = '0';
+			}
+			paintTopicStars(row, 0);
+		});
+		setTopicsOpen(false);
+		updateTopicsTriggerLabel();
+	}
+
+	function collectRatedTopics() {
+		var rated = [];
+		if (!topicsRoot) {
+			return rated;
+		}
+		topicsRoot.querySelectorAll('[data-topic-row]').forEach(function (row) {
+			var checkbox = row.querySelector('[data-topic-checkbox]');
+			var ratingInput = row.querySelector('[data-topic-rating-input]');
+			if (!checkbox || !checkbox.checked || !ratingInput) {
+				return;
+			}
+			var slug = checkbox.value;
+			var rating = parseInt(ratingInput.value || '0', 10);
+			if (slug && rating >= 1 && rating <= 5) {
+				rated.push({ slug: slug, rating: rating });
+			}
+		});
+		return rated;
+	}
+
+	if (topicsRoot && topicsTrigger && topicsPanel) {
+		topicsTrigger.addEventListener('click', function () {
+			setTopicsOpen(topicsPanel.hidden);
+		});
+
+		document.addEventListener('click', function (event) {
+			if (!topicsRoot.contains(event.target)) {
+				setTopicsOpen(false);
+			}
+		});
+
+		document.addEventListener('keydown', function (event) {
+			if (event.key === 'Escape') {
+				setTopicsOpen(false);
+			}
+		});
+
+		topicsRoot.addEventListener('click', function (event) {
+			var starBtn = event.target.closest('.cf-faq-topics__star');
+			if (!starBtn || !topicsRoot.contains(starBtn)) {
+				return;
+			}
+			var row = starBtn.closest('[data-topic-row]');
+			if (!row) {
+				return;
+			}
+			var rating = parseInt(starBtn.getAttribute('data-star-value') || '0', 10);
+			var ratingInput = row.querySelector('[data-topic-rating-input]');
+			var checkbox = row.querySelector('[data-topic-checkbox]');
+			if (ratingInput) {
+				ratingInput.value = String(rating);
+			}
+			paintTopicStars(row, rating);
+			if (checkbox && !checkbox.checked) {
+				checkbox.checked = true;
+			}
+			updateTopicsTriggerLabel();
+		});
+
+		topicsRoot.addEventListener('change', function (event) {
+			if (event.target && event.target.matches('[data-topic-checkbox]')) {
+				updateTopicsTriggerLabel();
+			}
+		});
+	}
+
 	form.addEventListener('submit', function (event) {
 		event.preventDefault();
 
-		var ratingInput = form.querySelector('input[name="cf_rating"]:checked');
 		var message = (form.querySelector('[name="comment"]') || {}).value || '';
 		message = message.trim();
 
-		if (!ratingInput) {
-			showStatus('Please select a star rating.', 'is-error');
+		var checkedCount = topicsRoot
+			? topicsRoot.querySelectorAll('[data-topic-checkbox]:checked').length
+			: 0;
+		var ratedTopics = collectRatedTopics();
+
+		if (checkedCount < 1) {
+			showStatus('Please select and rate at least one topic.', 'is-error');
+			setTopicsOpen(true);
+			return;
+		}
+		if (ratedTopics.length < checkedCount) {
+			showStatus('Please rate each selected topic.', 'is-error');
+			setTopicsOpen(true);
+			return;
+		}
+		if (ratedTopics.length < 1) {
+			showStatus('Please select and rate at least one topic.', 'is-error');
+			setTopicsOpen(true);
 			return;
 		}
 		if (message.length < 10) {
@@ -1062,19 +1340,16 @@ get_header();
 			return;
 		}
 
-		var topicSelect = form.querySelector('#cf-faq-review-topic');
-		var topicValue = topicSelect ? String(topicSelect.value || '').trim() : '';
-
 		var body = new FormData();
 		body.append('action', 'cf_submit_platform_review');
 		body.append('nonce', form.getAttribute('data-nonce') || '');
 		body.append('comment_post_ID', form.getAttribute('data-post-id') || '');
-		body.append('cf_rating', ratingInput.value);
 		body.append('comment', message);
 		body.append('cf_platform_review', '1');
-		if (topicValue) {
-			body.append('cf_review_categories[]', topicValue);
-		}
+		ratedTopics.forEach(function (topic) {
+			body.append('cf_review_categories[]', topic.slug);
+			body.append('cf_topic_ratings[' + topic.slug + ']', String(topic.rating));
+		});
 
 		if (submitBtn) {
 			submitBtn.disabled = true;
@@ -1102,6 +1377,7 @@ get_header();
 				var data = payload.data || {};
 				showStatus(data.message || 'Review submitted.', 'is-success');
 				form.reset();
+				resetTopicsWidget();
 
 				if (data.html && listEl) {
 					var empty = document.getElementById('cf-faq-reviews-empty');

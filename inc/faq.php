@@ -3,7 +3,8 @@
  * FAQ page helpers: platform reviews (AJAX), categories meta, and page bootstrap.
  *
  * Platform reviews are stored as native WordPress comments on the FAQ page with:
- * - comment meta `cf_rating` (1–5)
+ * - comment meta `cf_rating` (1–5 overall average of topic ratings)
+ * - comment meta `cf_topic_ratings` (associative array slug => 1–5)
  * - comment meta `cf_review_categories` (array of category slugs)
  * - comment meta `cf_platform_review` = 1
  *
@@ -152,6 +153,32 @@ function collective_finity_sanitize_review_categories( $raw ) {
 }
 
 /**
+ * Sanitize submitted per-topic ratings (slug => 1–5).
+ *
+ * @param mixed $raw Raw POST value (expected associative array).
+ * @return array<string, int>
+ */
+function collective_finity_sanitize_topic_ratings( $raw ) {
+	$allowed = array_keys( collective_finity_platform_review_categories() );
+	$raw     = is_array( $raw ) ? $raw : array();
+	$out     = array();
+
+	foreach ( $raw as $slug => $rating ) {
+		$slug   = sanitize_key( (string) $slug );
+		$rating = (int) $rating;
+		if ( ! in_array( $slug, $allowed, true ) ) {
+			continue;
+		}
+		if ( $rating < 1 || $rating > 5 ) {
+			continue;
+		}
+		$out[ $slug ] = $rating;
+	}
+
+	return $out;
+}
+
+/**
  * Format category labels for a platform review comment.
  *
  * @param int $comment_id Comment ID.
@@ -173,7 +200,7 @@ function collective_finity_get_review_category_labels( $comment_id ) {
 }
 
 /**
- * Persist platform-review categories when submitted via classic comment POST.
+ * Persist platform-review meta when submitted via classic comment POST.
  *
  * @param int        $comment_id Comment ID.
  * @param int|string $approved   Approval status.
@@ -191,6 +218,17 @@ function collective_finity_save_platform_review_meta( $comment_id, $approved ) {
 	}
 
 	add_comment_meta( $comment_id, 'cf_platform_review', 1, true );
+
+	$topic_ratings = array();
+	if ( isset( $_POST['cf_topic_ratings'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$topic_ratings = collective_finity_sanitize_topic_ratings( wp_unslash( $_POST['cf_topic_ratings'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+	}
+	if ( ! empty( $topic_ratings ) ) {
+		add_comment_meta( $comment_id, 'cf_topic_ratings', $topic_ratings, true );
+		$overall = (int) round( array_sum( $topic_ratings ) / count( $topic_ratings ) );
+		$overall = max( 1, min( 5, $overall ) );
+		add_comment_meta( $comment_id, 'cf_rating', $overall, true );
+	}
 
 	$categories = array();
 	if ( isset( $_POST['cf_review_categories'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -279,13 +317,19 @@ function collective_finity_ajax_submit_platform_review() {
 		);
 	}
 
-	$rating = isset( $_POST['cf_rating'] ) ? (int) $_POST['cf_rating'] : 0;
-	if ( $rating < 1 || $rating > 5 ) {
+	$topic_ratings = array();
+	if ( isset( $_POST['cf_topic_ratings'] ) ) {
+		$topic_ratings = collective_finity_sanitize_topic_ratings( wp_unslash( $_POST['cf_topic_ratings'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+	}
+	if ( empty( $topic_ratings ) ) {
 		wp_send_json_error(
-			array( 'message' => __( 'Please select a star rating from 1 to 5.', 'collective-finity' ) ),
+			array( 'message' => __( 'Please rate at least one topic.', 'collective-finity' ) ),
 			400
 		);
 	}
+
+	$rating = (int) round( array_sum( $topic_ratings ) / count( $topic_ratings ) );
+	$rating = max( 1, min( 5, $rating ) );
 
 	$message = isset( $_POST['comment'] ) ? trim( wp_unslash( $_POST['comment'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 	$message = sanitize_textarea_field( $message );
@@ -325,6 +369,7 @@ function collective_finity_ajax_submit_platform_review() {
 	}
 
 	add_comment_meta( $comment_id, 'cf_rating', $rating, true );
+	add_comment_meta( $comment_id, 'cf_topic_ratings', $topic_ratings, true );
 	add_comment_meta( $comment_id, 'cf_platform_review', 1, true );
 	if ( ! empty( $categories ) ) {
 		add_comment_meta( $comment_id, 'cf_review_categories', $categories, true );

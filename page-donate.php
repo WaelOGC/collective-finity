@@ -6,39 +6,91 @@
  * @package Collective_Finity
  */
 
+$cf_hero_title = __( 'Support Collective Finity', 'collective-finity' );
+$cf_hero_words = preg_split( '/\s+/u', trim( $cf_hero_title ) );
+if ( ! is_array( $cf_hero_words ) ) {
+	$cf_hero_words = array( $cf_hero_title );
+}
+
 get_header();
 ?>
 
 <main id="primary" class="site-main cf-donate-page" role="main">
-	<div class="cf-donate-page__inner">
 
-		<section class="cf-donate-hero" aria-labelledby="cf-donate-hero-heading">
-			<div class="cf-donate-hero__glow cf-donate-hero__glow--left" aria-hidden="true"></div>
-			<div class="cf-donate-hero__glow cf-donate-hero__glow--right" aria-hidden="true"></div>
-			<div class="cf-donate-hero__dots" aria-hidden="true"></div>
-			<div class="cf-donate-hero__content">
-				<span class="cf-donate-hero__badge"><?php esc_html_e( 'Support the platform', 'collective-finity' ); ?></span>
-				<h1 id="cf-donate-hero-heading" class="cf-donate-hero__title">
-					<?php esc_html_e( 'Support Collective Finity', 'collective-finity' ); ?>
-				</h1>
-				<p class="cf-donate-hero__lead">
-					<?php esc_html_e( 'Your contribution helps keep the platform running — hosting releases, maintaining the music library, and growing the community for creators and listeners alike.', 'collective-finity' ); ?>
-				</p>
-			</div>
-		</section>
+	<section class="cf-donate-hero" aria-labelledby="cf-donate-hero-heading">
+		<div class="cf-donate-hero__grid" aria-hidden="true"></div>
+		<div class="cf-donate-hero__border" aria-hidden="true"></div>
+		<div class="cf-donate-hero__center-glow" aria-hidden="true"></div>
+		<div class="cf-donate-hero__icons" aria-hidden="true">
+			<?php
+			$cf_donate_icon_uri  = get_template_directory_uri() . '/assets/images/donate/';
+			$cf_donate_icon_imgs = array(
+				'donate-icon-hand-heart-coin.png',
+				'donate-icon-handshake-linear.png',
+				'donate-icon-tap-donate.png',
+				'donate-icon-donate-button-solid.png',
+				'donate-icon-support-handshake-solid.png',
+			);
+			foreach ( $cf_donate_icon_imgs as $cf_icon_i => $cf_icon_file ) :
+				?>
+				<span
+					class="cf-donate-hero__icon cf-donate-hero__icon--<?php echo esc_attr( (string) ( $cf_icon_i + 1 ) ); ?>"
+					style="--cf-donate-icon-img: url('<?php echo esc_url( $cf_donate_icon_uri . $cf_icon_file ); ?>');"
+				></span>
+			<?php endforeach; ?>
+		</div>
+		<div class="cf-donate-hero__content">
+			<span class="cf-donate-hero__badge"><?php esc_html_e( 'Support the platform', 'collective-finity' ); ?></span>
+			<h1 id="cf-donate-hero-heading" class="cf-donate-hero__title">
+				<?php foreach ( $cf_hero_words as $cf_word_i => $cf_word ) : ?>
+					<?php if ( $cf_word_i > 0 ) : ?>
+						<?php echo ' '; ?>
+					<?php endif; ?>
+					<span class="cf-donate-hero__word" style="--cf-word-delay: <?php echo esc_attr( (string) ( $cf_word_i * 0.5 ) ); ?>s"><?php echo esc_html( $cf_word ); ?></span>
+				<?php endforeach; ?>
+			</h1>
+			<p class="cf-donate-hero__lead">
+				<?php esc_html_e( 'Your contribution helps keep the platform running — hosting releases, maintaining the music library, and growing the community for creators and listeners alike.', 'collective-finity' ); ?>
+			</p>
+		</div>
+	</section>
 
-		<section class="cf-donate-content" aria-label="<?php esc_attr_e( 'Donation form', 'collective-finity' ); ?>">
+	<section class="cf-donate-split" aria-label="<?php esc_attr_e( 'Support Collective Finity', 'collective-finity' ); ?>">
+		<div class="cf-donate-split__form">
 			<?php echo do_shortcode( '[cf_donation_form]' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-		</section>
+		</div>
+		<div class="cf-donate-split__copy">
+			<h2 class="cf-donate-split__title"><?php esc_html_e( 'Make Music Infinite', 'collective-finity' ); ?></h2>
+			<p class="cf-donate-split__text">
+				<?php esc_html_e( 'Every contribution you make fuels something bigger than music — it fuels freedom, creativity, and boundless possibility.', 'collective-finity' ); ?>
+			</p>
+			<p class="cf-donate-split__text">
+				<?php esc_html_e( 'Your support keeps Collective Finity alive. It means we can host thousands of tracks, publish in-depth guides for producers navigating AI composition, and build a thriving community where creators and listeners connect without walls or limits.', 'collective-finity' ); ?>
+			</p>
+			<p class="cf-donate-split__text">
+				<?php esc_html_e( 'When you support us, you\'re not just enabling a platform — you\'re saying "I believe in a world where imagination has no ceiling." You\'re part of something that matters.', 'collective-finity' ); ?>
+			</p>
+			<p class="cf-donate-split__text cf-donate-split__text--signoff">
+				<?php esc_html_e( 'Thank you for making music infinite.', 'collective-finity' ); ?>
+			</p>
+		</div>
+	</section>
 
+	<div class="cf-donate-page__inner">
+		<section class="cf-donate-wall" aria-label="<?php esc_attr_e( 'Donor wall', 'collective-finity' ); ?>">
+			<h2 class="cf-donate-wall__title"><?php esc_html_e( 'Thank You', 'collective-finity' ); ?></h2>
+			<p class="cf-donate-wall__subtitle"><?php esc_html_e( 'Every one of these supporters helps keep Collective Finity alive.', 'collective-finity' ); ?></p>
+			<?php echo do_shortcode( '[cf_donor_wall]' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+		</section>
 	</div>
+
 </main>
 
 <style>
 .cf-donate-page {
 	background: var(--darker-bg, #050505);
 	color: #fff;
-	padding: 48px clamp(12px, 2vw, 20px) 140px;
+	padding: 48px 20px 140px;
 	box-sizing: border-box;
 	width: 100%;
 	max-width: 100%;
@@ -49,7 +101,7 @@ get_header();
 	width: 100%;
 	max-width: min(720px, 100%);
 	min-width: 0;
-	margin: 0 auto;
+	margin: 40px auto 0;
 	display: flex;
 	flex-direction: column;
 	gap: 40px;
@@ -57,46 +109,160 @@ get_header();
 .cf-donate-hero {
 	position: relative;
 	text-align: center;
-	padding: clamp(40px, 6vw, 68px) clamp(20px, 4vw, 40px);
+	padding: clamp(48px, 7vw, 80px) clamp(20px, 4vw, 40px) clamp(56px, 8vw, 88px);
 	border-radius: 18px;
-	background: radial-gradient(ellipse at 50% 0%, rgba(255, 183, 0, 0.14), transparent 62%), var(--secondary-color, #0D0D0D);
-	border: 1px solid rgba(255, 255, 255, 0.08);
+	background: #0B0B0B;
+	border: 1px solid rgba(30, 30, 30, 0.9);
 	overflow: hidden;
 	min-width: 0;
 	max-width: 100%;
 	box-sizing: border-box;
 }
-.cf-donate-hero__glow {
-	position: absolute;
-	border-radius: 50%;
-	filter: blur(48px);
-	pointer-events: none;
-	opacity: 0.55;
-}
-.cf-donate-hero__glow--left {
-	width: 220px;
-	height: 220px;
-	top: -60px;
-	left: -40px;
-	background: rgba(255, 183, 0, 0.18);
-}
-.cf-donate-hero__glow--right {
-	width: 180px;
-	height: 180px;
-	bottom: -50px;
-	right: -20px;
-	background: rgba(255, 183, 0, 0.1);
-}
-.cf-donate-hero__dots {
+.cf-donate-hero__grid {
 	position: absolute;
 	inset: 0;
-	opacity: 0.42;
+	z-index: 0;
 	pointer-events: none;
-	background-image: radial-gradient(circle, rgba(255, 183, 0, 0.32) 1px, transparent 1.4px);
-	background-size: 26px 26px;
+	opacity: 0.5;
+	background-image:
+		linear-gradient(rgba(255, 183, 0, 0.07) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(255, 183, 0, 0.07) 1px, transparent 1px);
+	background-size: 32px 32px;
+	-webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 78%);
+	mask-image: radial-gradient(ellipse at center, black 35%, transparent 78%);
+}
+@property --cf-donate-border-angle {
+	syntax: '<angle>';
+	initial-value: 0deg;
+	inherits: false;
+}
+.cf-donate-hero__border {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	padding: 1.5px;
+	pointer-events: none;
+	z-index: 2;
+	background: conic-gradient(
+		from var(--cf-donate-border-angle),
+		transparent 0%,
+		transparent 72%,
+		rgba(255, 183, 0, 0.05) 80%,
+		rgba(255, 183, 0, 0.35) 86%,
+		var(--cf-accent, #FFB700) 90%,
+		#FFD060 93%,
+		rgba(255, 183, 0, 0.2) 96%,
+		transparent 100%
+	);
+	-webkit-mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
+	-webkit-mask-composite: xor;
+	mask-composite: exclude;
+	animation: cfDonateBorderTravel 5.5s linear infinite;
+	filter: drop-shadow(0 0 6px rgba(255, 183, 0, 0.35));
+}
+@keyframes cfDonateBorderTravel {
+	to { --cf-donate-border-angle: 360deg; }
+}
+.cf-donate-hero__center-glow {
+	position: absolute;
+	left: 50%;
+	top: 46%;
+	width: min(70%, 520px);
+	aspect-ratio: 1;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+	z-index: 0;
+	border-radius: 50%;
+	background: radial-gradient(
+		circle,
+		rgba(255, 183, 0, 0.14) 0%,
+		rgba(255, 183, 0, 0.05) 38%,
+		transparent 70%
+	);
+	animation: cfDonateCenterGlow 8.2s ease-in-out infinite;
+	will-change: transform, opacity;
+}
+@keyframes cfDonateCenterGlow {
+	0%, 100% {
+		opacity: 0.35;
+		transform: translate(-50%, -50%) scale(0.82);
+	}
+	50% {
+		opacity: 0.7;
+		transform: translate(-50%, -50%) scale(1.08);
+	}
+}
+.cf-donate-hero__icons {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 0;
+	overflow: hidden;
+}
+.cf-donate-hero__icon {
+	position: absolute;
+	display: block;
+	width: clamp(52px, 9vw, 88px);
+	aspect-ratio: 1;
+	opacity: 0;
+	background: linear-gradient(160deg, #c45a00 0%, var(--cf-accent, #FFB700) 48%, #FFE08A 100%);
+	-webkit-mask-image: var(--cf-donate-icon-img);
+	mask-image: var(--cf-donate-icon-img);
+	-webkit-mask-size: contain;
+	mask-size: contain;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-position: center;
+	mask-position: center;
+	filter: saturate(1.15) brightness(0.95);
+	animation: cfDonateIconPulse var(--cf-donate-icon-dur, 7.5s) ease-in-out infinite;
+	animation-delay: var(--cf-donate-icon-delay, 0s);
+}
+@keyframes cfDonateIconPulse {
+	0%, 100% { opacity: 0; }
+	18%, 42% { opacity: 0.14; }
+	30% { opacity: 0.2; }
+	55%, 100% { opacity: 0; }
+}
+.cf-donate-hero__icon--1 {
+	top: 10%;
+	left: 4%;
+	--cf-donate-icon-dur: 8.4s;
+	--cf-donate-icon-delay: 0s;
+}
+.cf-donate-hero__icon--2 {
+	top: 8%;
+	right: 5%;
+	width: clamp(48px, 8vw, 78px);
+	--cf-donate-icon-dur: 9.6s;
+	--cf-donate-icon-delay: -2.1s;
+}
+.cf-donate-hero__icon--3 {
+	bottom: 14%;
+	left: 7%;
+	width: clamp(46px, 7.5vw, 72px);
+	--cf-donate-icon-dur: 7.2s;
+	--cf-donate-icon-delay: -4.4s;
+}
+.cf-donate-hero__icon--4 {
+	bottom: 12%;
+	right: 6%;
+	width: clamp(50px, 8.5vw, 80px);
+	--cf-donate-icon-dur: 10.1s;
+	--cf-donate-icon-delay: -1.2s;
+}
+.cf-donate-hero__icon--5 {
+	top: 42%;
+	left: 2%;
+	width: clamp(44px, 7vw, 68px);
+	--cf-donate-icon-dur: 8.8s;
+	--cf-donate-icon-delay: -5.6s;
 }
 .cf-donate-hero__content {
 	position: relative;
+	z-index: 1;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -122,6 +288,22 @@ get_header();
 	line-height: 1.15;
 	color: #fff;
 }
+.cf-donate-hero__word {
+	display: inline-block;
+	color: #fff;
+	animation: cfDonateWordFlicker 7s ease-in-out infinite;
+	animation-delay: var(--cf-word-delay, 0s);
+}
+@keyframes cfDonateWordFlicker {
+	0%, 10%, 100% {
+		color: #fff;
+		text-shadow: none;
+	}
+	4%, 7% {
+		color: #FFD060;
+		text-shadow: 0 0 16px rgba(255, 183, 0, 0.55), 0 0 32px rgba(255, 183, 0, 0.22);
+	}
+}
 .cf-donate-hero__lead {
 	margin: 0;
 	max-width: 520px;
@@ -129,8 +311,66 @@ get_header();
 	line-height: 1.7;
 	color: var(--cf-text-2, #B3B3B3);
 }
-.cf-donate-content {
+.cf-donate-split {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	margin-top: 40px;
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 32px;
+}
+@media (min-width: 860px) {
+	.cf-donate-split {
+		grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
+		align-items: start;
+	}
+}
+.cf-donate-split__form {
 	min-width: 0;
+}
+.cf-donate-split__copy {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: clamp(28px, 4vw, 40px);
+	border-radius: 18px;
+	background: linear-gradient(160deg, rgba(255, 183, 0, 0.1), rgba(255, 183, 0, 0.02));
+	border: 1px solid rgba(255, 183, 0, 0.18);
+}
+.cf-donate-split__title {
+	margin: 0;
+	font-family: var(--cf-mono, 'Space Mono', monospace);
+	font-size: clamp(22px, 2.6vw, 30px);
+	color: #fff;
+}
+.cf-donate-split__text {
+	margin: 0;
+	font-size: 15px;
+	line-height: 1.7;
+	color: rgba(255, 255, 255, 0.72);
+}
+.cf-donate-split__text--signoff {
+	color: var(--cf-accent, #FFB700);
+	font-weight: 600;
+}
+.cf-donate-wall {
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.cf-donate-wall__title {
+	margin: 0;
+	font-family: var(--cf-mono, 'Space Mono', monospace);
+	font-size: clamp(22px, 2.6vw, 30px);
+	color: #fff;
+}
+.cf-donate-wall__subtitle {
+	margin: 0 0 12px;
+	font-size: 14px;
+	color: rgba(255, 255, 255, 0.55);
 }
 
 /* Donation form — styles target plugin shortcode markup only */
@@ -305,6 +545,28 @@ get_header();
 	line-height: 1.6;
 }
 
+@media (prefers-reduced-motion: reduce) {
+	.cf-donate-hero__word {
+		animation: none;
+		color: #fff;
+		text-shadow: none;
+	}
+	.cf-donate-hero__border {
+		animation: none;
+		--cf-donate-border-angle: 210deg;
+		filter: drop-shadow(0 0 3px rgba(255, 183, 0, 0.2));
+		opacity: 0.55;
+	}
+	.cf-donate-hero__center-glow {
+		animation: none;
+		opacity: 0.4;
+		transform: translate(-50%, -50%) scale(0.95);
+	}
+	.cf-donate-hero__icon {
+		animation: none;
+		opacity: 0.08;
+	}
+}
 @media (max-width: 767px) {
 	.cf-donate-page {
 		padding: 24px 16px 100px;
@@ -317,6 +579,12 @@ get_header();
 	}
 	.cf-donate-hero__content {
 		align-items: flex-start;
+	}
+	.cf-donate-hero__icon--5 {
+		display: none;
+	}
+	.cf-donate-hero__icon {
+		width: clamp(40px, 14vw, 64px);
 	}
 	.cf-donation-page .cf-card {
 		padding: 20px 16px;
