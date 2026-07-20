@@ -113,6 +113,7 @@ $comments_count = count($track_comments);
                             endforeach;
                             ?>
                         </select>
+                        <p id="cf-viz-debug-status">Waiting for play button click...</p>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -740,8 +741,39 @@ jQuery(document).ready(function($) {
         return shards;
     }
 
+    function setVizDebugStatus(msg) {
+        var el = document.getElementById('cf-viz-debug-status');
+        if (el) {
+            el.textContent = msg;
+        }
+    }
+
     function initVisualizer() {
-        if (audioContext || window.cfAudioMediaSourceConnected) {
+        if (!audio) {
+            setVizDebugStatus('Audio connection FAILED: no audio element');
+            return;
+        }
+
+        // Reuse existing graph if MediaElementSource was already created for this element.
+        if (audio.__cfVizMediaSourceConnected) {
+            var existing = audio.__cfVizGraph;
+            if (existing) {
+                audioContext = existing.audioContext;
+                analyser = existing.analyser;
+                source = existing.source;
+                bufferLength = existing.bufferLength;
+                dataArray = existing.dataArray;
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                setVizDebugStatus('Audio connected successfully');
+                if (!vizDrawLoopStarted) {
+                    vizDrawLoopStarted = true;
+                    drawVisualizer();
+                }
+            } else {
+                setVizDebugStatus('Audio connection FAILED: MediaElementSource already exists on this audio element');
+            }
             return;
         }
 
@@ -752,17 +784,39 @@ jQuery(document).ready(function($) {
             source = audioContext.createMediaElementSource(audio);
             source.connect(analyser);
             analyser.connect(audioContext.destination);
-            window.cfAudioMediaSourceConnected = true;
 
             analyser.fftSize = 256;
             bufferLength = analyser.frequencyBinCount;
             dataArray = new Uint8Array(bufferLength);
 
-            drawVisualizer();
+            audio.__cfVizMediaSourceConnected = true;
+            audio.__cfVizGraph = {
+                audioContext: audioContext,
+                analyser: analyser,
+                source: source,
+                bufferLength: bufferLength,
+                dataArray: dataArray
+            };
+            window.cfAudioMediaSourceConnected = true;
+
+            console.log('CF VIZ: audio graph connected successfully.');
+            setVizDebugStatus('Audio connected successfully');
+
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            if (!vizDrawLoopStarted) {
+                vizDrawLoopStarted = true;
+                drawVisualizer();
+            }
         } catch(e) {
-            console.log("Web Audio API not supported on this browser context.");
+            console.log('CF VIZ: Web Audio API not supported on this browser context.', e);
+            setVizDebugStatus('Audio connection FAILED: ' + (e && e.message ? e.message : String(e)));
         }
     }
+
+    var vizDebugFrame = 0;
+    var vizDrawLoopStarted = false;
 
     function drawVisualizer() {
         requestAnimationFrame(drawVisualizer);
@@ -777,6 +831,20 @@ jQuery(document).ready(function($) {
         }
 
         analyser.getByteFrequencyData(dataArray);
+        vizDebugFrame++;
+        if (vizDebugFrame % 120 === 0) {
+            console.log('CF VIZ draw:', $('#cf-visualizer-type').val(), Array.from(dataArray.slice(0, 8)));
+        }
+
+        var styleLabel = $('#cf-visualizer-type option:selected').text() || $('#cf-visualizer-type').val() || '(none)';
+        var hasAudioData = false;
+        for (var di = 0; di < dataArray.length; di++) {
+            if (dataArray[di] > 0) {
+                hasAudioData = true;
+                break;
+            }
+        }
+        setVizDebugStatus('Drawing: ' + styleLabel + ' | Audio data: ' + (hasAudioData ? 'yes' : 'no/silent'));
 
         if (!canvas || !ctx) {
             return;
@@ -1172,6 +1240,7 @@ jQuery(document).ready(function($) {
 
     // Trigger visualizer initialize on stream trigger
     $(document).off('click.cfViz', '.cf-play-btn-hero').on('click.cfViz', '.cf-play-btn-hero', function() {
+        setVizDebugStatus('Play button clicked, connecting audio...');
         initVisualizer();
         if (audioContext && audioContext.state === 'suspended') {
             audioContext.resume();
