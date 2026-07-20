@@ -89,7 +89,7 @@ $cf_home_reviews = get_comments(
     array(
         'status'     => 'approve',
         'type'       => 'comment',
-        'number'     => 24,
+        'number'     => 3,
         'orderby'    => 'comment_date',
         'order'      => 'DESC',
         'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
@@ -361,24 +361,31 @@ function collective_finity_home_album_cover_style( $album_id ) {
         ?>
 
         <?php if ( ! empty( $cf_review_cards ) ) : ?>
-            <div class="cf-home-reviews-grid">
-                <?php foreach ( $cf_review_cards as $cf_card ) : ?>
-                    <a class="cf-home-review-card" href="<?php echo esc_url( $cf_card['url'] ); ?>">
-                        <?php if ( 'platform' === $cf_card['source'] ) : ?>
-                            <span class="cf-home-review-tag cf-home-review-tag--platform"><?php esc_html_e( 'PLATFORM', 'collective-finity' ); ?></span>
-                        <?php else : ?>
-                            <span class="cf-home-review-tag cf-home-review-tag--article"><?php esc_html_e( 'ARTICLE', 'collective-finity' ); ?></span>
-                        <?php endif; ?>
-                        <div class="cf-home-review-stars">
-                            <?php echo collective_finity_stars_markup( $cf_card['rating'], 14 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                        </div>
-                        <p class="cf-home-review-excerpt"><?php echo esc_html( $cf_card['excerpt'] ); ?></p>
-                        <div class="cf-home-review-author">
-                            <?php echo collective_finity_review_avatar( $cf_card['comment'], 36 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                            <span class="cf-home-review-author__name"><?php echo esc_html( $cf_card['author'] ); ?></span>
-                        </div>
-                    </a>
-                <?php endforeach; ?>
+            <div class="cf-home-reviews-carousel" data-cf-reviews-carousel data-interval="8000">
+                <div class="cf-home-reviews-grid" data-cf-reviews-track>
+                    <?php foreach ( $cf_review_cards as $cf_index => $cf_card ) : ?>
+                        <a class="cf-home-review-card" data-cf-review-index="<?php echo esc_attr( $cf_index ); ?>" href="<?php echo esc_url( $cf_card['url'] ); ?>">
+                            <?php if ( 'platform' === $cf_card['source'] ) : ?>
+                                <span class="cf-home-review-tag cf-home-review-tag--platform"><?php esc_html_e( 'PLATFORM', 'collective-finity' ); ?></span>
+                            <?php else : ?>
+                                <span class="cf-home-review-tag cf-home-review-tag--article"><?php esc_html_e( 'ARTICLE', 'collective-finity' ); ?></span>
+                            <?php endif; ?>
+                            <div class="cf-home-review-stars">
+                                <?php echo collective_finity_stars_markup( $cf_card['rating'], 14 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                            </div>
+                            <p class="cf-home-review-excerpt"><?php echo esc_html( $cf_card['excerpt'] ); ?></p>
+                            <div class="cf-home-review-author">
+                                <?php echo collective_finity_review_avatar( $cf_card['comment'], 36 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                <span class="cf-home-review-author__name"><?php echo esc_html( $cf_card['author'] ); ?></span>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <div class="cf-home-reviews-cta">
+                <a class="cf-home-reviews-viewall" href="<?php echo esc_url( home_url( '/reviews/' ) ); ?>">
+                    <?php esc_html_e( 'View All Reviews', 'collective-finity' ); ?> &rarr;
+                </a>
             </div>
         <?php else : ?>
             <div class="cf-home-empty"><?php esc_html_e( 'No reviews yet — be the first to share your thoughts on an article or the platform.', 'collective-finity' ); ?></div>
@@ -910,6 +917,56 @@ function collective_finity_home_album_cover_style( $album_id ) {
         color: var(--cf-accent, #ffb700);
     }
 
+    .cf-home-redesign .cf-home-review-card.is-hidden {
+        display: none;
+    }
+
+    @keyframes cfReviewFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes cfReviewSlideLeft {
+        from { opacity: 0; transform: translateX(24px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes cfReviewSlideRight {
+        from { opacity: 0; transform: translateX(-24px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes cfReviewScale {
+        from { opacity: 0; transform: scale(0.92); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    .cf-home-redesign .cf-home-review-card.cf-anim-fade { animation: cfReviewFadeIn 0.5s ease both; }
+    .cf-home-redesign .cf-home-review-card.cf-anim-slide-left { animation: cfReviewSlideLeft 0.5s ease both; }
+    .cf-home-redesign .cf-home-review-card.cf-anim-slide-right { animation: cfReviewSlideRight 0.5s ease both; }
+    .cf-home-redesign .cf-home-review-card.cf-anim-scale { animation: cfReviewScale 0.5s ease both; }
+
+    @media (prefers-reduced-motion: reduce) {
+        .cf-home-redesign .cf-home-review-card.cf-anim-fade,
+        .cf-home-redesign .cf-home-review-card.cf-anim-slide-left,
+        .cf-home-redesign .cf-home-review-card.cf-anim-slide-right,
+        .cf-home-redesign .cf-home-review-card.cf-anim-scale {
+            animation: none;
+        }
+    }
+
+    .cf-home-redesign .cf-home-reviews-cta {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .cf-home-redesign .cf-home-reviews-viewall {
+        font-size: 13px;
+        color: var(--cf-accent);
+        text-decoration: none;
+    }
+
+    .cf-home-redesign .cf-home-reviews-viewall:hover {
+        color: var(--cf-link-hover, #ffde99);
+    }
+
     /* ---- CTA animated gradient ---- */
     .cf-home-redesign .cf-cta--animated {
         background: linear-gradient(135deg, rgba(255, 183, 0, 0.2), rgba(255, 120, 0, 0.06), rgba(255, 183, 0, 0.14), rgba(255, 80, 0, 0.04));
@@ -1135,6 +1192,73 @@ function collective_finity_home_album_cover_style( $album_id ) {
             hideResults();
         }
     });
+})();
+
+(function () {
+    var carousel = document.querySelector('[data-cf-reviews-carousel]');
+    if (!carousel) {
+        return;
+    }
+
+    var track = carousel.querySelector('[data-cf-reviews-track]');
+    if (!track) {
+        return;
+    }
+
+    var cards = track.querySelectorAll('.cf-home-review-card');
+    if (!cards.length) {
+        return;
+    }
+
+    if (cards.length <= 3) {
+        return;
+    }
+
+    var interval = parseInt(carousel.getAttribute('data-interval'), 10) || 8000;
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var animClasses = ['cf-anim-fade', 'cf-anim-slide-left', 'cf-anim-slide-right', 'cf-anim-scale'];
+    var currentGroup = 0;
+    var animIndex = 0;
+    var groups = [];
+    var i;
+
+    for (i = 0; i < cards.length; i += 3) {
+        groups.push(Array.prototype.slice.call(cards, i, i + 3));
+    }
+
+    function clearAnimClasses(card) {
+        animClasses.forEach(function (cls) {
+            card.classList.remove(cls);
+        });
+    }
+
+    function showGroup(groupIdx) {
+        var animClass = reduceMotion ? null : animClasses[animIndex % animClasses.length];
+        animIndex += 1;
+
+        groups.forEach(function (group, g) {
+            group.forEach(function (card) {
+                if (g === groupIdx) {
+                    card.classList.remove('is-hidden');
+                    clearAnimClasses(card);
+                    if (animClass) {
+                        void card.offsetWidth;
+                        card.classList.add(animClass);
+                    }
+                } else {
+                    card.classList.add('is-hidden');
+                    clearAnimClasses(card);
+                }
+            });
+        });
+    }
+
+    showGroup(0);
+
+    window.setInterval(function () {
+        currentGroup = (currentGroup + 1) % groups.length;
+        showGroup(currentGroup);
+    }, interval);
 })();
 </script>
 

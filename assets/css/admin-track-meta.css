@@ -234,6 +234,18 @@
     padding: 4px 0 0;
 }
 
+.cf-streaming-field-header {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.cf-streaming-field-header > label:first-child {
+    margin-bottom: 0;
+}
+
 .cf-streaming-field label {
     color: #50575e;
     display: block;
@@ -272,6 +284,13 @@
     grid-column: 1 / -1;
 }
 
+.cf-visualizer-styles-box {
+    display: grid;
+    gap: 10px 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 12px;
+}
+
 .cf-visibility-toggle {
     align-items: center;
     background: #fff;
@@ -283,6 +302,24 @@
     gap: 8px;
     margin-top: 10px;
     padding: 10px 12px;
+}
+
+.cf-streaming-field .cf-visibility-toggle--inline {
+    display: flex;
+    flex-shrink: 0;
+    margin-bottom: 0;
+    margin-top: 0;
+    padding: 4px 8px;
+}
+
+.cf-streaming-field .cf-visibility-toggle--inline span {
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.cf-visualizer-styles-box .cf-visibility-toggle {
+    margin-top: 0;
 }
 
 .cf-visibility-toggle input {
@@ -386,7 +423,8 @@
 
 @media (max-width: 782px) {
     .cf-admin-grid,
-    .cf-streaming-box {
+    .cf-streaming-box,
+    .cf-visualizer-styles-box {
         grid-template-columns: 1fr;
     }
 

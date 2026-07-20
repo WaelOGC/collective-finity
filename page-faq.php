@@ -18,6 +18,7 @@ $cf_platform_reviews = get_comments(
 		'post_id'    => $cf_faq_post_id,
 		'status'     => 'approve',
 		'type'       => 'comment',
+		'number'     => 4,
 		'orderby'    => 'comment_date',
 		'order'      => 'DESC',
 		'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query

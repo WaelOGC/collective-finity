@@ -39,15 +39,28 @@ $comments_count = count($track_comments);
         $track_key    = get_post_meta( get_the_ID(), 'track_key', true );
         $show_bpm     = collective_finity_track_show_bpm( get_the_ID() );
         $show_key     = collective_finity_track_show_key( get_the_ID() );
+        $show_lyrics  = collective_finity_track_show_lyrics( get_the_ID() );
         $release_type = get_post_meta( get_the_ID(), 'track_release_type', true );
         $playback_url = ! empty( $preview_url ) ? $preview_url : $audio_url;
 
-        // Streaming Links
-        $spotify      = get_post_meta( get_the_ID(), 'track_spotify_url', true );
-        $apple        = get_post_meta( get_the_ID(), 'track_apple_url', true );
-        $soundcloud   = get_post_meta( get_the_ID(), 'track_soundcloud_url', true );
-        $youtube      = get_post_meta( get_the_ID(), 'track_youtube_url', true );
-        $bandcamp     = get_post_meta( get_the_ID(), 'track_bandcamp_url', true );
+        // Streaming Links (URL + admin visibility toggle)
+        $streaming_platforms = collective_finity_track_streaming_platforms();
+        $streaming_links     = array();
+        foreach ( $streaming_platforms as $platform_slug => $platform ) {
+            $platform_url = get_post_meta( get_the_ID(), $platform['meta'], true );
+            if ( $platform_url && collective_finity_track_show_streaming( get_the_ID(), $platform_slug ) ) {
+                $streaming_links[ $platform_slug ] = $platform_url;
+            }
+        }
+
+        // Visualizer styles enabled for this track
+        $visualizer_styles  = collective_finity_track_visualizer_styles();
+        $enabled_visualizers = array();
+        foreach ( $visualizer_styles as $style_slug => $style_label ) {
+            if ( collective_finity_track_show_visualizer( get_the_ID(), $style_slug ) ) {
+                $enabled_visualizers[ $style_slug ] = $style_label;
+            }
+        }
 
         // Genre Taxonomy
         $genres = wp_get_post_terms( get_the_ID(), 'music_genre' );
@@ -86,21 +99,22 @@ $comments_count = count($track_comments);
                     </div>
                     
                     <!-- 2. Visualizer drop down selector -->
+                    <?php if ( ! empty( $enabled_visualizers ) ) : ?>
                     <div class="cf-visualizer-selector-wrapper">
                         <label for="cf-visualizer-type"><?php _e('Audio Effect Style:', 'collective-finity'); ?></label>
                         <select id="cf-visualizer-type">
-                            <option value="neon_ring" selected><?php _e( 'Neon Glow Ring', 'collective-finity' ); ?></option>
-                            <option value="spectrum_bars"><?php _e( 'Spectrum Equalizer Bars', 'collective-finity' ); ?></option>
-                            <option value="glowing_sine"><?php _e( 'Glowing Sine Wave', 'collective-finity' ); ?></option>
-                            <option value="beat_pulse"><?php _e( 'Cosmic Beat Pulse', 'collective-finity' ); ?></option>
-                            <option value="dual_ring"><?php _e( 'Dual Orbit Ring', 'collective-finity' ); ?></option>
-                            <option value="particle_burst"><?php _e( 'Particle Burst', 'collective-finity' ); ?></option>
-                            <option value="frequency_wave"><?php _e( 'Frequency Wave', 'collective-finity' ); ?></option>
-                            <option value="starfield"><?php _e( 'Starfield Pulse', 'collective-finity' ); ?></option>
-                            <option value="aurora_fill"><?php _e( 'Aurora Fill', 'collective-finity' ); ?></option>
-                            <option value="hexagon_grid"><?php _e( 'Hexagon Grid', 'collective-finity' ); ?></option>
+                            <?php
+                            $is_first_visualizer = true;
+                            foreach ( $enabled_visualizers as $style_slug => $style_label ) :
+                                ?>
+                                <option value="<?php echo esc_attr( $style_slug ); ?>" <?php selected( $is_first_visualizer ); ?>><?php echo esc_html( $style_label ); ?></option>
+                                <?php
+                                $is_first_visualizer = false;
+                            endforeach;
+                            ?>
                         </select>
                     </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- 3. MAIN DETAILS CARD -->
@@ -172,36 +186,48 @@ $comments_count = count($track_comments);
             </div>
 
             <!-- 5. LISTEN ON EXTERNAL PLATFORMS -->
+            <?php if ( ! empty( $streaming_links ) ) : ?>
             <div class="cf-external-platforms-wrapper cf-glass-card">
                 <span class="cf-platforms-title"><?php _e('Listen on External Platforms', 'collective-finity'); ?></span>
                 <div class="cf-platforms-grid">
-                    <?php if($spotify): ?>
-                        <a href="<?php echo esc_url($spotify); ?>" target="_blank" class="cf-platform-icon-btn" title="Spotify">
+                    <?php if ( ! empty( $streaming_links['spotify'] ) ) : ?>
+                        <a href="<?php echo esc_url( $streaming_links['spotify'] ); ?>" target="_blank" class="cf-platform-icon-btn" title="Spotify">
                             <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.417.387-.714.207-2.39-1.46-5.4-1.79-8.946-.983-.34.078-.615-.187-.69-.47-.075-.333.15-.658.463-.733 3.882-.888 7.21-.5 9.873 1.13.292.176.31.554.114.85zm1.224-2.724c-.226.367-.626.49-.982.262-2.735-1.68-6.904-2.17-10.128-1.192-.41.124-.836-.14-.954-.537-.118-.396.11-.844.516-.96 3.694-1.12 8.283-.573 11.414 2.247.332.22.427.674.134 1.18zm.107-2.836C14.502 8.78 8.04 8.567 4.3 9.702c-.575.174-1.18-.184-1.353-.75-.173-.565.155-1.196.732-1.37 4.3-1.304 11.436-1.047 15.485 1.36.518.516 0 1 .37 1.35.37.28.84.45 1.45.45.54 0 1-.22 1.35-.45.37-.35.37-.84.37-1.35z"/></svg>
                         </a>
                     <?php endif; ?>
-                    <?php if($apple): ?>
-                        <a href="<?php echo esc_url($apple); ?>" target="_blank" class="cf-platform-icon-btn" title="Apple Music">
+                    <?php if ( ! empty( $streaming_links['apple'] ) ) : ?>
+                        <a href="<?php echo esc_url( $streaming_links['apple'] ); ?>" target="_blank" class="cf-platform-icon-btn" title="Apple Music">
                             <svg viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm4.333 13.914c-.39.26-.816.388-1.258.388-.34 0-.676-.08-1.008-.242l-2.067-1.034v.538c0 .858-.458 1.636-1.198 2.032-.39.21-.817.314-1.242.314-.492 0-.974-.14-1.4-.412L6.11 16.146c-.732-.472-1.144-1.272-1.144-2.138v-3.076c0-.858.458-1.636 1.198-2.032l2.054-1.11c.39-.21.817-.314 1.242-.314.492 0 .974.14 1.4.412l2.054 1.358c.732.472 1.144 1.272 1.144 2.138v.538l2.067-1.034c.332-.162.668-.242 1.008-.242.442 0 .868.128 1.258.388.756.504 1.167 1.358 1.167 2.29v1.238c0 .932-.411 1.786-1.167 2.29z"/></svg>
                         </a>
                     <?php endif; ?>
-                    <?php if($soundcloud): ?>
-                        <a href="<?php echo esc_url($soundcloud); ?>" target="_blank" class="cf-platform-icon-btn" title="Soundcloud">
+                    <?php if ( ! empty( $streaming_links['soundcloud'] ) ) : ?>
+                        <a href="<?php echo esc_url( $streaming_links['soundcloud'] ); ?>" target="_blank" class="cf-platform-icon-btn" title="Soundcloud">
                             <svg viewBox="0 0 24 24"><path d="M11.56 16.5c0-.18.01-.36.03-.53l.03-.23c-1.39-.12-2.5-1.14-2.5-2.43 0-1.14.87-2.07 2.05-2.28-.01-.13-.02-.27-.02-.4 0-1.74 1.75-3.15 3.91-3.15 1.5 0 2.8 1 3.48 2.45.39-.14.8-.23 1.24-.23 1.95 0 3.53 1.41 3.53 3.15 0 1.95-1.58 3.53-3.53 3.53h-8.2zm-1.04-4.8c-.37-.5-1.02-.73-1.62-.57-.4.1-.73.38-.9.77-.1.25-.13.52-.09.78.1.53.52.92 1.06.94l1.55.08V11.7z"/></svg>
                         </a>
                     <?php endif; ?>
-                    <?php if($youtube): ?>
-                        <a href="<?php echo esc_url($youtube); ?>" target="_blank" class="cf-platform-icon-btn" title="YouTube">
+                    <?php if ( ! empty( $streaming_links['youtube'] ) ) : ?>
+                        <a href="<?php echo esc_url( $streaming_links['youtube'] ); ?>" target="_blank" class="cf-platform-icon-btn" title="YouTube">
                             <svg viewBox="0 0 24 24"><path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.517 3.545 12 3.545 12 3.545s0 0 0 0h-.002s-7.517 0-9.388.507a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.871.507 9.388.507 9.388.507s7.517 0 9.388-.507a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                         </a>
                     <?php endif; ?>
-                    <?php if($bandcamp): ?>
-                        <a href="<?php echo esc_url($bandcamp); ?>" target="_blank" class="cf-platform-icon-btn" title="Bandcamp">
+                    <?php if ( ! empty( $streaming_links['bandcamp'] ) ) : ?>
+                        <a href="<?php echo esc_url( $streaming_links['bandcamp'] ); ?>" target="_blank" class="cf-platform-icon-btn" title="Bandcamp">
                             <svg viewBox="0 0 24 24"><path d="M22 6H12l-2.5 4H2v8h20V6z"/></svg>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ( ! empty( $streaming_links['amazon'] ) ) : ?>
+                        <a href="<?php echo esc_url( $streaming_links['amazon'] ); ?>" target="_blank" class="cf-platform-icon-btn" title="Amazon Music">
+                            <svg viewBox="0 0 24 24"><path d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.525.13.12.172.09.336-.12.48-.256.19-.76.385-1.51.585-.797.252-1.597.504-2.402.754-3.158 1.006-6.626 1.51-10.406 1.51-4.324 0-8.162-.734-11.52-2.203-.176-.072-.296-.16-.36-.256-.1-.133-.076-.27.073-.41z"/></svg>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ( ! empty( $streaming_links['google_play'] ) ) : ?>
+                        <a href="<?php echo esc_url( $streaming_links['google_play'] ); ?>" target="_blank" class="cf-platform-icon-btn" title="Google Play Music">
+                            <svg viewBox="0 0 24 24"><path d="M3.61 1.81A1.5 1.5 0 0 0 1.5 3.18v17.64a1.5 1.5 0 0 0 2.11 1.37l15.84-8.82a1.5 1.5 0 0 0 0-2.64L3.61 1.81zm1.39 3.4 10.38 5.79L5 16.79V5.21z"/></svg>
                         </a>
                     <?php endif; ?>
                 </div>
             </div>
+            <?php endif; ?>
 
             <?php if ( function_exists( 'collective_finity_ad_slot_wrapped' ) ) : ?>
             <?php collective_finity_ad_slot_wrapped( 'track_sidebar', '<div class="cf-track-ad-sidebar cf-glass-card">', '</div>' ); ?>
@@ -209,6 +235,7 @@ $comments_count = count($track_comments);
 
             <!-- 6. STORY & AUDIO-TRACKED LYRICS PLAYER SECTION -->
             <div class="cf-content-area cf-glass-card">
+                <?php if ( $show_lyrics ) : ?>
                 <h2><?php _e('Story & Concept Behind the Track', 'collective-finity'); ?></h2>
                 
                 <div class="cf-entry-content">
@@ -226,9 +253,10 @@ $comments_count = count($track_comments);
                         <p class="cf-sync-line" data-start="69" data-end="120">✦ (Atmospheric soundscape & synthesizers climax) ✦</p>
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <!-- 2. STYLIZED COMMENTS SECTION WITH EMOJI SELECTOR AND FORCED INPUT FORM -->
-                <div id="cf-track-comments" class="cf-comments-section-wrapper" style="border-top:1px solid rgba(255,255,255,0.1); padding-top:40px;">
+                <div id="cf-track-comments" class="cf-comments-section-wrapper" style="<?php echo $show_lyrics ? 'border-top:1px solid rgba(255,255,255,0.1); padding-top:40px;' : ''; ?>">
                     <h3><?php _e('Listener Discussion', 'collective-finity'); ?></h3>
                     
                     <!-- Emoji Picker Bar -->
@@ -584,7 +612,7 @@ jQuery(document).ready(function($) {
     }
 
 
-    // --- 5. Web Audio API Circular Frequency Analyzer visualizer (With 5 Live Style Options) ---
+    // --- 5. Web Audio API circular visualizer (12 rotating multi-color styles) ---
     var audioContext;
     var analyser;
     var source;
@@ -592,6 +620,125 @@ jQuery(document).ready(function($) {
     var ctx = canvas ? canvas.getContext('2d') : null;
     var bufferLength;
     var dataArray;
+
+    // Brand gold first, then bright saturated accents (never gray).
+    var CF_VIZ_PALETTE = [
+        [255, 183, 0],   // #FFB700 brand gold
+        [255, 59, 48],   // bright red
+        [191, 90, 242],  // bright purple
+        [10, 132, 255],  // bright blue
+        [255, 149, 0]    // bright orange
+    ];
+    var colorPhase = 0;
+    var vizEmbers = [];
+    var vizSmoke = [];
+    var vizDrips = [];
+    var vizCracks = null;
+    var vizFrost = null;
+    var vizShards = null;
+    var radarAngle = 0;
+    var breathePhase = 0;
+
+    function vizEnergy(from, to) {
+        var sum = 0;
+        var n = 0;
+        var end = Math.min(to, bufferLength);
+        for (var i = from; i < end; i++) {
+            sum += dataArray[i];
+            n++;
+        }
+        return n ? sum / (n * 255) : 0;
+    }
+
+    function vizUpdateColorPhase() {
+        var full = vizEnergy(0, bufferLength);
+        var bass = vizEnergy(0, 10);
+        colorPhase += 0.006 + full * 0.055 + bass * 0.045;
+    }
+
+    function vizRgbAtAngle(angleRad) {
+        var t = (angleRad / (Math.PI * 2)) + colorPhase;
+        t = t - Math.floor(t);
+        var scaled = t * CF_VIZ_PALETTE.length;
+        var i0 = Math.floor(scaled) % CF_VIZ_PALETTE.length;
+        var i1 = (i0 + 1) % CF_VIZ_PALETTE.length;
+        var f = scaled - Math.floor(scaled);
+        f = f * f * (3 - 2 * f);
+        var c0 = CF_VIZ_PALETTE[i0];
+        var c1 = CF_VIZ_PALETTE[i1];
+        return [
+            Math.round(c0[0] + (c1[0] - c0[0]) * f),
+            Math.round(c0[1] + (c1[1] - c0[1]) * f),
+            Math.round(c0[2] + (c1[2] - c0[2]) * f)
+        ];
+    }
+
+    function vizColorAtAngle(angleRad, alpha) {
+        var rgb = vizRgbAtAngle(angleRad);
+        var a = (typeof alpha === 'number') ? alpha : 1;
+        return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + a + ')';
+    }
+
+    function vizSeedCracks(radius) {
+        var cracks = [];
+        for (var i = 0; i < 14; i++) {
+            var base = (Math.PI * 2 / 14) * i + (Math.random() - 0.5) * 0.25;
+            var segs = [];
+            var ang = base;
+            var dist = radius + 2;
+            segs.push({ a: ang, r: dist });
+            var steps = 3 + Math.floor(Math.random() * 3);
+            for (var s = 0; s < steps; s++) {
+                ang += (Math.random() - 0.5) * 0.55;
+                dist += 8 + Math.random() * 14;
+                segs.push({ a: ang, r: dist });
+            }
+            cracks.push(segs);
+        }
+        return cracks;
+    }
+
+    function vizSeedFrost(radius) {
+        var veins = [];
+        for (var i = 0; i < 18; i++) {
+            var base = (Math.PI * 2 / 18) * i + (Math.random() - 0.5) * 0.2;
+            var branches = [];
+            var main = [];
+            var ang = base;
+            var dist = radius + 1;
+            main.push({ a: ang, r: dist });
+            var len = 4 + Math.floor(Math.random() * 3);
+            for (var s = 0; s < len; s++) {
+                ang += (Math.random() - 0.5) * 0.35;
+                dist += 6 + Math.random() * 10;
+                main.push({ a: ang, r: dist });
+                if (s > 0 && Math.random() > 0.55) {
+                    var ba = ang + (Math.random() > 0.5 ? 0.4 : -0.4);
+                    var br = dist + 4 + Math.random() * 8;
+                    branches.push([
+                        { a: ang, r: dist },
+                        { a: ba, r: br }
+                    ]);
+                }
+            }
+            veins.push({ main: main, branches: branches });
+        }
+        return veins;
+    }
+
+    function vizSeedShards(radius) {
+        var shards = [];
+        for (var i = 0; i < 20; i++) {
+            var a = (Math.PI * 2 / 20) * i + (Math.random() - 0.5) * 0.15;
+            shards.push({
+                a: a,
+                spread: 0.06 + Math.random() * 0.08,
+                baseLen: 10 + Math.random() * 16,
+                tipBias: (Math.random() - 0.5) * 0.08
+            });
+        }
+        return shards;
+    }
 
     function initVisualizer() {
         if (audioContext || window.cfAudioMediaSourceConnected) {
@@ -601,17 +748,16 @@ jQuery(document).ready(function($) {
         try {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioContext.createAnalyser();
-            
-            // Connect global player element securely
+
             source = audioContext.createMediaElementSource(audio);
             source.connect(analyser);
             analyser.connect(audioContext.destination);
             window.cfAudioMediaSourceConnected = true;
 
-            analyser.fftSize = 256; 
+            analyser.fftSize = 256;
             bufferLength = analyser.frequencyBinCount;
             dataArray = new Uint8Array(bufferLength);
-            
+
             drawVisualizer();
         } catch(e) {
             console.log("Web Audio API not supported on this browser context.");
@@ -640,170 +786,387 @@ jQuery(document).ready(function($) {
 
         var centerX = canvas.width / 2;
         var centerY = canvas.height / 2;
-        var radius = 142; // Surrounds the 280px cover disc neatly
-        var bars = 64;
-        
-        // Grab current dynamic visualizer selection from dropdown
+        var radius = 142;
         var selectedStyle = $('#cf-visualizer-type').val();
+        var bass = vizEnergy(0, 10);
+        var mid = vizEnergy(10, 40);
+        var full = vizEnergy(0, bufferLength);
 
-        if (selectedStyle === 'neon_ring') {
-            // Style 1: Outward Neon Glow Ring
+        vizUpdateColorPhase();
+
+        if (selectedStyle === 'spectrum_bars') {
+            var bars = 64;
+            var barWidth = (Math.PI * 2 * radius) / bars * 0.55;
             for (var i = 0; i < bars; i++) {
                 var val = dataArray[i % bufferLength];
-                var barHeight = (val / 255) * 22; // Height scaling factor
-
-                var rads = (Math.PI * 2) / bars * i;
-                var x_start = centerX + Math.cos(rads) * radius;
-                var y_start = centerY + Math.sin(rads) * radius;
-                
-                var x_end = centerX + Math.cos(rads) * (radius + barHeight);
-                var y_end = centerY + Math.sin(rads) * (radius + barHeight);
-
-                ctx.strokeStyle = i % 2 === 0 ? '#FFB700' : '#00FFFF';
-                ctx.lineWidth = 3;
+                var barHeight = 4 + (val / 255) * 28;
+                var rads = (Math.PI * 2 / bars) * i;
+                var cos = Math.cos(rads);
+                var sin = Math.sin(rads);
+                var x0 = centerX + cos * radius;
+                var y0 = centerY + sin * radius;
+                var x1 = centerX + cos * (radius + barHeight);
+                var y1 = centerY + sin * (radius + barHeight);
+                var inten = 0.45 + (val / 255) * 0.55;
+                ctx.strokeStyle = vizColorAtAngle(rads, inten);
+                ctx.lineWidth = Math.max(2, barWidth * 0.35);
+                ctx.lineCap = 'round';
+                ctx.shadowBlur = 6 + (val / 255) * 10;
+                ctx.shadowColor = vizColorAtAngle(rads, 0.7);
                 ctx.beginPath();
-                ctx.moveTo(x_start, y_start);
-                ctx.lineTo(x_end, y_end);
+                ctx.moveTo(x0, y0);
+                ctx.lineTo(x1, y1);
                 ctx.stroke();
             }
-        } 
-        else if (selectedStyle === 'spectrum_bars') {
-            // Style 2: Dense Linear Spectrum Equalizer Bars
-            var linearBarWidth = (canvas.width / bufferLength) * 1.5;
-            var barX = 0;
-
-            for(var i = 0; i < bufferLength; i++) {
-                var val = dataArray[i];
-                var barHeight = (val / 255) * 60;
-
-                ctx.fillStyle = 'rgba(255, 183, 0, 0.8)';
-                ctx.fillRect(barX, canvas.height - barHeight, linearBarWidth - 2, barHeight);
-                barX += linearBarWidth;
-            }
-        } 
-        else if (selectedStyle === 'glowing_sine') {
-            ctx.beginPath();
-            for (var i = 0; i <= bars; i++) {
-                var val = dataArray[i % bufferLength];
-                var waveScale = (val / 255) * 15;
-                var rads = (Math.PI * 2) / bars * i;
-                var x = centerX + Math.cos(rads) * (radius + waveScale);
-                var y = centerY + Math.sin(rads) * (radius + waveScale);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            }
-            ctx.closePath();
-            ctx.strokeStyle = '#00FFFF';
-            ctx.lineWidth = 4;
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#00FFFF';
-            ctx.stroke();
             ctx.shadowBlur = 0;
-        }
-        else if (selectedStyle === 'beat_pulse') {
-            var totalBass = 0;
-            for (var bi = 0; bi < 10; bi++) totalBass += dataArray[bi];
-            var avgBass = totalBass / 10;
-            var pulseScale = (avgBass / 255) * 35;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius - 2, 0, 2 * Math.PI);
-            ctx.fillStyle = 'rgba(255, 183, 0, 0.05)';
-            ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = '#FFB700';
-            ctx.shadowBlur = 15 + pulseScale;
-            ctx.shadowColor = '#FFB700';
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-        }
-        else if (selectedStyle === 'dual_ring') {
-            var timeRotation = Date.now() * 0.001;
-            for (var di = 0; di < 30; di++) {
-                var dval = dataArray[di % bufferLength];
-                var dbar = (dval / 255) * 12;
-                var drads = ((Math.PI * 2) / 30 * di) + timeRotation;
-                ctx.fillStyle = '#FFB700';
-                ctx.fillRect(centerX + Math.cos(drads) * (radius - 15 - dbar) - 2, centerY + Math.sin(drads) * (radius - 15 - dbar) - 2, 4, 4);
-            }
-            for (var dj = 0; dj < 40; dj++) {
-                var dval2 = dataArray[dj % bufferLength];
-                var dbar2 = (dval2 / 255) * 12;
-                var drads2 = ((Math.PI * 2) / 40 * dj) - timeRotation;
-                ctx.fillStyle = '#00FFFF';
-                ctx.fillRect(centerX + Math.cos(drads2) * (radius + 15 + dbar2) - 2, centerY + Math.sin(drads2) * (radius + 15 + dbar2) - 2, 4, 4);
-            }
-        }
-        else if (selectedStyle === 'particle_burst') {
-            for (var p = 0; p < 48; p++) {
-                var pval = dataArray[p % bufferLength];
-                var dist = radius + (pval / 255) * 40;
-                var prads = (Math.PI * 2 / 48) * p;
-                ctx.beginPath();
-                ctx.arc(centerX + Math.cos(prads) * dist, centerY + Math.sin(prads) * dist, 2 + (pval / 255) * 3, 0, Math.PI * 2);
-                ctx.fillStyle = p % 2 === 0 ? 'rgba(255,183,0,0.85)' : 'rgba(0,255,255,0.65)';
-                ctx.fill();
-            }
-        }
-        else if (selectedStyle === 'frequency_wave') {
-            ctx.beginPath();
-            for (var w = 0; w < bufferLength; w++) {
-                var wval = dataArray[w];
-                var wx = (w / bufferLength) * canvas.width;
-                var wy = centerY + Math.sin(w * 0.15) * (wval / 255) * 50;
-                if (w === 0) ctx.moveTo(wx, wy);
-                else ctx.lineTo(wx, wy);
-            }
-            ctx.strokeStyle = '#FFB700';
-            ctx.lineWidth = 2;
-            ctx.shadowBlur = 8;
-            ctx.shadowColor = '#FFB700';
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-        }
-        else if (selectedStyle === 'starfield') {
-            for (var s = 0; s < 60; s++) {
-                var sval = dataArray[s % bufferLength];
-                var srads = (Math.PI * 2 / 60) * s + Date.now() * 0.0005;
-                var sr = radius - 20 + (s % 5) * 8 + (sval / 255) * 10;
-                ctx.beginPath();
-                ctx.arc(centerX + Math.cos(srads) * sr, centerY + Math.sin(srads) * sr, 1 + (sval / 255) * 2, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255,255,255,' + (0.3 + sval / 400) + ')';
-                ctx.fill();
-            }
+            ctx.lineCap = 'butt';
         }
         else if (selectedStyle === 'aurora_fill') {
-            var grad = ctx.createRadialGradient(centerX, centerY, radius * 0.4, centerX, centerY, radius + 30);
-            var bassAvg = 0;
-            for (var b = 0; b < 8; b++) bassAvg += dataArray[b];
-            bassAvg /= 8;
-            grad.addColorStop(0, 'rgba(255,183,0,' + (bassAvg / 600) + ')');
-            grad.addColorStop(0.5, 'rgba(0,255,255,' + (bassAvg / 800) + ')');
-            grad.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius + 25, 0, Math.PI * 2);
-            ctx.fillStyle = grad;
-            ctx.fill();
-        }
-        else if (selectedStyle === 'hexagon_grid') {
-            for (var h = 0; h < 24; h++) {
-                var hval = dataArray[h % bufferLength];
-                var hrads = (Math.PI * 2 / 24) * h;
-                var hx = centerX + Math.cos(hrads) * (radius + (hval / 255) * 18);
-                var hy = centerY + Math.sin(hrads) * (radius + (hval / 255) * 18);
-                var size = 5 + (hval / 255) * 4;
+            var haloR = radius + 55 + bass * 25 + mid * 10;
+            var steps = 48;
+            for (var ai = 0; ai < steps; ai++) {
+                var a0 = (Math.PI * 2 / steps) * ai;
+                var a1 = (Math.PI * 2 / steps) * (ai + 1.15);
+                var rgb = vizRgbAtAngle(a0);
+                var alpha = 0.12 + bass * 0.35 + full * 0.15;
+                var grad = ctx.createRadialGradient(centerX, centerY, radius * 0.85, centerX, centerY, haloR);
+                grad.addColorStop(0, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0)');
+                grad.addColorStop(0.45, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + (alpha * 0.35) + ')');
+                grad.addColorStop(0.75, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + alpha + ')');
+                grad.addColorStop(1, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0)');
                 ctx.beginPath();
-                for (var side = 0; side < 6; side++) {
-                    var angle = (Math.PI / 3) * side + hrads;
-                    var sx = hx + Math.cos(angle) * size;
-                    var sy = hy + Math.sin(angle) * size;
-                    if (side === 0) ctx.moveTo(sx, sy);
-                    else ctx.lineTo(sx, sy);
-                }
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, haloR, a0, a1);
                 ctx.closePath();
-                ctx.strokeStyle = h % 2 === 0 ? '#FFB700' : '#00FFFF';
-                ctx.lineWidth = 1.5;
+                ctx.fillStyle = grad;
+                ctx.fill();
+            }
+        }
+        else if (selectedStyle === 'ember_drift') {
+            var spawnRate = 0.35 + full * 2.5 + bass * 1.5;
+            for (var e = 0; e < spawnRate; e++) {
+                if (vizEmbers.length > 80) break;
+                var ea = Math.random() * Math.PI * 2;
+                var er = radius + 4 + Math.random() * 18;
+                vizEmbers.push({
+                    a: ea,
+                    r: er,
+                    life: 1,
+                    decay: 0.008 + Math.random() * 0.012,
+                    drift: (Math.random() - 0.5) * 0.02,
+                    rise: 0.35 + Math.random() * 0.55,
+                    size: 1.2 + Math.random() * 2.2
+                });
+            }
+            for (var ei = vizEmbers.length - 1; ei >= 0; ei--) {
+                var em = vizEmbers[ei];
+                em.a += em.drift + (full - 0.5) * 0.01;
+                em.r += em.rise * (0.6 + bass * 1.4);
+                em.life -= em.decay * (0.7 + full);
+                if (em.life <= 0 || em.r > radius + 90) {
+                    vizEmbers.splice(ei, 1);
+                    continue;
+                }
+                var ex = centerX + Math.cos(em.a) * em.r;
+                var ey = centerY + Math.sin(em.a) * em.r;
+                ctx.beginPath();
+                ctx.arc(ex, ey, em.size * em.life, 0, Math.PI * 2);
+                ctx.fillStyle = vizColorAtAngle(em.a, 0.35 + em.life * 0.65);
+                ctx.shadowBlur = 8 + em.life * 10;
+                ctx.shadowColor = vizColorAtAngle(em.a, 0.8);
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+        }
+        else if (selectedStyle === 'crimson_pulse_ring') {
+            var pulse = 1 + bass * 0.18 + mid * 0.06;
+            var ringR = radius + 6 + bass * 14;
+            var segs = 72;
+            ctx.lineWidth = 1.5 + bass * 2.5;
+            ctx.lineCap = 'round';
+            for (var pi = 0; pi < segs; pi++) {
+                var pa0 = (Math.PI * 2 / segs) * pi;
+                var pa1 = (Math.PI * 2 / segs) * (pi + 1);
+                var pr = ringR * pulse;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, pr, pa0, pa1);
+                ctx.strokeStyle = vizColorAtAngle(pa0, 0.55 + bass * 0.45);
+                ctx.shadowBlur = 8 + bass * 22;
+                ctx.shadowColor = vizColorAtAngle(pa0, 0.85);
                 ctx.stroke();
             }
+            ctx.shadowBlur = 0;
+            ctx.lineCap = 'butt';
+        }
+        else if (selectedStyle === 'smoke_wisp') {
+            var smokeSpawn = 0.2 + full * 1.4;
+            for (var ss = 0; ss < smokeSpawn; ss++) {
+                if (vizSmoke.length > 36) break;
+                vizSmoke.push({
+                    a: Math.random() * Math.PI * 2,
+                    r: radius + 2 + Math.random() * 8,
+                    life: 1,
+                    decay: 0.006 + Math.random() * 0.008,
+                    swirl: (Math.random() > 0.5 ? 1 : -1) * (0.012 + Math.random() * 0.02),
+                    widen: 0.2 + Math.random() * 0.35,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+            for (var si = vizSmoke.length - 1; si >= 0; si--) {
+                var sm = vizSmoke[si];
+                sm.phase += 0.08 + mid * 0.12;
+                sm.a += sm.swirl * (0.7 + full);
+                sm.r += 0.45 + bass * 0.9;
+                sm.life -= sm.decay * (0.8 + full * 0.6);
+                if (sm.life <= 0 || sm.r > radius + 85) {
+                    vizSmoke.splice(si, 1);
+                    continue;
+                }
+                var ribbon = 10 + sm.widen * 40 * (1 - sm.life * 0.3);
+                ctx.beginPath();
+                for (var t = 0; t <= 8; t++) {
+                    var tt = t / 8;
+                    var ra = sm.a + Math.sin(sm.phase + tt * 2.5) * 0.35 * tt;
+                    var rr = sm.r + tt * ribbon * 0.35;
+                    var sx = centerX + Math.cos(ra) * rr;
+                    var sy = centerY + Math.sin(ra) * rr;
+                    if (t === 0) ctx.moveTo(sx, sy);
+                    else ctx.lineTo(sx, sy);
+                }
+                ctx.strokeStyle = vizColorAtAngle(sm.a, 0.08 + sm.life * 0.28);
+                ctx.lineWidth = 6 + (1 - sm.life) * 10;
+                ctx.lineCap = 'round';
+                ctx.shadowBlur = 14;
+                ctx.shadowColor = vizColorAtAngle(sm.a, 0.35);
+                ctx.stroke();
+            }
+            ctx.shadowBlur = 0;
+            ctx.lineCap = 'butt';
+        }
+        else if (selectedStyle === 'shard_fracture') {
+            if (!vizShards) vizShards = vizSeedShards(radius);
+            for (var sh = 0; sh < vizShards.length; sh++) {
+                var shard = vizShards[sh];
+                var sval = dataArray[sh % bufferLength] / 255;
+                var len = shard.baseLen * (0.55 + sval * 1.35 + bass * 0.5);
+                var aL = shard.a - shard.spread;
+                var aR = shard.a + shard.spread;
+                var aT = shard.a + shard.tipBias;
+                var xL = centerX + Math.cos(aL) * radius;
+                var yL = centerY + Math.sin(aL) * radius;
+                var xR = centerX + Math.cos(aR) * radius;
+                var yR = centerY + Math.sin(aR) * radius;
+                var xT = centerX + Math.cos(aT) * (radius + len);
+                var yT = centerY + Math.sin(aT) * (radius + len);
+                ctx.beginPath();
+                ctx.moveTo(xL, yL);
+                ctx.lineTo(xT, yT);
+                ctx.lineTo(xR, yR);
+                ctx.closePath();
+                ctx.fillStyle = vizColorAtAngle(shard.a, 0.25 + sval * 0.55);
+                ctx.strokeStyle = vizColorAtAngle(shard.a, 0.55 + sval * 0.45);
+                ctx.lineWidth = 1;
+                ctx.shadowBlur = 4 + sval * 12;
+                ctx.shadowColor = vizColorAtAngle(shard.a, 0.7);
+                ctx.fill();
+                ctx.stroke();
+            }
+            ctx.shadowBlur = 0;
+        }
+        else if (selectedStyle === 'radar_sweep') {
+            radarAngle += 0.025 + full * 0.08 + bass * 0.06;
+            var sweepLen = Math.PI * 0.55;
+            var trailSteps = 40;
+            for (var ri = 0; ri < trailSteps; ri++) {
+                var frac = ri / trailSteps;
+                var ra0 = radarAngle - sweepLen * (1 - frac);
+                var ra1 = radarAngle - sweepLen * (1 - (ri + 1) / trailSteps);
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius + 38 + bass * 12, ra0, ra1);
+                ctx.closePath();
+                ctx.fillStyle = vizColorAtAngle(ra0, 0.02 + frac * 0.22 * (0.4 + full));
+                ctx.fill();
+            }
+            ctx.beginPath();
+            ctx.moveTo(centerX + Math.cos(radarAngle) * (radius - 4), centerY + Math.sin(radarAngle) * (radius - 4));
+            ctx.lineTo(centerX + Math.cos(radarAngle) * (radius + 42 + bass * 14), centerY + Math.sin(radarAngle) * (radius + 42 + bass * 14));
+            ctx.strokeStyle = vizColorAtAngle(radarAngle, 0.85 + bass * 0.15);
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 12 + bass * 16;
+            ctx.shadowColor = vizColorAtAngle(radarAngle, 0.9);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius + 2, 0, Math.PI * 2);
+            ctx.strokeStyle = vizColorAtAngle(radarAngle, 0.2 + mid * 0.25);
+            ctx.lineWidth = 1;
+            ctx.shadowBlur = 0;
+            ctx.stroke();
+        }
+        else if (selectedStyle === 'ink_bleed') {
+            var bleedR = radius + 20 + bass * 40 + mid * 15;
+            var inkSteps = 36;
+            for (var ii = 0; ii < inkSteps; ii++) {
+                var ia = (Math.PI * 2 / inkSteps) * ii;
+                var wobble = 1 + Math.sin(ia * 3 + colorPhase * 4) * 0.08 * (0.5 + full);
+                var ir = bleedR * wobble;
+                var rgb = vizRgbAtAngle(ia);
+                var alpha = 0.18 + bass * 0.4;
+                var igrad = ctx.createRadialGradient(
+                    centerX + Math.cos(ia) * radius,
+                    centerY + Math.sin(ia) * radius,
+                    2,
+                    centerX + Math.cos(ia) * radius,
+                    centerY + Math.sin(ia) * radius,
+                    ir - radius + 8
+                );
+                igrad.addColorStop(0, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + alpha + ')');
+                igrad.addColorStop(0.55, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + (alpha * 0.35) + ')');
+                igrad.addColorStop(1, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0)');
+                ctx.beginPath();
+                ctx.arc(
+                    centerX + Math.cos(ia) * (radius + 4),
+                    centerY + Math.sin(ia) * (radius + 4),
+                    (ir - radius) * 0.9,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fillStyle = igrad;
+                ctx.fill();
+            }
+        }
+        else if (selectedStyle === 'frost_veins') {
+            if (!vizFrost) vizFrost = vizSeedFrost(radius);
+            for (var fi = 0; fi < vizFrost.length; fi++) {
+                var vein = vizFrost[fi];
+                var fval = dataArray[fi % bufferLength] / 255;
+                var fAlpha = 0.25 + fval * 0.55 + bass * 0.2;
+                var baseA = vein.main[0].a;
+                ctx.beginPath();
+                for (var fm = 0; fm < vein.main.length; fm++) {
+                    var mp = vein.main[fm];
+                    var mx = centerX + Math.cos(mp.a) * mp.r;
+                    var my = centerY + Math.sin(mp.a) * mp.r;
+                    if (fm === 0) ctx.moveTo(mx, my);
+                    else ctx.lineTo(mx, my);
+                }
+                ctx.strokeStyle = vizColorAtAngle(baseA, fAlpha);
+                ctx.lineWidth = 1 + fval * 1.5;
+                ctx.shadowBlur = 3 + fval * 8;
+                ctx.shadowColor = vizColorAtAngle(baseA, 0.7);
+                ctx.stroke();
+                for (var fb = 0; fb < vein.branches.length; fb++) {
+                    var br = vein.branches[fb];
+                    ctx.beginPath();
+                    ctx.moveTo(centerX + Math.cos(br[0].a) * br[0].r, centerY + Math.sin(br[0].a) * br[0].r);
+                    ctx.lineTo(centerX + Math.cos(br[1].a) * br[1].r, centerY + Math.sin(br[1].a) * br[1].r);
+                    ctx.strokeStyle = vizColorAtAngle(br[0].a, fAlpha * 0.75);
+                    ctx.lineWidth = 0.8;
+                    ctx.stroke();
+                }
+            }
+            ctx.shadowBlur = 0;
+        }
+        else if (selectedStyle === 'blood_drip_trails') {
+            var dripSpawn = 0.15 + bass * 1.8 + full * 0.6;
+            for (var ds = 0; ds < dripSpawn; ds++) {
+                if (vizDrips.length > 50) break;
+                var da = Math.random() * Math.PI * 2;
+                // Irregular clusters: bias some angles
+                if (Math.random() > 0.7) da = Math.floor(Math.random() * 8) * (Math.PI / 4) + (Math.random() - 0.5) * 0.3;
+                vizDrips.push({
+                    a: da,
+                    r: radius + 48 + Math.random() * 22,
+                    target: radius + 2 + Math.random() * 6,
+                    speed: 0.4 + Math.random() * 0.9,
+                    life: 1,
+                    thickness: 1 + Math.random() * 1.8,
+                    wobble: (Math.random() - 0.5) * 0.03,
+                    trail: []
+                });
+            }
+            for (var di = vizDrips.length - 1; di >= 0; di--) {
+                var dr = vizDrips[di];
+                dr.a += dr.wobble * (0.5 + mid);
+                dr.r -= dr.speed * (0.7 + bass * 1.5 + full * 0.5);
+                dr.trail.push({ a: dr.a, r: dr.r });
+                if (dr.trail.length > 12) dr.trail.shift();
+                if (dr.r <= dr.target) {
+                    dr.life -= 0.04;
+                }
+                if (dr.life <= 0) {
+                    vizDrips.splice(di, 1);
+                    continue;
+                }
+                ctx.beginPath();
+                for (var dt = 0; dt < dr.trail.length; dt++) {
+                    var tp = dr.trail[dt];
+                    var tx = centerX + Math.cos(tp.a) * tp.r;
+                    var ty = centerY + Math.sin(tp.a) * tp.r;
+                    if (dt === 0) ctx.moveTo(tx, ty);
+                    else ctx.lineTo(tx, ty);
+                }
+                ctx.strokeStyle = vizColorAtAngle(dr.a, 0.35 + dr.life * 0.55);
+                ctx.lineWidth = dr.thickness;
+                ctx.lineCap = 'round';
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = vizColorAtAngle(dr.a, 0.6);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(centerX + Math.cos(dr.a) * dr.r, centerY + Math.sin(dr.a) * dr.r, dr.thickness * 0.9, 0, Math.PI * 2);
+                ctx.fillStyle = vizColorAtAngle(dr.a, 0.5 + dr.life * 0.5);
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+            ctx.lineCap = 'butt';
+        }
+        else if (selectedStyle === 'halo_breathe') {
+            breathePhase += 0.02 + full * 0.04;
+            var breath = 0.5 + 0.5 * Math.sin(breathePhase);
+            var breathBoost = breath * (0.65 + bass * 0.7 + mid * 0.25);
+            var haloInner = radius + 2;
+            var haloOuter = radius + 28 + breathBoost * 42;
+            var hSteps = 40;
+            for (var hi = 0; hi < hSteps; hi++) {
+                var ha0 = (Math.PI * 2 / hSteps) * hi;
+                var ha1 = (Math.PI * 2 / hSteps) * (hi + 1.2);
+                var hrgb = vizRgbAtAngle(ha0);
+                var hAlpha = 0.1 + breathBoost * 0.35;
+                var hgrad = ctx.createRadialGradient(centerX, centerY, haloInner, centerX, centerY, haloOuter);
+                hgrad.addColorStop(0, 'rgba(' + hrgb[0] + ',' + hrgb[1] + ',' + hrgb[2] + ',0)');
+                hgrad.addColorStop(0.55, 'rgba(' + hrgb[0] + ',' + hrgb[1] + ',' + hrgb[2] + ',' + (hAlpha * 0.45) + ')');
+                hgrad.addColorStop(0.85, 'rgba(' + hrgb[0] + ',' + hrgb[1] + ',' + hrgb[2] + ',' + hAlpha + ')');
+                hgrad.addColorStop(1, 'rgba(' + hrgb[0] + ',' + hrgb[1] + ',' + hrgb[2] + ',0)');
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, haloOuter, ha0, ha1);
+                ctx.closePath();
+                ctx.fillStyle = hgrad;
+                ctx.fill();
+            }
+        }
+        else if (selectedStyle === 'fracture_cracks') {
+            if (!vizCracks) vizCracks = vizSeedCracks(radius);
+            var intensity = 0.2 + bass * 0.8 + mid * 0.25;
+            for (var ci = 0; ci < vizCracks.length; ci++) {
+                var crack = vizCracks[ci];
+                var cval = dataArray[ci % bufferLength] / 255;
+                var cAlpha = intensity * (0.35 + cval * 0.65);
+                ctx.beginPath();
+                for (var cs = 0; cs < crack.length; cs++) {
+                    var cp = crack[cs];
+                    var cx = centerX + Math.cos(cp.a) * cp.r;
+                    var cy = centerY + Math.sin(cp.a) * cp.r;
+                    if (cs === 0) ctx.moveTo(cx, cy);
+                    else ctx.lineTo(cx, cy);
+                }
+                ctx.strokeStyle = vizColorAtAngle(crack[0].a, cAlpha);
+                ctx.lineWidth = 1 + cval * 2 + bass * 1.5;
+                ctx.shadowBlur = 2 + intensity * 14;
+                ctx.shadowColor = vizColorAtAngle(crack[0].a, 0.75);
+                ctx.stroke();
+            }
+            ctx.shadowBlur = 0;
         }
     }
 

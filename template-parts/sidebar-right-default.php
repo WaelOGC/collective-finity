@@ -65,12 +65,26 @@ $cf_register_url = home_url( '/cf-register' );
                 <?php endif; ?>
             </div>
         </div>
+        <?php // Messages icon hidden from frontend until admin-to-user messaging feature is prioritized. Do not delete — see /docs/PROJECT-LOG.md ?>
+        <!--
         <button type="button" class="cf-icon-btn" disabled title="<?php esc_attr_e( 'Messages — coming soon', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Messages', 'collective-finity' ); ?>">
             <?php echo collective_finity_icon( 'mail', 18 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
         </button>
-        <button type="button" class="cf-icon-btn" disabled title="<?php esc_attr_e( 'Notifications — coming soon', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Notifications', 'collective-finity' ); ?>">
-            <?php echo collective_finity_icon( 'bell', 18 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-        </button>
+        -->
+        <div class="cf-notifications">
+            <button type="button" class="cf-icon-btn" data-cf-notifications-toggle aria-haspopup="true" aria-expanded="false" aria-label="<?php esc_attr_e( 'Notifications', 'collective-finity' ); ?>">
+                <?php echo collective_finity_icon( 'bell', 18 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                <span class="cf-notif-badge" style="display:none;">0</span>
+            </button>
+            <div class="cf-notifications-panel">
+                <div class="cf-notifications-header">
+                    <span class="cf-notifications-title"><?php esc_html_e( 'Notifications', 'collective-finity' ); ?></span>
+                    <button type="button" class="cf-notifications-mark-all" data-cf-mark-all-read><?php esc_html_e( 'Mark all as read', 'collective-finity' ); ?></button>
+                </div>
+                <div class="cf-notifications-list"></div>
+                <p class="cf-notifications-empty" style="display:none;"><?php esc_html_e( 'No notifications yet', 'collective-finity' ); ?></p>
+            </div>
+        </div>
     </div>
 
     <div id="cf-dropdown-scrim" class="cf-dropdown-scrim" style="display:none;"></div>

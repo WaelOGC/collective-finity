@@ -881,15 +881,58 @@ jQuery(document).ready(function($) {
         updatePlayerTrackActions(window.cfPageTrackId);
     }
 
+    var CF_NOTIFY_LOGIN = 'Please log in to add tracks to your favorites.';
+    var CF_NOTIFY_GENERIC_ERROR = 'An error occurred. Please try again.';
+    var cfNotifyHideTimer = null;
+
+    function hideCfNotification() {
+        var $toast = $('#cf-player-toast');
+        if (!$toast.length) {
+            return;
+        }
+        $toast.removeClass('is-visible');
+        clearTimeout(cfNotifyHideTimer);
+        cfNotifyHideTimer = null;
+    }
+
+    function showCfNotification(message) {
+        var text = message || CF_NOTIFY_GENERIC_ERROR;
+        var $toast = $('#cf-player-toast');
+
+        if (!$toast.length) {
+            $toast = $(
+                '<div id="cf-player-toast" class="cf-toast" role="status" aria-live="polite">' +
+                    '<p class="cf-toast-message"></p>' +
+                    '<button type="button" class="cf-toast-close cf-close-modal-btn" aria-label="Close">&times;</button>' +
+                '</div>'
+            );
+            $('body').append($toast);
+            $toast.on('click', '.cf-toast-close', function(e) {
+                e.preventDefault();
+                hideCfNotification();
+            });
+        }
+
+        $toast.find('.cf-toast-message').text(text);
+        // Retrigger enter animation when replacing an already-visible toast
+        $toast.removeClass('is-visible');
+        // Force reflow so the transition restarts cleanly
+        void $toast[0].offsetWidth;
+        $toast.addClass('is-visible');
+
+        clearTimeout(cfNotifyHideTimer);
+        cfNotifyHideTimer = setTimeout(hideCfNotification, 4000);
+    }
+
     $(document).on('click', '.cf-like-btn', function(e) {
         e.preventDefault();
 
         if (!window.CF_AUTH || window.CF_AUTH.is_logged_in !== '1') {
-            alert('Please log in to add tracks to your favorites.');
+            showCfNotification(CF_NOTIFY_LOGIN);
             return;
         }
         if (typeof window.CF_Auth === 'undefined' || !window.CF_Auth.toggleFavorite) {
-            alert('An error occurred. Please try again.');
+            showCfNotification(CF_NOTIFY_GENERIC_ERROR);
             return;
         }
 
@@ -928,8 +971,8 @@ jQuery(document).ready(function($) {
             })
             .catch(function(err) {
                 $('.cf-like-btn[data-track-id="' + trackId + '"]').toggleClass('active');
-                var message = (err && err.message) ? err.message : 'An error occurred. Please try again.';
-                alert(message);
+                var message = (err && err.message) ? err.message : CF_NOTIFY_GENERIC_ERROR;
+                showCfNotification(message);
             });
     });
 
@@ -1017,11 +1060,11 @@ jQuery(document).ready(function($) {
         e.preventDefault();
 
         if (!window.CF_AUTH || window.CF_AUTH.is_logged_in !== '1') {
-            alert('Please log in to add tracks to your favorites.');
+            showCfNotification(CF_NOTIFY_LOGIN);
             return;
         }
         if (typeof window.CF_Auth === 'undefined' || !window.CF_Auth.getUserPlaylists) {
-            alert('An error occurred. Please try again.');
+            showCfNotification(CF_NOTIFY_GENERIC_ERROR);
             return;
         }
 

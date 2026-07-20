@@ -1051,7 +1051,7 @@ function collective_finity_render_theme_options_donate_tab( $options ) {
         <?php foreach ( $messages as $i => $message ) : ?>
         <tr>
             <th scope="row"><label for="cf_leadscreen_msg_<?php echo esc_attr( $i ); ?>"><?php printf( esc_html__( 'Message %d', 'collective-finity' ), $i + 1 ); ?></label></th>
-            <td><input type="text" class="regular-text" id="cf_leadscreen_msg_<?php echo esc_attr( $i ); ?>" maxlength="40" name="<?php echo esc_attr( $option_key ); ?>[donate_leadscreen_messages][]" value="<?php echo esc_attr( $message ); ?>"></td>
+            <td><input type="text" class="regular-text" id="cf_leadscreen_msg_<?php echo esc_attr( $i ); ?>" maxlength="150" name="<?php echo esc_attr( $option_key ); ?>[donate_leadscreen_messages][]" value="<?php echo esc_attr( $message ); ?>"></td>
         </tr>
         <?php endforeach; ?>
         <tr>

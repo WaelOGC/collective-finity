@@ -87,6 +87,154 @@ function collective_finity_track_show_key( $track_id ) {
 }
 
 /**
+ * Whether a track should display the Lyrics/Story section on the frontend.
+ * Defaults to enabled when unset so existing tracks keep the section visible.
+ *
+ * @param int $track_id Post ID.
+ * @return bool
+ */
+function collective_finity_track_show_lyrics( $track_id ) {
+    return collective_finity_track_meta_enabled_by_default( $track_id, 'track_show_lyrics' );
+}
+
+/**
+ * Track meta visibility toggle that defaults to enabled when unset.
+ * Used for visualizer styles and streaming platform visibility so existing
+ * tracks keep their current frontend behavior until an admin opts out.
+ *
+ * @param int    $track_id Post ID.
+ * @param string $meta_key Post meta key.
+ * @return bool
+ */
+function collective_finity_track_meta_enabled_by_default( $track_id, $meta_key ) {
+    $value = get_post_meta( $track_id, $meta_key, true );
+    if ( $value === '' || $value === false ) {
+        return true;
+    }
+    return (string) $value === '1';
+}
+
+/**
+ * Available audio visualizer styles for single track pages.
+ *
+ * @return array<string, string> Style slug => label.
+ */
+function collective_finity_track_visualizer_styles() {
+    return array(
+        'spectrum_bars'       => __( 'Spectrum Equalizer Bars', 'collective-finity' ),
+        'aurora_fill'         => __( 'Aurora Fill', 'collective-finity' ),
+        'ember_drift'         => __( 'Ember Drift', 'collective-finity' ),
+        'crimson_pulse_ring'  => __( 'Crimson Pulse Ring', 'collective-finity' ),
+        'smoke_wisp'          => __( 'Smoke Wisp', 'collective-finity' ),
+        'shard_fracture'      => __( 'Shard Fracture', 'collective-finity' ),
+        'radar_sweep'         => __( 'Radar Sweep', 'collective-finity' ),
+        'ink_bleed'           => __( 'Ink Bleed', 'collective-finity' ),
+        'frost_veins'         => __( 'Frost Veins', 'collective-finity' ),
+        'blood_drip_trails'   => __( 'Blood Drip Trails', 'collective-finity' ),
+        'halo_breathe'        => __( 'Halo Breathe', 'collective-finity' ),
+        'fracture_cracks'     => __( 'Fracture Cracks', 'collective-finity' ),
+    );
+}
+
+/**
+ * Post meta key for a visualizer style show/hide toggle.
+ *
+ * @param string $style_slug Visualizer style slug.
+ * @return string
+ */
+function collective_finity_track_visualizer_meta_key( $style_slug ) {
+    return 'track_show_visualizer_' . $style_slug;
+}
+
+/**
+ * Whether a visualizer style is enabled for a track (defaults to on).
+ *
+ * @param int    $track_id   Post ID.
+ * @param string $style_slug Visualizer style slug.
+ * @return bool
+ */
+function collective_finity_track_show_visualizer( $track_id, $style_slug ) {
+    return collective_finity_track_meta_enabled_by_default(
+        $track_id,
+        collective_finity_track_visualizer_meta_key( $style_slug )
+    );
+}
+
+/**
+ * Streaming platforms available on track pages.
+ *
+ * @return array<string, array{label:string, meta:string, show_meta:string, icon:string, placeholder:string}>
+ */
+function collective_finity_track_streaming_platforms() {
+    return array(
+        'spotify'     => array(
+            'label'       => 'Spotify',
+            'meta'        => 'track_spotify_url',
+            'show_meta'   => 'track_show_spotify',
+            'icon'        => 'dashicons-controls-play',
+            'placeholder' => 'https://open.spotify.com/...',
+        ),
+        'apple'       => array(
+            'label'       => 'Apple Music',
+            'meta'        => 'track_apple_url',
+            'show_meta'   => 'track_show_apple',
+            'icon'        => 'dashicons-smartphone',
+            'placeholder' => 'https://music.apple.com/...',
+        ),
+        'soundcloud'  => array(
+            'label'       => 'SoundCloud',
+            'meta'        => 'track_soundcloud_url',
+            'show_meta'   => 'track_show_soundcloud',
+            'icon'        => 'dashicons-cloud',
+            'placeholder' => 'https://soundcloud.com/...',
+        ),
+        'youtube'     => array(
+            'label'       => 'YouTube',
+            'meta'        => 'track_youtube_url',
+            'show_meta'   => 'track_show_youtube',
+            'icon'        => 'dashicons-video-alt3',
+            'placeholder' => 'https://youtube.com/...',
+        ),
+        'bandcamp'    => array(
+            'label'       => 'Bandcamp',
+            'meta'        => 'track_bandcamp_url',
+            'show_meta'   => 'track_show_bandcamp',
+            'icon'        => 'dashicons-format-audio',
+            'placeholder' => 'https://bandcamp.com/...',
+        ),
+        'amazon'      => array(
+            'label'       => 'Amazon Music',
+            'meta'        => 'track_amazon_url',
+            'show_meta'   => 'track_show_amazon',
+            'icon'        => 'dashicons-cart',
+            'placeholder' => 'https://music.amazon.com/...',
+        ),
+        'google_play' => array(
+            'label'       => 'Google Play Music',
+            'meta'        => 'track_google_play_url',
+            'show_meta'   => 'track_show_google_play',
+            'icon'        => 'dashicons-playlist-audio',
+            'placeholder' => 'https://play.google.com/music/...',
+        ),
+    );
+}
+
+/**
+ * Whether a streaming platform link should display for a track (defaults to on).
+ *
+ * @param int    $track_id  Post ID.
+ * @param string $platform  Platform slug.
+ * @return bool
+ */
+function collective_finity_track_show_streaming( $track_id, $platform ) {
+    $platforms = collective_finity_track_streaming_platforms();
+    if ( empty( $platforms[ $platform ]['show_meta'] ) ) {
+        return true;
+    }
+    return collective_finity_track_meta_enabled_by_default( $track_id, $platforms[ $platform ]['show_meta'] );
+}
+
+/**
  * Track view count (page visits).
  */
 function collective_finity_track_views( $track_id ) {
@@ -1409,16 +1557,27 @@ function collective_finity_render_tracks_meta_box( $post ) {
     $show_bpm         = (bool) get_post_meta( $post->ID, 'track_show_bpm', true );
     $show_key         = (bool) get_post_meta( $post->ID, 'track_show_key', true );
     $lyrics_url       = get_post_meta( $post->ID, 'track_lyrics_url', true );
+    $show_lyrics      = collective_finity_track_show_lyrics( $post->ID );
     $cta_label        = get_post_meta( $post->ID, 'track_cta_label', true );
     $cta_url          = get_post_meta( $post->ID, 'track_cta_url', true );
     $copyright        = get_post_meta( $post->ID, 'track_copyright', true );
 
-    // Fetch Streaming URLs
-    $spotify_url      = get_post_meta( $post->ID, 'track_spotify_url', true );
-    $apple_url        = get_post_meta( $post->ID, 'track_apple_url', true );
-    $soundcloud_url   = get_post_meta( $post->ID, 'track_soundcloud_url', true );
-    $youtube_url      = get_post_meta( $post->ID, 'track_youtube_url', true );
-    $bandcamp_url     = get_post_meta( $post->ID, 'track_bandcamp_url', true );
+    // Fetch Streaming URLs + visibility
+    $streaming_platforms = collective_finity_track_streaming_platforms();
+    $streaming_values    = array();
+    foreach ( $streaming_platforms as $platform_slug => $platform ) {
+        $streaming_values[ $platform_slug ] = array(
+            'url'  => get_post_meta( $post->ID, $platform['meta'], true ),
+            'show' => collective_finity_track_show_streaming( $post->ID, $platform_slug ),
+        );
+    }
+
+    // Visualizer style visibility (default enabled)
+    $visualizer_styles = collective_finity_track_visualizer_styles();
+    $visualizer_shown  = array();
+    foreach ( array_keys( $visualizer_styles ) as $style_slug ) {
+        $visualizer_shown[ $style_slug ] = collective_finity_track_show_visualizer( $post->ID, $style_slug );
+    }
 
     // Fetch current Genre taxonomy term assigned to this track
     $assigned_genres = wp_get_post_terms( $post->ID, 'music_genre', array( 'fields' => 'ids' ) );
@@ -1536,6 +1695,11 @@ function collective_finity_render_tracks_meta_box( $post ) {
                         <button type="button" class="button button-primary cf-media-upload-btn" data-target="track_lyrics_url" data-type="text"><?php esc_html_e( 'Select File', 'collective-finity' ); ?></button>
                         <button type="button" class="button cf-media-clear-btn<?php echo empty( $lyrics_url ) ? ' is-disabled' : ''; ?>" data-target="track_lyrics_url" <?php disabled( empty( $lyrics_url ) ); ?>><?php esc_html_e( 'Remove', 'collective-finity' ); ?></button>
                     </div>
+                    <label class="cf-visibility-toggle">
+                        <input type="checkbox" name="track_show_lyrics" value="1" <?php checked( $show_lyrics ); ?> />
+                        <span><?php esc_html_e( 'Show Lyrics/Story section on the frontend', 'collective-finity' ); ?></span>
+                    </label>
+                    <p class="cf-field-hint"><?php esc_html_e( 'Enabled by default. Disable to hide the Story & Concept and Lyrics sections on the track page.', 'collective-finity' ); ?></p>
                 </div>
             </div>
         </section>
@@ -1579,43 +1743,38 @@ function collective_finity_render_tracks_meta_box( $post ) {
         </section>
 
         <section class="cf-meta-section">
+            <h3 class="cf-meta-section-title"><span class="dashicons dashicons-art"></span><?php esc_html_e( 'Visualizer Styles', 'collective-finity' ); ?></h3>
+            <p class="cf-field-hint"><?php esc_html_e( 'Choose which audio visualizer styles appear in the dropdown on this track page. All styles are enabled by default.', 'collective-finity' ); ?></p>
+            <div class="cf-visualizer-styles-box">
+                <?php foreach ( $visualizer_styles as $style_slug => $style_label ) : ?>
+                    <?php $style_meta_key = collective_finity_track_visualizer_meta_key( $style_slug ); ?>
+                    <label class="cf-visibility-toggle">
+                        <input type="checkbox" name="<?php echo esc_attr( $style_meta_key ); ?>" value="1" <?php checked( ! empty( $visualizer_shown[ $style_slug ] ) ); ?> />
+                        <span><?php echo esc_html( $style_label ); ?></span>
+                    </label>
+                <?php endforeach; ?>
+            </div>
+        </section>
+
+        <section class="cf-meta-section">
             <h3 class="cf-meta-section-title"><span class="dashicons dashicons-share"></span><?php esc_html_e( 'Streaming Links', 'collective-finity' ); ?></h3>
+            <p class="cf-field-hint"><?php esc_html_e( 'Uncheck Show to hide a platform on the track page without deleting its URL.', 'collective-finity' ); ?></p>
             <div class="cf-streaming-box">
-                <div class="cf-streaming-field">
-                    <label for="track_spotify_url">Spotify</label>
-                    <div class="cf-streaming-input-wrap">
-                        <span class="dashicons dashicons-controls-play cf-streaming-input-icon" aria-hidden="true"></span>
-                        <input type="url" name="track_spotify_url" id="track_spotify_url" class="cf-input-text cf-streaming-input" value="<?php echo esc_url( $spotify_url ); ?>" placeholder="https://open.spotify.com/..." />
+                <?php foreach ( $streaming_platforms as $platform_slug => $platform ) : ?>
+                    <div class="cf-streaming-field">
+                        <div class="cf-streaming-field-header">
+                            <label for="<?php echo esc_attr( $platform['meta'] ); ?>"><?php echo esc_html( $platform['label'] ); ?></label>
+                            <label class="cf-visibility-toggle cf-visibility-toggle--inline">
+                                <input type="checkbox" name="<?php echo esc_attr( $platform['show_meta'] ); ?>" value="1" <?php checked( ! empty( $streaming_values[ $platform_slug ]['show'] ) ); ?> />
+                                <span><?php esc_html_e( 'Show', 'collective-finity' ); ?></span>
+                            </label>
+                        </div>
+                        <div class="cf-streaming-input-wrap">
+                            <span class="dashicons <?php echo esc_attr( $platform['icon'] ); ?> cf-streaming-input-icon" aria-hidden="true"></span>
+                            <input type="url" name="<?php echo esc_attr( $platform['meta'] ); ?>" id="<?php echo esc_attr( $platform['meta'] ); ?>" class="cf-input-text cf-streaming-input" value="<?php echo esc_url( $streaming_values[ $platform_slug ]['url'] ); ?>" placeholder="<?php echo esc_attr( $platform['placeholder'] ); ?>" />
+                        </div>
                     </div>
-                </div>
-                <div class="cf-streaming-field">
-                    <label for="track_apple_url">Apple Music</label>
-                    <div class="cf-streaming-input-wrap">
-                        <span class="dashicons dashicons-smartphone cf-streaming-input-icon" aria-hidden="true"></span>
-                        <input type="url" name="track_apple_url" id="track_apple_url" class="cf-input-text cf-streaming-input" value="<?php echo esc_url( $apple_url ); ?>" placeholder="https://music.apple.com/..." />
-                    </div>
-                </div>
-                <div class="cf-streaming-field">
-                    <label for="track_soundcloud_url">SoundCloud</label>
-                    <div class="cf-streaming-input-wrap">
-                        <span class="dashicons dashicons-cloud cf-streaming-input-icon" aria-hidden="true"></span>
-                        <input type="url" name="track_soundcloud_url" id="track_soundcloud_url" class="cf-input-text cf-streaming-input" value="<?php echo esc_url( $soundcloud_url ); ?>" placeholder="https://soundcloud.com/..." />
-                    </div>
-                </div>
-                <div class="cf-streaming-field">
-                    <label for="track_youtube_url">YouTube</label>
-                    <div class="cf-streaming-input-wrap">
-                        <span class="dashicons dashicons-video-alt3 cf-streaming-input-icon" aria-hidden="true"></span>
-                        <input type="url" name="track_youtube_url" id="track_youtube_url" class="cf-input-text cf-streaming-input" value="<?php echo esc_url( $youtube_url ); ?>" placeholder="https://youtube.com/..." />
-                    </div>
-                </div>
-                <div class="cf-streaming-field cf-streaming-field--full">
-                    <label for="track_bandcamp_url">Bandcamp</label>
-                    <div class="cf-streaming-input-wrap">
-                        <span class="dashicons dashicons-format-audio cf-streaming-input-icon" aria-hidden="true"></span>
-                        <input type="url" name="track_bandcamp_url" id="track_bandcamp_url" class="cf-input-text cf-streaming-input" value="<?php echo esc_url( $bandcamp_url ); ?>" placeholder="https://bandcamp.com/..." />
-                    </div>
-                </div>
+                <?php endforeach; ?>
             </div>
         </section>
 
@@ -1689,9 +1848,9 @@ function collective_finity_save_tracks_metadata( $post_id ) {
 
     // URL Fields
     $url_fields = array(
-        'track_audio_url', 'track_preview_url', 'track_cover_url', 'track_lyrics_url', 
-        'track_cta_url', 'track_spotify_url', 'track_apple_url', 'track_soundcloud_url', 
-        'track_youtube_url', 'track_bandcamp_url'
+        'track_audio_url', 'track_preview_url', 'track_cover_url', 'track_lyrics_url',
+        'track_cta_url', 'track_spotify_url', 'track_apple_url', 'track_soundcloud_url',
+        'track_youtube_url', 'track_bandcamp_url', 'track_amazon_url', 'track_google_play_url',
     );
     foreach ($url_fields as $field) {
         if ( isset( $_POST[$field] ) ) {
@@ -1701,6 +1860,17 @@ function collective_finity_save_tracks_metadata( $post_id ) {
 
     update_post_meta( $post_id, 'track_show_bpm', empty( $_POST['track_show_bpm'] ) ? 0 : 1 );
     update_post_meta( $post_id, 'track_show_key', empty( $_POST['track_show_key'] ) ? 0 : 1 );
+    update_post_meta( $post_id, 'track_show_lyrics', empty( $_POST['track_show_lyrics'] ) ? 0 : 1 );
+
+    foreach ( array_keys( collective_finity_track_visualizer_styles() ) as $style_slug ) {
+        $style_meta_key = collective_finity_track_visualizer_meta_key( $style_slug );
+        update_post_meta( $post_id, $style_meta_key, empty( $_POST[ $style_meta_key ] ) ? 0 : 1 );
+    }
+
+    foreach ( collective_finity_track_streaming_platforms() as $platform ) {
+        $show_meta = $platform['show_meta'];
+        update_post_meta( $post_id, $show_meta, empty( $_POST[ $show_meta ] ) ? 0 : 1 );
+    }
 }
 add_action( 'save_post_tracks', 'collective_finity_save_tracks_metadata' );
 

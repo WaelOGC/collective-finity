@@ -398,6 +398,27 @@ function collective_finity_ajax_submit_platform_review() {
 add_action( 'wp_ajax_cf_submit_platform_review', 'collective_finity_ajax_submit_platform_review' );
 
 /**
+ * Notify the reviewer when their platform review is approved in wp-admin.
+ *
+ * @param WP_Comment $comment Comment object.
+ */
+function collective_finity_notify_review_published( $comment ) {
+	if ( ! get_comment_meta( $comment->comment_ID, 'cf_platform_review', true ) ) {
+		return;
+	}
+
+	$user_id = (int) $comment->user_id;
+	if ( ! $user_id ) {
+		return;
+	}
+
+	if ( class_exists( 'CF_Email' ) ) {
+		CF_Email::send_review_published( $user_id );
+	}
+}
+add_action( 'comment_unapproved_to_approved', 'collective_finity_notify_review_published' );
+
+/**
  * Accordion Q&A content for the FAQ page template.
  *
  * @return array<int, array{title:string, eyebrow:string, items:array<int, array{question:string, answer:string}>}>

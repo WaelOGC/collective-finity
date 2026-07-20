@@ -1,0 +1,77 @@
+# Collective Finity Theme — Documentation Log
+
+## Purpose
+This file tracks every feature, fix, and pending item implemented in the collective-finity theme, so any developer (including future Cursor sessions) can understand the full history without re-reading all code.
+
+## Completed Features
+
+### FAQ & Platform Reviews
+- FAQ page with platform review submission (`inc/faq.php`)
+- AJAX handler `collective_finity_ajax_submit_platform_review()` creates a comment-based review and triggers a confirmation email via the cf-auth plugin (`CF_Email::send_feedback_confirmation`)
+- On admin approval of a review comment, `collective_finity_notify_review_published()` (hooked to `comment_unapproved_to_approved`) triggers a second email via `CF_Email::send_review_published()` — users receive one email on submission and one when their review goes live
+
+### User Dashboard Sidebar
+- Right sidebar (`template-parts/sidebar-right-default.php`) includes account, Messages, and Notifications icons
+- Notifications icon is active and connected to the plugin's polling-based notifications system
+- Messages icon exists in code but remains visually hidden (not deleted) until the messaging feature is prioritized
+
+### Notifications (Frontend)
+- Sidebar notifications button + dropdown panel, polling-based (fetches on click via AJAX to the plugin's `cf_get_notifications` / `cf_mark_notifications_read` endpoints)
+- JS: `assets/js/cf-shell.js` — panel open/close, fetch, mark-as-read
+- CSS: `assets/css/cf-shell.css`
+
+### Login/Register Page Design
+- Removed gold radial-gradient glow from `.cf-auth-brand::before`
+- Brand side shows the plugin logo (`icon-192.png`, ~64px) with welcoming copy
+- Social login grid is dynamic: PHP counts enabled providers and applies a modifier class `cf-social-grid--{1|2|3|4}` with matching CSS grid layout rules
+- Card hover glow override in `assets/css/cf-shell.css` excludes `.cf-auth-form-side .cf-card` from the site's global card hover effect
+
+### Homepage Reviews Carousel
+- `front-page.php`: auto-rotating carousel (3 cards visible at a time, rotates every 8 seconds)
+- 4 entrance animations cycling: fade → slide-left → slide-right → scale
+- "View All Reviews →" button links to `home_url('/reviews/')`
+- Reuses the same card markup/classes as the All Reviews page for visual consistency
+
+### All Reviews Page (`page-reviews.php`)
+- Template Name: "All Reviews"
+- Combines FAQ platform reviews and Blog article reviews into one filterable, paginated list (32 per page)
+- Filters: rating (exact 1–5 or All) and type (faq / article / all) via `$_GET['rating']` and `$_GET['type']`
+- Hero section (`.cf-reviews-hero`) matches the site's shared hero visual system (animated conic-gradient border + center radial glow, same pattern as `page-join-community.php`'s `.cf-community-hero`), without the dancer/equalizer decorations
+- Rating and Type filter pill groups live inside the hero content, above the reviews grid
+- Reuses `collective_finity_stars_markup()`, `collective_finity_review_avatar()`, and `.cf-home-review-card` styling from the homepage carousel
+
+### User-Facing Notifications (Toast, replacing native `alert()`)
+- `js/music-player.js`: all user-facing `alert()` calls (favorite-login prompt, generic errors) replaced with a single shared `showCfNotification(message)` function
+- Renders a non-blocking toast (`#cf-player-toast`, `.cf-toast`) styled to match the site, auto-dismisses after ~4 seconds or via a close button
+- Duplicated message strings consolidated into shared constants (`CF_NOTIFY_LOGIN`, `CF_NOTIFY_GENERIC_ERROR`) instead of being redefined per call site
+- Toast CSS lives in `assets/css/cf-shell.css`
+
+### Admin Options
+- `inc/theme-options.php`: donate leadscreen message fields (`cf_leadscreen_msg_*`) have `maxlength="150"` (increased from the original 40-character limit)
+- `footer_description` field remains at its own separate `maxlength="140"`, unchanged
+
+### Track Metabox — Visualizer Styles & Streaming Visibility
+- Track Custom Audio Settings metabox (`functions.php`) includes a **Visualizer Styles** section with per-style checkboxes for all frontend visualizer options; each stored as `track_show_visualizer_{slug}`, default enabled when unset
+- **Streaming Links** section: per-platform Show checkbox (hide without deleting URL) plus Amazon Music and Google Play Music URL fields; visibility stored as `track_show_{platform}`, default enabled
+- `single-tracks.php` only renders enabled visualizer dropdown options and only shows streaming icons when both URL is set and Show is enabled
+- **Lyrics/Story visibility**: checkbox on the Lyrics File field (`track_show_lyrics`, default enabled); when off, the Story & Concept / Lyrics Narrative Sync block is not rendered on the single track page
+
+### Single Track — Audio Effect Style Overhaul (12 styles)
+- Removed 8 legacy styles (Neon Glow Ring, Glowing Sine Wave, Cosmic Beat Pulse, Dual Orbit Ring, Particle Burst, Frequency Wave, Starfield Pulse, Hexagon Grid)
+- Kept and improved Spectrum Equalizer Bars (circular ring around cover) and Aurora Fill (larger outer halo)
+- Added 10 styles: Ember Drift, Crimson Pulse Ring, Smoke Wisp, Shard Fracture, Radar Sweep, Ink Bleed, Frost Veins, Blood Drip Trails, Halo Breathe, Fracture Cracks
+- Shared rotating multi-color system on all 12: brand gold `#FFB700` first, then bright red/purple/blue/orange; conic rotation and intensity driven by live AnalyserNode frequency data (no gray/grayscale)
+- Registry: `collective_finity_track_visualizer_styles()` in `functions.php`; drawing in `single-tracks.php`
+
+## Known Pending Items
+- Decision needed: number of reviews shown on the FAQ page (currently 4/6/8 candidates) and on the homepage carousel (3/6/9 candidates) — no final call made yet
+
+## Future Features (Planned, Not Yet Built)
+- **Real-time notifications** (WebSocket/push) — current system is polling-based; real-time planned for a later phase (6+ months out as of last discussion)
+- **Messages system**: icon present in the sidebar markup but hidden/commented out until the admin-to-user messaging feature is built
+- **Admin email broadcast dashboard**: a UI for composing and sending templated emails to users, to replace manual sending via the hosting provider's email panel
+
+## Working Rules for This Project
+- Theme and Plugin are separate repos, developed in separate Cursor windows
+- Never reference Plugin files/paths inside Theme work, and vice versa
+- Update this log whenever a feature is completed or a new one is planned
