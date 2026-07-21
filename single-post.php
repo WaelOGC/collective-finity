@@ -32,6 +32,17 @@ while ( have_posts() ) :
     $cf_author     = get_the_author();
     $cf_author_bio = get_the_author_meta( 'description' );
 
+    $cf_author_artist_term = function_exists( 'collective_finity_get_artist_term_for_user' )
+        ? collective_finity_get_artist_term_for_user( $cf_author_id )
+        : null;
+    $cf_author_artist_link = null;
+    if ( $cf_author_artist_term ) {
+        $cf_author_artist_link = get_term_link( $cf_author_artist_term );
+        if ( is_wp_error( $cf_author_artist_link ) ) {
+            $cf_author_artist_link = null;
+        }
+    }
+
     // Process content once: inject heading IDs + build TOC.
     $cf_rendered  = apply_filters( 'the_content', get_the_content() );
     $cf_rendered  = str_replace( ']]>', ']]&gt;', $cf_rendered );
@@ -92,7 +103,11 @@ while ( have_posts() ) :
         <div class="cf-single-meta-row">
             <div class="cf-single-meta">
                 <?php echo collective_finity_review_avatar( $cf_author_id, 30 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                <span class="cf-single-author"><?php echo esc_html( $cf_author ); ?></span>
+                <?php if ( $cf_author_artist_link ) : ?>
+                    <a class="cf-single-author" href="<?php echo esc_url( $cf_author_artist_link ); ?>"><?php echo esc_html( $cf_author ); ?></a>
+                <?php else : ?>
+                    <span class="cf-single-author"><?php echo esc_html( $cf_author ); ?></span>
+                <?php endif; ?>
                 <span class="cf-single-dot" aria-hidden="true">&middot;</span>
                 <span class="cf-single-datetime"><?php echo esc_html( get_the_date() ); ?> &middot; <?php echo esc_html( $cf_read_time ); ?></span>
             </div>
@@ -193,7 +208,11 @@ while ( have_posts() ) :
                 <div class="cf-author-bio">
                     <?php echo collective_finity_review_avatar( $cf_author_id, 48 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     <div>
-                        <div class="cf-author-bio-name"><?php echo esc_html( $cf_author ); ?></div>
+                        <?php if ( $cf_author_artist_link ) : ?>
+                            <div class="cf-author-bio-name"><a href="<?php echo esc_url( $cf_author_artist_link ); ?>"><?php echo esc_html( $cf_author ); ?></a></div>
+                        <?php else : ?>
+                            <div class="cf-author-bio-name"><?php echo esc_html( $cf_author ); ?></div>
+                        <?php endif; ?>
                         <div class="cf-author-bio-text"><?php echo esc_html( $cf_author_bio ); ?></div>
                     </div>
                 </div>
@@ -413,6 +432,8 @@ while ( have_posts() ) :
     .cf-single-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
     .cf-single-meta .cf-review-avatar { border: 1px solid rgba(255, 183, 0, 0.28); }
     .cf-single-author { font-size: 13.5px; font-weight: 600; color: #F0F0F0; }
+    a.cf-single-author { text-decoration: none; transition: color 0.2s ease; }
+    a.cf-single-author:hover { color: var(--primary-color, #FFB700); text-decoration: underline; }
     .cf-single-dot { color: rgba(255, 183, 0, 0.45); }
     .cf-single-datetime { font-size: 12.5px; color: #B8B8B8; font-family: var(--cf-mono); letter-spacing: 0.01em; }
 
@@ -610,6 +631,8 @@ while ( have_posts() ) :
     /* author bio */
     .cf-author-bio { display: flex; gap: 14px; padding: 20px; border-radius: 12px; background: var(--cf-bg-card); border: 1px solid var(--cf-border); align-items: flex-start; }
     .cf-author-bio-name { font-size: 14.5px; font-weight: 700; color: #fff; }
+    .cf-author-bio-name a { color: inherit; text-decoration: none; transition: color 0.2s ease; }
+    .cf-author-bio-name a:hover { color: var(--primary-color, #FFB700); text-decoration: underline; }
     .cf-author-bio-text { font-size: 12.5px; color: var(--cf-text-3); margin-top: 4px; line-height: 1.6; }
 
     /* newsletter */

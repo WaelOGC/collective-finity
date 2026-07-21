@@ -42,27 +42,54 @@ $cf_render_track_card = static function ( $track_id ) {
 	$track_audio   = get_post_meta( $track_id, 'track_audio_url', true );
 	$track_preview = get_post_meta( $track_id, 'track_preview_url', true );
 	$audio_url     = ! empty( $track_preview ) ? $track_preview : $track_audio;
-	$artists       = wp_get_post_terms( $track_id, 'track_artist', array( 'fields' => 'names' ) );
-	$artist_name   = ! empty( $artists ) ? $artists[0] : 'Collective Finity';
-	$genres        = wp_get_post_terms( $track_id, 'music_genre', array( 'fields' => 'names' ) );
-	$genre_name    = ! empty( $genres ) ? $genres[0] : '';
-	$title         = get_the_title( $track_id );
-	$permalink     = get_permalink( $track_id );
+	$artists       = wp_get_post_terms( $track_id, 'track_artist' );
+	if ( is_wp_error( $artists ) ) {
+		$artists = array();
+	}
+	$artist_names = ! empty( $artists ) ? wp_list_pluck( $artists, 'name' ) : array();
+	$artist_name  = ! empty( $artist_names ) ? implode( ', ', $artist_names ) : 'Collective Finity';
+	$genres       = wp_get_post_terms( $track_id, 'music_genre', array( 'fields' => 'names' ) );
+	$genre_name   = ! empty( $genres ) ? $genres[0] : '';
+	$title        = get_the_title( $track_id );
+	$permalink    = get_permalink( $track_id );
 	?>
-	<a href="<?php echo esc_url( $permalink ); ?>" class="cf-card">
-		<div class="cf-cover">
-			<img src="<?php echo esc_url( $cover_image ); ?>" alt="<?php echo esc_attr( $title ); ?>" loading="lazy">
-			<button type="button" class="cf-interaction-btn cf-like-btn cf-heart-btn" data-track-id="<?php echo esc_attr( (string) $track_id ); ?>" title="<?php esc_attr_e( 'Like', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Like', 'collective-finity' ); ?>" onclick="event.preventDefault();">
-				<span class="dashicons dashicons-heart"></span>
-			</button>
-			<button type="button" class="cf-play-btn" aria-label="<?php echo esc_attr( sprintf( __( 'Play %s', 'collective-finity' ), $title ) ); ?>" onclick="event.preventDefault(); event.stopPropagation(); if (window.playTrack) { window.playTrack('<?php echo esc_js( $audio_url ); ?>', '<?php echo esc_js( $title ); ?>', '<?php echo esc_js( $artist_name ); ?>', '<?php echo esc_js( $cover_image ); ?>'); }">
-				<span class="dashicons dashicons-controls-play"></span>
-			</button>
+	<div class="cf-card">
+		<a href="<?php echo esc_url( $permalink ); ?>" class="cf-card-primary">
+			<div class="cf-cover">
+				<img src="<?php echo esc_url( $cover_image ); ?>" alt="<?php echo esc_attr( $title ); ?>" loading="lazy">
+				<button type="button" class="cf-interaction-btn cf-like-btn cf-heart-btn" data-track-id="<?php echo esc_attr( (string) $track_id ); ?>" title="<?php esc_attr_e( 'Like', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Like', 'collective-finity' ); ?>" onclick="event.preventDefault();">
+					<span class="dashicons dashicons-heart"></span>
+				</button>
+				<button type="button" class="cf-play-btn" aria-label="<?php echo esc_attr( sprintf( __( 'Play %s', 'collective-finity' ), $title ) ); ?>" onclick="event.preventDefault(); event.stopPropagation(); if (window.playTrack) { window.playTrack('<?php echo esc_js( $audio_url ); ?>', '<?php echo esc_js( $title ); ?>', '<?php echo esc_js( $artist_name ); ?>', '<?php echo esc_js( $cover_image ); ?>'); }">
+					<span class="dashicons dashicons-controls-play"></span>
+				</button>
+			</div>
+			<div class="cf-card-title"><?php echo esc_html( $title ); ?></div>
+		</a>
+		<div class="cf-card-sub">
+			<?php
+			if ( ! empty( $artists ) ) {
+				$cf_artist_link_parts = array();
+				foreach ( $artists as $cf_artist_term ) {
+					$cf_term_url = get_term_link( $cf_artist_term );
+					if ( ! is_wp_error( $cf_term_url ) ) {
+						$cf_artist_link_parts[] = sprintf(
+							'<a class="cf-artist-link" href="%1$s">%2$s</a>',
+							esc_url( $cf_term_url ),
+							esc_html( $cf_artist_term->name )
+						);
+					} else {
+						$cf_artist_link_parts[] = esc_html( $cf_artist_term->name );
+					}
+				}
+				echo implode( ', ', $cf_artist_link_parts ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- pieces escaped above.
+			} else {
+				echo esc_html( $artist_name );
+			}
+			?>
 		</div>
-		<div class="cf-card-title"><?php echo esc_html( $title ); ?></div>
-		<div class="cf-card-sub"><?php echo esc_html( $artist_name ); ?></div>
 		<?php if ( $genre_name ) : ?><span class="cf-card-chip"><?php echo esc_html( $genre_name ); ?></span><?php endif; ?>
-	</a>
+	</div>
 	<?php
 };
 
@@ -414,6 +441,11 @@ $cf_carousel_close = static function () {
 		padding: 0 0 12px;
 		transition: border-color var(--cf-transition-speed, 0.2s) ease, transform var(--cf-transition-speed, 0.2s) ease, box-shadow var(--cf-transition-speed, 0.2s) ease;
 	}
+	.cf-card-primary {
+		display: block;
+		text-decoration: none;
+		color: inherit;
+	}
 	.cf-cover {
 		position: relative;
 		width: 100%;
@@ -435,6 +467,15 @@ $cf_carousel_close = static function () {
 
 	.cf-card-title { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 12px; }
 	.cf-card-sub { font-size: 12px; color: #7A7A7A; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 12px; transition: color var(--cf-transition-speed, 0.2s) ease; }
+	.cf-artist-link {
+		color: inherit;
+		text-decoration: none;
+		transition: color var(--cf-transition-speed, 0.2s) ease;
+	}
+	.cf-artist-link:hover {
+		color: var(--primary-color, #FFB700);
+		text-decoration: underline;
+	}
 	.cf-card-chip { display: inline-block; margin: 6px 12px 0; font-size: 10px; color: #B3B3B3; background: rgba(255,255,255,0.04); border: 1px solid var(--cf-border, #232323); padding: 2px 8px; border-radius: 10px; transition: border-color var(--cf-transition-speed, 0.2s) ease, color var(--cf-transition-speed, 0.2s) ease; }
 
 	/* Soft accent spotlight behind the card + orange outline (hover / focus / press). */

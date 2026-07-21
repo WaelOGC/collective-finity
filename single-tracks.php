@@ -42,6 +42,67 @@ $comments_count = count($track_comments);
         $show_lyrics  = collective_finity_track_show_lyrics( get_the_ID() );
         $release_type = get_post_meta( get_the_ID(), 'track_release_type', true );
         $playback_url = ! empty( $preview_url ) ? $preview_url : $audio_url;
+        $associated_album_id = get_post_meta( get_the_ID(), 'associated_album', true );
+        $cf_album_queue      = array();
+
+        if ( $associated_album_id ) {
+            $album_tracks_query = new WP_Query(
+                array(
+                    'post_type'      => 'tracks',
+                    'posts_per_page' => -1,
+                    'post_status'    => 'publish',
+                    'orderby'        => array(
+                        'menu_order' => 'ASC',
+                        'title'      => 'ASC',
+                    ),
+                    'meta_query'     => array(
+                        array(
+                            'key'     => 'associated_album',
+                            'value'   => $associated_album_id,
+                            'compare' => '=',
+                        ),
+                    ),
+                )
+            );
+
+            if ( $album_tracks_query->have_posts() ) {
+                $album_cover = get_the_post_thumbnail_url( $associated_album_id, 'full' );
+                if ( empty( $album_cover ) ) {
+                    $album_cover = $cover_url;
+                }
+
+                while ( $album_tracks_query->have_posts() ) {
+                    $album_tracks_query->the_post();
+                    $album_track_id      = get_the_ID();
+                    $album_track_audio   = get_post_meta( $album_track_id, 'track_audio_url', true );
+                    $album_track_preview = get_post_meta( $album_track_id, 'track_preview_url', true );
+                    $album_playback_url  = ! empty( $album_track_preview ) ? $album_track_preview : $album_track_audio;
+                    $album_track_cover   = get_post_meta( $album_track_id, 'track_cover_url', true );
+
+                    if ( empty( $album_track_cover ) ) {
+                        $album_track_cover = get_the_post_thumbnail_url( $album_track_id, 'medium' );
+                    }
+                    if ( empty( $album_track_cover ) ) {
+                        $album_track_cover = $album_cover;
+                    }
+
+                    $album_artists = wp_get_post_terms( $album_track_id, 'track_artist' );
+                    $album_artist  = ! empty( $album_artists ) ? $album_artists[0]->name : collective_finity_brand_name();
+
+                    if ( $album_playback_url ) {
+                        $cf_album_queue[] = array(
+                            'url'       => $album_playback_url,
+                            'title'     => get_the_title(),
+                            'artist'    => $album_artist,
+                            'art'       => $album_track_cover,
+                            'id'        => $album_track_id,
+                            'permalink' => get_permalink( $album_track_id ),
+                        );
+                    }
+                }
+                wp_reset_postdata();
+            }
+        }
 
         // Streaming Links (URL + admin visibility toggle)
         $streaming_platforms = collective_finity_track_streaming_platforms();
@@ -72,9 +133,8 @@ $comments_count = count($track_comments);
 
         // Smart Cover Fallback
         if ( empty( $cover_url ) ) {
-            $associated_album = get_post_meta( get_the_ID(), 'associated_album', true );
-            if ( $associated_album ) {
-                $cover_url = get_the_post_thumbnail_url( $associated_album, 'full' );
+            if ( $associated_album_id ) {
+                $cover_url = get_the_post_thumbnail_url( $associated_album_id, 'full' );
             }
         }
         if ( empty( $cover_url ) ) {
@@ -85,8 +145,8 @@ $comments_count = count($track_comments);
         }
     ?>
 
-    <!-- Background blurred album art with dynamic visual options -->
-    <div class="cf-cinematic-hero" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.85), #000000), url('<?php echo esc_url($cover_url); ?>');">
+    <!-- Frosted cover-art hero with brand gold tint -->
+    <div class="cf-cinematic-hero" style="--cf-hero-art: url('<?php echo esc_url($cover_url); ?>');">
         <div class="cf-container">
             
             <div class="cf-track-header-layout">
@@ -113,7 +173,6 @@ $comments_count = count($track_comments);
                             endforeach;
                             ?>
                         </select>
-                        <p id="cf-viz-debug-status">Waiting for play button click...</p>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -134,7 +193,24 @@ $comments_count = count($track_comments);
                     <!-- Artist Info Box with Avatar -->
                     <div class="cf-artist-profile-row">
                         <span class="cf-artist-avatar-icon dashicons dashicons-admin-users"></span>
-                        <p class="cf-hero-artist"><?php echo esc_html($artist_name); ?></p>
+                        <p class="cf-hero-artist">
+                            <?php
+                            if ( ! empty( $artists ) && ! is_wp_error( $artists ) ) {
+                                $cf_artist_term_link = get_term_link( $artists[0] );
+                                if ( ! is_wp_error( $cf_artist_term_link ) ) {
+                                    printf(
+                                        '<a href="%1$s">%2$s</a>',
+                                        esc_url( $cf_artist_term_link ),
+                                        esc_html( $artists[0]->name )
+                                    );
+                                } else {
+                                    echo esc_html( $artist_name );
+                                }
+                            } else {
+                                echo esc_html( $artist_name );
+                            }
+                            ?>
+                        </p>
                     </div>
                     <p class="cf-hero-subline">
                         <?php echo esc_html( $release_type === 'album_track' ? __( 'Album track', 'collective-finity' ) : __( 'Featured single', 'collective-finity' ) ); ?>
@@ -157,7 +233,11 @@ $comments_count = count($track_comments);
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
+    <div class="cf-track-body">
+        <div class="cf-container">
             <!-- 4. VISITOR-FRIENDLY EMOTIONAL METADATA CARDS -->
             <div class="cf-meta-grid">
                 <div class="cf-meta-box cf-glass-card">
@@ -340,13 +420,18 @@ $comments_count = count($track_comments);
 
                 <p class="cf-copyright-text"><?php echo esc_html($copyright); ?></p>
             </div>
-
         </div>
     </div>
     <?php endwhile; ?>
 </div>
 
-<script type="text/javascript">window.cfPageTrackId = <?php echo (int) $track_id; ?>;</script>
+<script type="text/javascript">
+window.cfPageTrackId = <?php echo (int) $track_id; ?>;
+window.cfPageTrackPermalink = <?php echo wp_json_encode( get_permalink( $track_id ) ); ?>;
+<?php if ( ! empty( $cf_album_queue ) ) : ?>
+window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
+<?php endif; ?>
+</script>
 
 <style>
 /* CSS Styles with requested #FFB700 Color Scheme */
@@ -369,30 +454,52 @@ $comments_count = count($track_comments);
     overflow-x: hidden;
 }
 .cf-cinematic-hero {
-    min-height: 100vh;
-    background-size: cover;
-    background-position: center;
-    padding: 108px 0 70px;
+    background: #0a0a0a;
+    padding: 108px 0 56px;
     position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid rgba(255, 183, 0, 0.16);
 }
 .cf-cinematic-hero::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(140deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.72) 45%, rgba(0, 0, 0, 0.9) 100%);
+    background-image: var(--cf-hero-art);
+    background-size: cover;
+    background-position: center;
+    filter: blur(18px) saturate(115%);
+    transform: scale(1.08);
+    opacity: 1;
     z-index: 0;
+}
+.cf-cinematic-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 80% 55% at 18% -8%, rgba(255, 183, 0, 0.22), transparent 58%),
+        radial-gradient(ellipse 55% 40% at 92% 8%, rgba(255, 183, 0, 0.12), transparent 52%),
+        linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, 0.45) 100%),
+        linear-gradient(140deg, rgba(0, 0, 0, 0.38) 0%, rgba(0, 0, 0, 0.32) 45%, rgba(0, 0, 0, 0.4) 100%);
+    z-index: 0;
+    pointer-events: none;
 }
 .cf-cinematic-hero > .cf-container {
     position: relative;
     z-index: 1;
 }
+.cf-track-body {
+    position: relative;
+    z-index: 1;
+    padding: 40px 0 20px;
+}
 .cf-container { width: 90%; max-width: 1100px; margin: 0 auto; box-sizing: border-box; }
-.cf-track-header-layout { display: flex; align-items: center; gap: 50px; margin-bottom: 50px; flex-wrap: wrap; min-width: 0; max-width: 100%; }
+.cf-track-header-layout { display: flex; align-items: center; gap: 50px; margin-bottom: 0; flex-wrap: wrap; min-width: 0; max-width: 100%; }
 
 /* 2. Visualizer Canvas styling (Upgraded for fluid aspect-ratio mobile responsiveness) */
 .cf-vinyl-wrapper { flex: 1 1 250px; min-width: 0; max-width: 100%; display: flex; flex-direction: column; align-items: center; position: relative; }
 .cf-vinyl-inner { position: relative; width: 100%; max-width: 340px; aspect-ratio: 1 / 1; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
-#cf-circular-visualizer { position: absolute; top: -10px; left: -10px; width: 100% !important; height: 100% !important; max-width: 360px; max-height: 360px; z-index: 1; pointer-events: none; }
+#cf-circular-visualizer { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; max-width: 360px; max-height: 360px; z-index: 1; pointer-events: none; }
 .cf-vinyl-disc { width: 82% !important; height: 82% !important; max-width: 280px; max-height: 280px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 0 25px rgba(0,0,0,0.8); object-fit: cover; z-index: 2; transition: transform 0.2s, box-shadow 0.2s; }
 .cf-vinyl-disc.playing { animation: spin 15s linear infinite; }
 .cf-visualizer-selector-wrapper { text-align: center; width: 100%; max-width: 320px; margin-top: 10px; }
@@ -423,6 +530,8 @@ $comments_count = count($track_comments);
 .cf-artist-profile-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .cf-artist-avatar-icon { font-size: 24px; width: 24px; height: 24px; color: #888; }
 .cf-hero-artist { font-size: 16px; color: #aaa; margin: 0; font-weight: bold; }
+.cf-hero-artist a { color: inherit; text-decoration: none; transition: color 0.2s ease; }
+.cf-hero-artist a:hover { color: var(--primary-color, #FFB700); text-decoration: underline; }
 .cf-hero-subline { margin: 0 0 24px; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #b7b7b7; }
 
 .cf-hero-actions-row { display: flex; gap: 15px; flex-wrap: wrap; }
@@ -654,7 +763,7 @@ jQuery(document).ready(function($) {
     function vizUpdateColorPhase() {
         var full = vizEnergy(0, bufferLength);
         var bass = vizEnergy(0, 10);
-        colorPhase += 0.006 + full * 0.055 + bass * 0.045;
+        colorPhase += 0.002 + full * 0.008 + bass * 0.006;
     }
 
     function vizRgbAtAngle(angleRad) {
@@ -741,16 +850,20 @@ jQuery(document).ready(function($) {
         return shards;
     }
 
-    function setVizDebugStatus(msg) {
-        var el = document.getElementById('cf-viz-debug-status');
-        if (el) {
-            el.textContent = msg;
-        }
+    function vizApplyRadialFade(centerX, centerY, canvasW, canvasH) {
+        var fadeRadius = Math.min(canvasW, canvasH) * 0.5;
+        var fadeGrad = ctx.createRadialGradient(centerX, centerY, fadeRadius * 0.3, centerX, centerY, fadeRadius);
+        fadeGrad.addColorStop(0, 'rgba(255,255,255,1)');
+        fadeGrad.addColorStop(0.9, 'rgba(255,255,255,1)');
+        fadeGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.globalCompositeOperation = 'destination-in';
+        ctx.fillStyle = fadeGrad;
+        ctx.fillRect(0, 0, canvasW, canvasH);
+        ctx.globalCompositeOperation = 'source-over';
     }
 
     function initVisualizer() {
         if (!audio) {
-            setVizDebugStatus('Audio connection FAILED: no audio element');
             return;
         }
 
@@ -766,13 +879,10 @@ jQuery(document).ready(function($) {
                 if (audioContext && audioContext.state === 'suspended') {
                     audioContext.resume();
                 }
-                setVizDebugStatus('Audio connected successfully');
                 if (!vizDrawLoopStarted) {
                     vizDrawLoopStarted = true;
                     drawVisualizer();
                 }
-            } else {
-                setVizDebugStatus('Audio connection FAILED: MediaElementSource already exists on this audio element');
             }
             return;
         }
@@ -799,9 +909,6 @@ jQuery(document).ready(function($) {
             };
             window.cfAudioMediaSourceConnected = true;
 
-            console.log('CF VIZ: audio graph connected successfully.');
-            setVizDebugStatus('Audio connected successfully');
-
             if (audioContext.state === 'suspended') {
                 audioContext.resume();
             }
@@ -810,12 +917,10 @@ jQuery(document).ready(function($) {
                 drawVisualizer();
             }
         } catch(e) {
-            console.log('CF VIZ: Web Audio API not supported on this browser context.', e);
-            setVizDebugStatus('Audio connection FAILED: ' + (e && e.message ? e.message : String(e)));
+            // Web Audio API unavailable or MediaElementSource already connected elsewhere.
         }
     }
 
-    var vizDebugFrame = 0;
     var vizDrawLoopStarted = false;
 
     function drawVisualizer() {
@@ -831,20 +936,6 @@ jQuery(document).ready(function($) {
         }
 
         analyser.getByteFrequencyData(dataArray);
-        vizDebugFrame++;
-        if (vizDebugFrame % 120 === 0) {
-            console.log('CF VIZ draw:', $('#cf-visualizer-type').val(), Array.from(dataArray.slice(0, 8)));
-        }
-
-        var styleLabel = $('#cf-visualizer-type option:selected').text() || $('#cf-visualizer-type').val() || '(none)';
-        var hasAudioData = false;
-        for (var di = 0; di < dataArray.length; di++) {
-            if (dataArray[di] > 0) {
-                hasAudioData = true;
-                break;
-            }
-        }
-        setVizDebugStatus('Drawing: ' + styleLabel + ' | Audio data: ' + (hasAudioData ? 'yes' : 'no/silent'));
 
         if (!canvas || !ctx) {
             return;
@@ -1236,11 +1327,12 @@ jQuery(document).ready(function($) {
             }
             ctx.shadowBlur = 0;
         }
+
+        vizApplyRadialFade(centerX, centerY, canvas.width, canvas.height);
     }
 
     // Trigger visualizer initialize on stream trigger
     $(document).off('click.cfViz', '.cf-play-btn-hero').on('click.cfViz', '.cf-play-btn-hero', function() {
-        setVizDebugStatus('Play button clicked, connecting audio...');
         initVisualizer();
         if (audioContext && audioContext.state === 'suspended') {
             audioContext.resume();

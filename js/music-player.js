@@ -17,6 +17,7 @@ jQuery(document).ready(function($) {
     window.cfLastVolume = 0.72;
     window.cfIsMuted = false;
     var cfLastLoggedTrackId = null;
+    var cfSuppressTrackNavigation = false;
     var CF_PLAYER_STATE_KEY = 'cf_player_state';
     var CF_PLAYER_STATE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
     var CF_PLAYER_SAVE_COOLDOWN = 4000;
@@ -144,8 +145,58 @@ jQuery(document).ready(function($) {
             title: track.title || 'Unknown Track',
             artist: track.artist || 'Unknown Artist',
             art: track.art || track.artUrl || '',
-            id: track.id || track.trackId || null
+            id: track.id || track.trackId || null,
+            permalink: track.permalink || track.permalinkUrl || ''
         };
+    }
+
+    function getTrackPermalink(track) {
+        track = normalizeTrack(track);
+        if (track.permalink) {
+            return track.permalink;
+        }
+        if (!track.id) {
+            return null;
+        }
+        var trackId = String(track.id);
+        var queueSources = [window.cfPlayerQueue, window.cfAlbumQueue];
+        for (var q = 0; q < queueSources.length; q++) {
+            var queue = queueSources[q];
+            if (!Array.isArray(queue)) {
+                continue;
+            }
+            for (var i = 0; i < queue.length; i++) {
+                var queueTrack = normalizeTrack(queue[i]);
+                if (queueTrack.id != null && String(queueTrack.id) === trackId && queueTrack.permalink) {
+                    return queueTrack.permalink;
+                }
+            }
+        }
+        var $row = $('.cf-album-track-row[data-track-id="' + trackId + '"]');
+        if ($row.length) {
+            var rowHref = $row.find('a.cf-track-name, a.cf-view-track-btn').first().attr('href');
+            if (rowHref) {
+                return rowHref.split('#')[0];
+            }
+        }
+        var $cardLink = $('.cf-like-btn[data-track-id="' + trackId + '"]').closest('a.cf-card');
+        if ($cardLink.length) {
+            return $cardLink.attr('href');
+        }
+        return null;
+    }
+
+    function navigateToTrackPage(track) {
+        var permalink = getTrackPermalink(track);
+        if (!permalink) {
+            return;
+        }
+        var targetPath = permalink.split('#')[0];
+        var currentPath = window.location.href.split('#')[0];
+        if (targetPath === currentPath) {
+            return;
+        }
+        window.location.href = targetPath;
     }
 
     function clearPlayerState() {
@@ -291,12 +342,14 @@ jQuery(document).ready(function($) {
             }
         }
 
+        cfSuppressTrackNavigation = true;
         var track = normalizeTrack(window.cfPlayerQueue[window.cfPlayerQueueIndex]);
         audio.src = track.url;
         applyQueueTrackUI(track);
         updatePlayerTrackActions(track.id || null);
         highlightQueueRow(track.id, window.cfPlayerQueueIndex);
         updateQueueIndicator();
+        cfSuppressTrackNavigation = false;
 
         var savedTime = typeof saved.currentTime === 'number' && !isNaN(saved.currentTime) ? saved.currentTime : 0;
         if (savedTime > 0) {
@@ -308,6 +361,15 @@ jQuery(document).ready(function($) {
                 }
                 audio.currentTime = seekTo;
                 updateProgress();
+                if (saved.isPlaying === true) {
+                    audio.play().then(updatePlayState).catch(function() {
+                        showPlayerError('Playback blocked — try again');
+                    });
+                }
+            });
+        } else if (saved.isPlaying === true) {
+            audio.play().then(updatePlayState).catch(function() {
+                showPlayerError('Playback blocked — try again');
             });
         }
 
@@ -388,6 +450,9 @@ jQuery(document).ready(function($) {
             return;
         }
 
+        var previousTrack = window.cfPlayerQueueIndex >= 0
+            ? normalizeTrack(window.cfPlayerQueue[window.cfPlayerQueueIndex])
+            : null;
         var track = normalizeTrack(window.cfPlayerQueue[index]);
         if (!track.url) {
             showPlayerError('Track has no audio file');
@@ -402,6 +467,14 @@ jQuery(document).ready(function($) {
         highlightQueueRow(track.id, index);
         updateQueueIndicator();
         savePlayerState();
+
+        if (!cfSuppressTrackNavigation) {
+            var prevId = previousTrack && previousTrack.id != null ? String(previousTrack.id) : null;
+            var nextId = track.id != null ? String(track.id) : null;
+            if (nextId && prevId !== nextId) {
+                navigateToTrackPage(track);
+            }
+        }
 
         audio.play().then(updatePlayState).catch(function() {
             showPlayerError('Playback blocked — try again');

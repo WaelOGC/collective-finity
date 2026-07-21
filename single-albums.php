@@ -75,15 +75,20 @@ get_header();
                 }
 
                 $artists      = wp_get_post_terms( $track_id, 'track_artist' );
-                $track_artist = ! empty( $artists ) ? $artists[0]->name : collective_finity_brand_name();
+                if ( is_wp_error( $artists ) ) {
+                    $artists = array();
+                }
+                $artist_term  = ! empty( $artists ) ? $artists[0] : null;
+                $track_artist = $artist_term ? $artist_term->name : collective_finity_brand_name();
 
                 if ( $playback_url ) {
                     $album_queue[] = array(
-                        'url'    => $playback_url,
-                        'title'  => get_the_title(),
-                        'artist' => $track_artist,
-                        'art'    => $track_cover,
-                        'id'     => $track_id,
+                        'url'       => $playback_url,
+                        'title'     => get_the_title(),
+                        'artist'    => $track_artist,
+                        'art'       => $track_cover,
+                        'id'        => $track_id,
+                        'permalink' => get_permalink( $track_id ),
                     );
                     ++$playable_count;
                 }
@@ -93,6 +98,7 @@ get_header();
                     'title'        => get_the_title(),
                     'permalink'    => get_permalink(),
                     'artist'       => $track_artist,
+                    'artist_term'  => $artist_term,
                     'bpm'          => get_post_meta( $track_id, 'track_bpm', true ) ?: '—',
                     'key'          => get_post_meta( $track_id, 'track_key', true ) ?: '—',
                     'show_bpm'     => collective_finity_track_show_bpm( $track_id ),
@@ -116,14 +122,28 @@ get_header();
                 $show_key = true;
             }
         }
+
+        // Album-level artist credit: first real track_artist term found on album tracks.
+        $album_artist_term = null;
+        foreach ( $tracks_data as $track_row ) {
+            if ( ! empty( $track_row['artist_term'] ) && $track_row['artist_term'] instanceof WP_Term ) {
+                $album_artist_term = $track_row['artist_term'];
+                break;
+            }
+        }
+        $album_artist_name = $album_artist_term ? $album_artist_term->name : collective_finity_brand_name();
+        $album_artist_link = null;
+        if ( $album_artist_term ) {
+            $album_artist_link = get_term_link( $album_artist_term );
+            if ( is_wp_error( $album_artist_link ) ) {
+                $album_artist_link = null;
+            }
+        }
         ?>
 
-    <div class="cf-album-ambient" style="--cf-album-art: url('<?php echo esc_url( $cover_url ); ?>');"></div>
-
-    <div class="cf-album-shell">
+    <header class="cf-album-hero" style="--cf-album-art: url('<?php echo esc_url( $cover_url ); ?>');">
         <div class="cf-container">
-
-            <header class="cf-album-hero">
+            <div class="cf-album-hero-layout">
                 <div class="cf-album-art-frame">
                     <img src="<?php echo esc_url( $cover_url ); ?>" alt="<?php the_title_attribute(); ?>" class="cf-album-cover-img" loading="eager">
                     <div class="cf-album-art-glow" aria-hidden="true"></div>
@@ -132,7 +152,19 @@ get_header();
                 <div class="cf-album-hero-content">
                     <span class="cf-album-eyebrow"><?php esc_html_e( 'Album', 'collective-finity' ); ?></span>
                     <h1 class="cf-album-title"><?php the_title(); ?></h1>
-                    <p class="cf-album-artist"><?php echo esc_html( collective_finity_brand_name() ); ?></p>
+                    <p class="cf-album-artist">
+                        <?php
+                        if ( $album_artist_link ) {
+                            printf(
+                                '<a href="%1$s">%2$s</a>',
+                                esc_url( $album_artist_link ),
+                                esc_html( $album_artist_name )
+                            );
+                        } else {
+                            echo esc_html( $album_artist_name );
+                        }
+                        ?>
+                    </p>
 
                     <?php if ( get_the_content() ) : ?>
                         <div class="cf-album-description">
@@ -157,7 +189,17 @@ get_header();
                         </span>
                         <span class="cf-album-meta-pill">
                             <span class="dashicons dashicons-admin-users"></span>
-                            <?php echo esc_html( collective_finity_brand_name() ); ?>
+                            <?php
+                            if ( $album_artist_link ) {
+                                printf(
+                                    '<a href="%1$s">%2$s</a>',
+                                    esc_url( $album_artist_link ),
+                                    esc_html( $album_artist_name )
+                                );
+                            } else {
+                                echo esc_html( $album_artist_name );
+                            }
+                            ?>
                         </span>
                     </div>
 
@@ -187,7 +229,12 @@ get_header();
                         <?php collective_finity_ad_slot_wrapped( 'album_sidebar', '<div class="cf-album-ad-sidebar">', '</div>' ); ?>
                     <?php endif; ?>
                 </div>
-            </header>
+            </div>
+        </div>
+    </header>
+
+    <div class="cf-album-shell">
+        <div class="cf-container">
 
             <section class="cf-album-tracklist-section" aria-label="<?php esc_attr_e( 'Album tracklist', 'collective-finity' ); ?>">
                 <div class="cf-tracklist-header">
@@ -234,7 +281,24 @@ get_header();
 
                                 <div class="cf-col-title" role="cell">
                                     <a href="<?php echo esc_url( $track['permalink'] ); ?>" class="cf-track-name"><?php echo esc_html( $track['title'] ); ?></a>
-                                    <span class="cf-track-artist-name"><?php echo esc_html( $track['artist'] ); ?></span>
+                                    <span class="cf-track-artist-name">
+                                        <?php
+                                        if ( ! empty( $track['artist_term'] ) && $track['artist_term'] instanceof WP_Term ) {
+                                            $cf_track_artist_link = get_term_link( $track['artist_term'] );
+                                            if ( ! is_wp_error( $cf_track_artist_link ) ) {
+                                                printf(
+                                                    '<a href="%1$s">%2$s</a>',
+                                                    esc_url( $cf_track_artist_link ),
+                                                    esc_html( $track['artist'] )
+                                                );
+                                            } else {
+                                                echo esc_html( $track['artist'] );
+                                            }
+                                        } else {
+                                            echo esc_html( $track['artist'] );
+                                        }
+                                        ?>
+                                    </span>
                                 </div>
 
                                 <?php if ( $show_bpm ) : ?>
@@ -302,43 +366,57 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $album_queue ); ?>;
     position: relative;
     min-height: 100vh;
     background: #050505;
+    overflow-x: hidden;
+}
+.cf-album-hero {
+    position: relative;
     overflow: hidden;
+    background: #0a0a0a;
+    padding: 48px 0 56px;
+    border-bottom: 1px solid rgba(255, 183, 0, 0.16);
 }
-.cf-album-ambient {
-    position: absolute;
-    inset: 0;
-    background-image:
-        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(255, 183, 0, 0.18), transparent 55%),
-        radial-gradient(ellipse 60% 40% at 90% 10%, rgba(255, 183, 0, 0.08), transparent 50%),
-        linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, #050505 70%);
-    pointer-events: none;
-}
-.cf-album-ambient::after {
+.cf-album-hero::before {
     content: '';
     position: absolute;
     inset: 0;
     background-image: var(--cf-album-art);
     background-size: cover;
     background-position: center;
-    opacity: 0.12;
-    filter: blur(60px) saturate(120%);
-    transform: scale(1.2);
+    filter: blur(18px) saturate(115%);
+    transform: scale(1.08);
+    opacity: 1;
+    z-index: 0;
+}
+.cf-album-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 80% 55% at 18% -8%, rgba(255, 183, 0, 0.22), transparent 58%),
+        radial-gradient(ellipse 55% 40% at 92% 8%, rgba(255, 183, 0, 0.12), transparent 52%),
+        linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, 0.45) 100%),
+        linear-gradient(140deg, rgba(0, 0, 0, 0.38) 0%, rgba(0, 0, 0, 0.32) 45%, rgba(0, 0, 0, 0.4) 100%);
+    z-index: 0;
+    pointer-events: none;
+}
+.cf-album-hero > .cf-container {
+    position: relative;
+    z-index: 1;
 }
 .cf-album-shell {
     position: relative;
     z-index: 1;
-    padding: 48px 0 80px;
+    padding: 40px 0 80px;
 }
 .cf-container {
     width: min(1120px, 92%);
     margin: 0 auto;
 }
-.cf-album-hero {
+.cf-album-hero-layout {
     display: grid;
     grid-template-columns: minmax(220px, 280px) 1fr;
     gap: 48px;
     align-items: end;
-    margin-bottom: 48px;
 }
 .cf-album-art-frame {
     position: relative;
@@ -383,6 +461,17 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $album_queue ); ?>;
     color: rgba(255, 255, 255, 0.55);
     margin: 0 0 20px;
     font-weight: 500;
+}
+.cf-album-artist a,
+.cf-album-meta-pill a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+.cf-album-artist a:hover,
+.cf-album-meta-pill a:hover {
+    color: var(--primary-color, #FFB700);
+    text-decoration: underline;
 }
 .cf-album-description {
     font-size: 0.95rem;
@@ -706,6 +795,15 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $album_queue ); ?>;
     font-size: 0.78rem;
     color: rgba(255, 255, 255, 0.38);
 }
+.cf-track-artist-name a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+.cf-track-artist-name a:hover {
+    color: var(--primary-color, #FFB700);
+    text-decoration: underline;
+}
 .cf-col-bpm,
 .cf-col-key {
     font-size: 0.82rem;
@@ -780,7 +878,7 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $album_queue ); ?>;
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E");
 }
 @media (max-width: 768px) {
-    .cf-album-hero {
+    .cf-album-hero-layout {
         grid-template-columns: 1fr;
         gap: 28px;
         text-align: center;
@@ -835,7 +933,7 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $album_queue ); ?>;
     }
 }
 @media (min-width: 769px) and (max-width: 1024px) {
-    .cf-album-hero {
+    .cf-album-hero-layout {
         grid-template-columns: 220px 1fr;
         gap: 32px;
     }

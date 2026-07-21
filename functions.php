@@ -388,11 +388,12 @@ function collective_finity_get_published_track_queue() {
         $artist  = ! empty( $artists ) ? $artists[0] : 'Collective Finity';
 
         $queue[] = array(
-            'url'    => $url,
-            'title'  => $track->post_title,
-            'artist' => $artist,
-            'art'    => $cover,
-            'id'     => $track_id,
+            'url'       => $url,
+            'title'     => $track->post_title,
+            'artist'    => $artist,
+            'art'       => $cover,
+            'id'        => $track_id,
+            'permalink' => get_permalink( $track_id ),
         );
     }
 
@@ -1481,6 +1482,530 @@ function collective_finity_register_track_artist_taxonomy() {
 }
 add_action( 'init', 'collective_finity_register_track_artist_taxonomy' );
 
+/**
+ * Artist bio character limit (admin + save).
+ *
+ * @return int
+ */
+function collective_finity_artist_bio_max_length() {
+    return 150;
+}
+
+/**
+ * Term meta keys for the track_artist taxonomy.
+ *
+ * @return array<string, string> Meta key => field type.
+ */
+function collective_finity_track_artist_meta_keys() {
+    return array(
+        'artist_photo_id'       => 'attachment',
+        'artist_bio'            => 'textarea',
+        'artist_instagram_url'  => 'url',
+        'artist_spotify_url'    => 'url',
+        'artist_youtube_url'    => 'url',
+        'artist_tiktok_url'     => 'url',
+        'artist_facebook_url'   => 'url',
+        'artist_x_url'          => 'url',
+        'artist_user_id'        => 'user',
+        'artist_show_pro_info'  => 'checkbox',
+        'artist_years_active'   => 'text',
+        'artist_location'       => 'text',
+        'artist_label'          => 'text',
+        'artist_genre_ids'      => 'term_ids',
+    );
+}
+
+/**
+ * Enqueue media uploader on Add/Edit Artist term screens.
+ *
+ * @param string $hook Current admin page hook.
+ */
+function collective_finity_enqueue_artist_term_admin_assets( $hook ) {
+    if ( ! in_array( $hook, array( 'edit-tags.php', 'term.php' ), true ) ) {
+        return;
+    }
+
+    $screen = get_current_screen();
+    if ( ! $screen || 'track_artist' !== $screen->taxonomy ) {
+        return;
+    }
+
+    wp_enqueue_media();
+
+    $js_path = get_template_directory() . '/js/admin-artist-term-meta.js';
+    $js_ver  = file_exists( $js_path ) ? filemtime( $js_path ) : '1.0.0';
+
+    wp_enqueue_script(
+        'collective-finity-admin-artist-term',
+        get_template_directory_uri() . '/js/admin-artist-term-meta.js',
+        array( 'jquery' ),
+        $js_ver,
+        true
+    );
+
+    $admin_css = '.cf-artist-genre-pills{display:flex;flex-wrap:wrap;gap:8px;max-width:640px;}'
+        . '.cf-artist-genre-pill{display:inline-flex;align-items:center;gap:6px;margin:0;padding:6px 12px;border:1px solid #c3c4c7;border-radius:999px;background:#fff;cursor:pointer;font-size:13px;line-height:1.3;transition:border-color .15s ease,background .15s ease,color .15s ease;}'
+        . '.cf-artist-genre-pill:hover{border-color:#FFB700;}'
+        . '.cf-artist-genre-pill.is-checked{border-color:#FFB700;background:rgba(255,183,0,.12);color:#1d2327;}'
+        . '.cf-artist-genre-pill input{position:absolute;opacity:0;pointer-events:none;}'
+        . '.cf-artist-bio-counter{margin:.35em 0 0;color:#646970;font-size:12px;}'
+        . '.cf-artist-bio-counter.is-near-limit{color:#b32d2e;}';
+
+    wp_register_style( 'collective-finity-admin-artist-term', false, array(), $js_ver );
+    wp_enqueue_style( 'collective-finity-admin-artist-term' );
+    wp_add_inline_style( 'collective-finity-admin-artist-term', $admin_css );
+}
+add_action( 'admin_enqueue_scripts', 'collective_finity_enqueue_artist_term_admin_assets' );
+
+/**
+ * Render music_genre multi-select pills for an artist term.
+ *
+ * @param int[] $selected_ids Selected music_genre term IDs.
+ */
+function collective_finity_render_artist_genre_field( $selected_ids = array() ) {
+    $selected_ids = array_map( 'absint', (array) $selected_ids );
+    $genres       = get_terms(
+        array(
+            'taxonomy'   => 'music_genre',
+            'hide_empty' => false,
+            'orderby'    => 'name',
+            'order'      => 'ASC',
+        )
+    );
+
+    if ( is_wp_error( $genres ) || empty( $genres ) ) {
+        echo '<p class="description">' . esc_html__( 'No music genres found. Create genres under Tracks → Genres first.', 'collective-finity' ) . '</p>';
+        return;
+    }
+    ?>
+    <div class="cf-artist-genre-pills" data-cf-artist-genres>
+        <?php foreach ( $genres as $genre ) : ?>
+            <?php
+            $checked = in_array( (int) $genre->term_id, $selected_ids, true );
+            $pill_id = 'artist_genre_' . (int) $genre->term_id;
+            ?>
+            <label class="cf-artist-genre-pill<?php echo $checked ? ' is-checked' : ''; ?>" for="<?php echo esc_attr( $pill_id ); ?>">
+                <input
+                    type="checkbox"
+                    name="artist_genre_ids[]"
+                    id="<?php echo esc_attr( $pill_id ); ?>"
+                    value="<?php echo esc_attr( (string) $genre->term_id ); ?>"
+                    <?php checked( $checked ); ?>
+                />
+                <span><?php echo esc_html( $genre->name ); ?></span>
+            </label>
+        <?php endforeach; ?>
+    </div>
+    <p class="description"><?php esc_html_e( 'Select one or more genres shown on the artist page.', 'collective-finity' ); ?></p>
+    <?php
+}
+
+/**
+ * Render artist photo media field markup (shared by add/edit forms).
+ *
+ * @param int $photo_id Attachment ID.
+ */
+function collective_finity_render_artist_photo_field( $photo_id = 0 ) {
+    $photo_id  = absint( $photo_id );
+    $preview   = $photo_id ? wp_get_attachment_image_url( $photo_id, 'medium' ) : '';
+    ?>
+    <div class="cf-artist-photo-field" data-cf-artist-photo>
+        <input type="hidden" name="artist_photo_id" id="artist_photo_id" value="<?php echo esc_attr( (string) $photo_id ); ?>" />
+        <div class="cf-artist-photo-preview" style="margin-bottom:10px;">
+            <?php if ( $preview ) : ?>
+                <img src="<?php echo esc_url( $preview ); ?>" alt="" style="max-width:150px;height:auto;border-radius:50%;display:block;" />
+            <?php else : ?>
+                <span class="cf-artist-photo-placeholder" style="display:inline-flex;align-items:center;justify-content:center;width:120px;height:120px;border-radius:50%;background:#1a1a1a;color:#666;font-size:12px;"><?php esc_html_e( 'No photo', 'collective-finity' ); ?></span>
+            <?php endif; ?>
+        </div>
+        <p>
+            <button type="button" class="button cf-artist-photo-upload"><?php esc_html_e( 'Select Photo', 'collective-finity' ); ?></button>
+            <button type="button" class="button cf-artist-photo-remove"<?php disabled( ! $photo_id ); ?>><?php esc_html_e( 'Remove', 'collective-finity' ); ?></button>
+        </p>
+        <p class="description"><?php esc_html_e( 'Square image recommended. Shown as a circular portrait on the artist page.', 'collective-finity' ); ?></p>
+    </div>
+    <?php
+}
+
+/**
+ * Add Artist fields on the "Add New Artist" screen.
+ */
+function collective_finity_track_artist_add_form_fields() {
+    $users     = get_users( array( 'orderby' => 'display_name', 'order' => 'ASC' ) );
+    $bio_max   = collective_finity_artist_bio_max_length();
+    ?>
+    <div class="form-field term-artist-photo-wrap">
+        <label for="artist_photo_id"><?php esc_html_e( 'Artist Photo', 'collective-finity' ); ?></label>
+        <?php collective_finity_render_artist_photo_field( 0 ); ?>
+    </div>
+    <div class="form-field term-artist-bio-wrap">
+        <label for="artist_bio"><?php esc_html_e( 'Artist Bio', 'collective-finity' ); ?></label>
+        <textarea name="artist_bio" id="artist_bio" rows="5" cols="40" maxlength="<?php echo esc_attr( (string) $bio_max ); ?>" data-cf-artist-bio></textarea>
+        <p class="cf-artist-bio-counter" data-cf-artist-bio-counter>0 / <?php echo esc_html( (string) $bio_max ); ?></p>
+        <p><?php esc_html_e( 'Short bio shown on the artist page. Separate from the taxonomy Description field above.', 'collective-finity' ); ?></p>
+    </div>
+    <div class="form-field term-artist-instagram-wrap">
+        <label for="artist_instagram_url"><?php esc_html_e( 'Instagram URL', 'collective-finity' ); ?></label>
+        <input type="url" name="artist_instagram_url" id="artist_instagram_url" value="" placeholder="https://instagram.com/..." />
+    </div>
+    <div class="form-field term-artist-spotify-wrap">
+        <label for="artist_spotify_url"><?php esc_html_e( 'Spotify URL', 'collective-finity' ); ?></label>
+        <input type="url" name="artist_spotify_url" id="artist_spotify_url" value="" placeholder="https://open.spotify.com/..." />
+    </div>
+    <div class="form-field term-artist-youtube-wrap">
+        <label for="artist_youtube_url"><?php esc_html_e( 'YouTube URL', 'collective-finity' ); ?></label>
+        <input type="url" name="artist_youtube_url" id="artist_youtube_url" value="" placeholder="https://youtube.com/..." />
+    </div>
+    <div class="form-field term-artist-tiktok-wrap">
+        <label for="artist_tiktok_url"><?php esc_html_e( 'TikTok URL', 'collective-finity' ); ?></label>
+        <input type="url" name="artist_tiktok_url" id="artist_tiktok_url" value="" placeholder="https://tiktok.com/@..." />
+    </div>
+    <div class="form-field term-artist-facebook-wrap">
+        <label for="artist_facebook_url"><?php esc_html_e( 'Facebook URL', 'collective-finity' ); ?></label>
+        <input type="url" name="artist_facebook_url" id="artist_facebook_url" value="" placeholder="https://facebook.com/..." />
+    </div>
+    <div class="form-field term-artist-x-wrap">
+        <label for="artist_x_url"><?php esc_html_e( 'X (Twitter) URL', 'collective-finity' ); ?></label>
+        <input type="url" name="artist_x_url" id="artist_x_url" value="" placeholder="https://x.com/..." />
+    </div>
+    <div class="form-field term-artist-show-pro-wrap">
+        <label for="artist_show_pro_info">
+            <input type="checkbox" name="artist_show_pro_info" id="artist_show_pro_info" value="1" checked="checked" />
+            <?php esc_html_e( 'Show Professional Info Section', 'collective-finity' ); ?>
+        </label>
+        <p><?php esc_html_e( 'When enabled, years active, location, label, genres, and auto-computed stats appear on the artist page.', 'collective-finity' ); ?></p>
+    </div>
+    <div class="form-field term-artist-years-wrap">
+        <label for="artist_years_active"><?php esc_html_e( 'Years Active', 'collective-finity' ); ?></label>
+        <input type="text" name="artist_years_active" id="artist_years_active" value="" placeholder="2021 — present" />
+    </div>
+    <div class="form-field term-artist-location-wrap">
+        <label for="artist_location"><?php esc_html_e( 'Location', 'collective-finity' ); ?></label>
+        <input type="text" name="artist_location" id="artist_location" value="" placeholder="" />
+    </div>
+    <div class="form-field term-artist-label-wrap">
+        <label for="artist_label"><?php esc_html_e( 'Label / Crew', 'collective-finity' ); ?></label>
+        <input type="text" name="artist_label" id="artist_label" value="" placeholder="" />
+    </div>
+    <div class="form-field term-artist-genres-wrap">
+        <label><?php esc_html_e( 'Genres', 'collective-finity' ); ?></label>
+        <?php collective_finity_render_artist_genre_field( array() ); ?>
+    </div>
+    <div class="form-field term-artist-user-wrap">
+        <label for="artist_user_id"><?php esc_html_e( 'Linked WordPress User', 'collective-finity' ); ?></label>
+        <select name="artist_user_id" id="artist_user_id">
+            <option value=""><?php esc_html_e( '— None —', 'collective-finity' ); ?></option>
+            <?php foreach ( $users as $user ) : ?>
+                <option value="<?php echo esc_attr( (string) $user->ID ); ?>">
+                    <?php echo esc_html( $user->display_name . ' (' . $user->user_login . ')' ); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <p><?php esc_html_e( 'Optional. Used to show blog posts written by this artist if they are also a site author.', 'collective-finity' ); ?></p>
+    </div>
+    <?php
+}
+add_action( 'track_artist_add_form_fields', 'collective_finity_track_artist_add_form_fields' );
+
+/**
+ * Edit Artist fields on the "Edit Artist" screen.
+ *
+ * @param WP_Term $term Current term.
+ */
+function collective_finity_track_artist_edit_form_fields( $term ) {
+    $term_id      = (int) $term->term_id;
+    $photo_id     = absint( get_term_meta( $term_id, 'artist_photo_id', true ) );
+    $bio          = (string) get_term_meta( $term_id, 'artist_bio', true );
+    $instagram    = (string) get_term_meta( $term_id, 'artist_instagram_url', true );
+    $spotify      = (string) get_term_meta( $term_id, 'artist_spotify_url', true );
+    $youtube      = (string) get_term_meta( $term_id, 'artist_youtube_url', true );
+    $tiktok       = (string) get_term_meta( $term_id, 'artist_tiktok_url', true );
+    $facebook     = (string) get_term_meta( $term_id, 'artist_facebook_url', true );
+    $x_url        = (string) get_term_meta( $term_id, 'artist_x_url', true );
+    $user_id      = absint( get_term_meta( $term_id, 'artist_user_id', true ) );
+    $show_pro_raw = get_term_meta( $term_id, 'artist_show_pro_info', true );
+    $show_pro     = ( '' === $show_pro_raw || '1' === (string) $show_pro_raw );
+    $years        = (string) get_term_meta( $term_id, 'artist_years_active', true );
+    $location     = (string) get_term_meta( $term_id, 'artist_location', true );
+    $label        = (string) get_term_meta( $term_id, 'artist_label', true );
+    $genre_ids    = get_term_meta( $term_id, 'artist_genre_ids', true );
+    $genre_ids    = is_array( $genre_ids ) ? array_map( 'absint', $genre_ids ) : array();
+    $users        = get_users( array( 'orderby' => 'display_name', 'order' => 'ASC' ) );
+    $bio_max      = collective_finity_artist_bio_max_length();
+    $bio_len      = function_exists( 'mb_strlen' ) ? mb_strlen( $bio ) : strlen( $bio );
+    ?>
+    <tr class="form-field term-artist-photo-wrap">
+        <th scope="row"><label for="artist_photo_id"><?php esc_html_e( 'Artist Photo', 'collective-finity' ); ?></label></th>
+        <td><?php collective_finity_render_artist_photo_field( $photo_id ); ?></td>
+    </tr>
+    <tr class="form-field term-artist-bio-wrap">
+        <th scope="row"><label for="artist_bio"><?php esc_html_e( 'Artist Bio', 'collective-finity' ); ?></label></th>
+        <td>
+            <textarea name="artist_bio" id="artist_bio" rows="5" cols="50" maxlength="<?php echo esc_attr( (string) $bio_max ); ?>" data-cf-artist-bio><?php echo esc_textarea( $bio ); ?></textarea>
+            <p class="cf-artist-bio-counter" data-cf-artist-bio-counter><?php echo esc_html( $bio_len . ' / ' . $bio_max ); ?></p>
+            <p class="description"><?php esc_html_e( 'Short bio shown on the artist page. Separate from the taxonomy Description field.', 'collective-finity' ); ?></p>
+        </td>
+    </tr>
+    <tr class="form-field term-artist-instagram-wrap">
+        <th scope="row"><label for="artist_instagram_url"><?php esc_html_e( 'Instagram URL', 'collective-finity' ); ?></label></th>
+        <td><input type="url" name="artist_instagram_url" id="artist_instagram_url" value="<?php echo esc_url( $instagram ); ?>" class="regular-text" placeholder="https://instagram.com/..." /></td>
+    </tr>
+    <tr class="form-field term-artist-spotify-wrap">
+        <th scope="row"><label for="artist_spotify_url"><?php esc_html_e( 'Spotify URL', 'collective-finity' ); ?></label></th>
+        <td><input type="url" name="artist_spotify_url" id="artist_spotify_url" value="<?php echo esc_url( $spotify ); ?>" class="regular-text" placeholder="https://open.spotify.com/..." /></td>
+    </tr>
+    <tr class="form-field term-artist-youtube-wrap">
+        <th scope="row"><label for="artist_youtube_url"><?php esc_html_e( 'YouTube URL', 'collective-finity' ); ?></label></th>
+        <td><input type="url" name="artist_youtube_url" id="artist_youtube_url" value="<?php echo esc_url( $youtube ); ?>" class="regular-text" placeholder="https://youtube.com/..." /></td>
+    </tr>
+    <tr class="form-field term-artist-tiktok-wrap">
+        <th scope="row"><label for="artist_tiktok_url"><?php esc_html_e( 'TikTok URL', 'collective-finity' ); ?></label></th>
+        <td><input type="url" name="artist_tiktok_url" id="artist_tiktok_url" value="<?php echo esc_url( $tiktok ); ?>" class="regular-text" placeholder="https://tiktok.com/@..." /></td>
+    </tr>
+    <tr class="form-field term-artist-facebook-wrap">
+        <th scope="row"><label for="artist_facebook_url"><?php esc_html_e( 'Facebook URL', 'collective-finity' ); ?></label></th>
+        <td><input type="url" name="artist_facebook_url" id="artist_facebook_url" value="<?php echo esc_url( $facebook ); ?>" class="regular-text" placeholder="https://facebook.com/..." /></td>
+    </tr>
+    <tr class="form-field term-artist-x-wrap">
+        <th scope="row"><label for="artist_x_url"><?php esc_html_e( 'X (Twitter) URL', 'collective-finity' ); ?></label></th>
+        <td><input type="url" name="artist_x_url" id="artist_x_url" value="<?php echo esc_url( $x_url ); ?>" class="regular-text" placeholder="https://x.com/..." /></td>
+    </tr>
+    <tr class="form-field term-artist-show-pro-wrap">
+        <th scope="row"><?php esc_html_e( 'Professional Info', 'collective-finity' ); ?></th>
+        <td>
+            <label for="artist_show_pro_info">
+                <input type="checkbox" name="artist_show_pro_info" id="artist_show_pro_info" value="1" <?php checked( $show_pro ); ?> />
+                <?php esc_html_e( 'Show Professional Info Section', 'collective-finity' ); ?>
+            </label>
+            <p class="description"><?php esc_html_e( 'When enabled, years active, location, label, genres, and auto-computed stats appear on the artist page.', 'collective-finity' ); ?></p>
+        </td>
+    </tr>
+    <tr class="form-field term-artist-years-wrap">
+        <th scope="row"><label for="artist_years_active"><?php esc_html_e( 'Years Active', 'collective-finity' ); ?></label></th>
+        <td><input type="text" name="artist_years_active" id="artist_years_active" value="<?php echo esc_attr( $years ); ?>" class="regular-text" placeholder="2021 — present" /></td>
+    </tr>
+    <tr class="form-field term-artist-location-wrap">
+        <th scope="row"><label for="artist_location"><?php esc_html_e( 'Location', 'collective-finity' ); ?></label></th>
+        <td><input type="text" name="artist_location" id="artist_location" value="<?php echo esc_attr( $location ); ?>" class="regular-text" /></td>
+    </tr>
+    <tr class="form-field term-artist-label-wrap">
+        <th scope="row"><label for="artist_label"><?php esc_html_e( 'Label / Crew', 'collective-finity' ); ?></label></th>
+        <td><input type="text" name="artist_label" id="artist_label" value="<?php echo esc_attr( $label ); ?>" class="regular-text" /></td>
+    </tr>
+    <tr class="form-field term-artist-genres-wrap">
+        <th scope="row"><?php esc_html_e( 'Genres', 'collective-finity' ); ?></th>
+        <td><?php collective_finity_render_artist_genre_field( $genre_ids ); ?></td>
+    </tr>
+    <tr class="form-field term-artist-user-wrap">
+        <th scope="row"><label for="artist_user_id"><?php esc_html_e( 'Linked WordPress User', 'collective-finity' ); ?></label></th>
+        <td>
+            <select name="artist_user_id" id="artist_user_id">
+                <option value=""><?php esc_html_e( '— None —', 'collective-finity' ); ?></option>
+                <?php foreach ( $users as $user ) : ?>
+                    <option value="<?php echo esc_attr( (string) $user->ID ); ?>" <?php selected( $user_id, $user->ID ); ?>>
+                        <?php echo esc_html( $user->display_name . ' (' . $user->user_login . ')' ); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <p class="description"><?php esc_html_e( 'Optional. Used to show blog posts written by this artist if they are also a site author.', 'collective-finity' ); ?></p>
+        </td>
+    </tr>
+    <?php
+}
+add_action( 'track_artist_edit_form_fields', 'collective_finity_track_artist_edit_form_fields' );
+
+/**
+ * Save track_artist term meta on create/edit.
+ *
+ * @param int $term_id Term ID.
+ */
+function collective_finity_save_track_artist_meta( $term_id ) {
+    if ( ! current_user_can( 'edit_term', $term_id ) ) {
+        return;
+    }
+
+    // Photo (attachment ID).
+    if ( isset( $_POST['artist_photo_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- term form nonce handled by core.
+        $photo_id = absint( wp_unslash( $_POST['artist_photo_id'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        if ( $photo_id > 0 && wp_attachment_is_image( $photo_id ) ) {
+            update_term_meta( $term_id, 'artist_photo_id', $photo_id );
+        } else {
+            delete_term_meta( $term_id, 'artist_photo_id' );
+        }
+    }
+
+    // Bio (hard 150-character trim).
+    if ( isset( $_POST['artist_bio'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $bio     = sanitize_textarea_field( wp_unslash( $_POST['artist_bio'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $bio_max = collective_finity_artist_bio_max_length();
+        if ( function_exists( 'mb_substr' ) ) {
+            $bio = mb_substr( $bio, 0, $bio_max );
+        } else {
+            $bio = substr( $bio, 0, $bio_max );
+        }
+        if ( '' !== $bio ) {
+            update_term_meta( $term_id, 'artist_bio', $bio );
+        } else {
+            delete_term_meta( $term_id, 'artist_bio' );
+        }
+    }
+
+    // Social URLs.
+    $url_keys = array(
+        'artist_instagram_url',
+        'artist_spotify_url',
+        'artist_youtube_url',
+        'artist_tiktok_url',
+        'artist_facebook_url',
+        'artist_x_url',
+    );
+    foreach ( $url_keys as $key ) {
+        if ( ! isset( $_POST[ $key ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+            continue;
+        }
+        $url = esc_url_raw( wp_unslash( $_POST[ $key ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        if ( $url ) {
+            update_term_meta( $term_id, $key, $url );
+        } else {
+            delete_term_meta( $term_id, $key );
+        }
+    }
+
+    // Extended artist-form fields only when our Add/Edit form was submitted
+    // (avoids wiping meta on unrelated wp_update_term calls).
+    $from_artist_form = isset( $_POST['artist_bio'] ) || isset( $_POST['artist_photo_id'] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+
+    if ( $from_artist_form ) {
+        // Professional info visibility (default on; unchecked posts as off).
+        $show_pro = isset( $_POST['artist_show_pro_info'] ) ? '1' : '0'; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        update_term_meta( $term_id, 'artist_show_pro_info', $show_pro );
+
+        // Free-text professional fields.
+        $text_keys = array( 'artist_years_active', 'artist_location', 'artist_label' );
+        foreach ( $text_keys as $key ) {
+            if ( ! isset( $_POST[ $key ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+                continue;
+            }
+            $value = sanitize_text_field( wp_unslash( $_POST[ $key ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+            if ( '' !== $value ) {
+                update_term_meta( $term_id, $key, $value );
+            } else {
+                delete_term_meta( $term_id, $key );
+            }
+        }
+
+        // Genre term IDs (multi-select).
+        $genre_ids = array();
+        if ( isset( $_POST['artist_genre_ids'] ) && is_array( $_POST['artist_genre_ids'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+            $raw_ids = array_map( 'absint', wp_unslash( $_POST['artist_genre_ids'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+            foreach ( $raw_ids as $genre_id ) {
+                if ( $genre_id <= 0 ) {
+                    continue;
+                }
+                $genre_term = get_term( $genre_id, 'music_genre' );
+                if ( $genre_term && ! is_wp_error( $genre_term ) ) {
+                    $genre_ids[] = $genre_id;
+                }
+            }
+            $genre_ids = array_values( array_unique( $genre_ids ) );
+        }
+        if ( ! empty( $genre_ids ) ) {
+            update_term_meta( $term_id, 'artist_genre_ids', $genre_ids );
+        } else {
+            delete_term_meta( $term_id, 'artist_genre_ids' );
+        }
+    }
+
+    // Linked user.
+    if ( isset( $_POST['artist_user_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $user_id = absint( wp_unslash( $_POST['artist_user_id'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        if ( $user_id > 0 && get_userdata( $user_id ) ) {
+            update_term_meta( $term_id, 'artist_user_id', $user_id );
+        } else {
+            delete_term_meta( $term_id, 'artist_user_id' );
+        }
+    }
+}
+add_action( 'created_track_artist', 'collective_finity_save_track_artist_meta' );
+add_action( 'edited_track_artist', 'collective_finity_save_track_artist_meta' );
+
+/**
+ * Find a track_artist term linked to a WordPress user via artist_user_id term meta.
+ *
+ * @param int $user_id WordPress user ID.
+ * @return WP_Term|null
+ */
+function collective_finity_get_artist_term_for_user( $user_id ) {
+    $user_id = absint( $user_id );
+    if ( ! $user_id ) {
+        return null;
+    }
+
+    $terms = get_terms(
+        array(
+            'taxonomy'   => 'track_artist',
+            'hide_empty' => false,
+            'number'     => 1,
+            'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+                array(
+                    'key'     => 'artist_user_id',
+                    'value'   => $user_id,
+                    'compare' => '=',
+                ),
+            ),
+        )
+    );
+
+    if ( is_wp_error( $terms ) || empty( $terms ) ) {
+        return null;
+    }
+
+    return $terms[0];
+}
+
+/**
+ * Album IDs associated with an artist via their tagged tracks' associated_album meta.
+ *
+ * @param int $term_id Artist term ID.
+ * @return int[] Unique published album IDs.
+ */
+function collective_finity_get_artist_album_ids( $term_id ) {
+    $term_id = absint( $term_id );
+    if ( ! $term_id ) {
+        return array();
+    }
+
+    $track_ids = get_posts(
+        array(
+            'post_type'      => 'tracks',
+            'posts_per_page' => -1,
+            'post_status'    => 'publish',
+            'fields'         => 'ids',
+            'tax_query'      => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+                array(
+                    'taxonomy' => 'track_artist',
+                    'field'    => 'term_id',
+                    'terms'    => $term_id,
+                ),
+            ),
+        )
+    );
+
+    if ( empty( $track_ids ) ) {
+        return array();
+    }
+
+    $album_ids = array();
+    foreach ( $track_ids as $track_id ) {
+        $album_id = absint( get_post_meta( $track_id, 'associated_album', true ) );
+        if ( $album_id > 0 && 'publish' === get_post_status( $album_id ) ) {
+            $album_ids[ $album_id ] = $album_id;
+        }
+    }
+
+    return array_values( $album_ids );
+}
+
 
 /**
  * 6. ENQUEUE ADMIN SCRIPTS & MEDIA FRAME FOR TRACKS (With Cache Busting & Screen Verification)
@@ -2071,8 +2596,6 @@ function collective_finity_extend_search( $query ) {
 }
 add_action( 'pre_get_posts', 'collective_finity_extend_search' );
 
-error_log( 'CF DEBUG: before music library require' );
 require get_template_directory() . '/inc/cf-music-library-shortcode.php';
-error_log( 'CF DEBUG: after music library require, before latest releases require' );
 require get_template_directory() . '/inc/cf-latest-releases-shortcode.php';
 require get_template_directory() . '/inc/cf-footer-player-shortcode.php';

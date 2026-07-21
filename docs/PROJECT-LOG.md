@@ -5,6 +5,15 @@ This file tracks every feature, fix, and pending item implemented in the collect
 
 ## Completed Features
 
+### Artist Taxonomy Pages (`track_artist`)
+- Term meta fields on Tracks → Artists (Add/Edit): Artist Photo (media uploader), Artist Bio (max 150 chars + live counter + server-side trim), Instagram/Spotify/YouTube/TikTok/Facebook/X URLs, Linked WordPress User
+- Professional Info term meta: Show Professional Info Section toggle (default on), Years Active, Location, Label/Crew, Genres (multi-select from `music_genre` term IDs)
+- Saved via `track_artist_add_form_fields` / `track_artist_edit_form_fields` + `created_track_artist` / `edited_track_artist`
+- Frontend template `taxonomy-track_artist.php` for `/artist/{slug}/`: fixed-height hero (420px desktop / 360px mobile) with wheel scroll-to-pan background, floating 3D sphere artist photo, bio + track/album stats + social icons, optional Professional Info & Stats section (info cards with gold hover, scrolling genre marquee, auto Total views / Avg likes / Most played from track meta), Tracks grid, Albums (5-per-row with `?album_page=` pagination), Blog Posts (4-per-row with `?blog_page=` pagination + gold card hover), all independent of tracks `?paged=`
+- Admin media/counter/genre script: `js/admin-artist-term-meta.js`
+- Helper: `collective_finity_get_artist_album_ids()`, `collective_finity_get_artist_term_for_user()`, `collective_finity_artist_bio_max_length()`, `collective_finity_render_artist_genre_field()`
+- Artist name links wired on `single-tracks.php`, `single-albums.php`, `archive-tracks.php`, and blog author → artist on `single-post.php`
+
 ### FAQ & Platform Reviews
 - FAQ page with platform review submission (`inc/faq.php`)
 - AJAX handler `collective_finity_ajax_submit_platform_review()` creates a comment-based review and triggers a confirmation email via the cf-auth plugin (`CF_Email::send_feedback_confirmation`)
