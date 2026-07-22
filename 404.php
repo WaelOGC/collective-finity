@@ -29,7 +29,7 @@ $cf_tracks_url = $cf_tracks_url ? $cf_tracks_url : home_url( '/tracks/' );
 </div>
 
 <style>
-    .cf-404 { padding: 30px 34px; display: flex; align-items: center; justify-content: center; min-height: 60vh; }
+    .cf-404 { padding: 30px 5px; display: flex; align-items: center; justify-content: center; min-height: 60vh; }
     .cf-404-card {
         max-width: 560px;
         width: 100%;
@@ -68,7 +68,7 @@ $cf_tracks_url = $cf_tracks_url ? $cf_tracks_url : home_url( '/tracks/' );
     .cf-404-btn--ghost:hover { background: var(--cf-bg-card-hover); color: #fff; border-color: var(--cf-border-strong); }
 
     @media (max-width: 767px) {
-        .cf-404 { padding: 18px 16px; }
+        .cf-404 { padding: 18px 5px; }
         .cf-404-card { padding: 36px 22px; }
     }
 </style>

@@ -929,7 +929,7 @@ html.cf-player-collapsed .cf-player-headline { justify-content: center; }
 
 /* ============ SITE FOOTER ============ */
 .cf-site-footer {
-    margin: 56px 34px 0;
+    margin: 0 34px 0;
     border-top: 1px solid var(--cf-divider);
     padding-top: 36px;
     padding-bottom: 40px;
@@ -1080,7 +1080,7 @@ html.cf-player-collapsed .cf-player-headline { justify-content: center; }
 .cf-cookie-settings-link:hover { color: #fff; }
 
 /* ============ HOME PAGE ============ */
-.cf-home { padding: 30px 34px; display: flex; flex-direction: column; gap: var(--cf-section-gap, 60px); }
+.cf-home { padding: 30px 5px; display: flex; flex-direction: column; gap: var(--cf-section-gap, 60px); }
 .cf-home-dotbg {
     background-image: radial-gradient(circle, rgba(255,183,0,0.3) 1px, transparent 1.4px);
     background-size: 26px 26px;
@@ -1095,6 +1095,10 @@ html.cf-player-collapsed .cf-player-headline { justify-content: center; }
     background: radial-gradient(ellipse at 50% 0%, rgba(255,183,0,0.16), transparent 62%), var(--cf-bg-panel);
     overflow: hidden;
     border: 1px solid var(--cf-divider);
+    max-width: 100%;
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
 }
 .cf-hero-dots { position: absolute; inset: 0; opacity: 0.5; pointer-events: none; }
 .cf-hero-glow {
@@ -1309,7 +1313,7 @@ body.cf-glow-disabled .cf-cta { background: linear-gradient(135deg, rgba(255,183
         padding-right: 0 !important;
     }
 
-    .cf-home { padding: 18px 16px; gap: calc(var(--cf-section-gap, 60px) * 0.767); }
+    .cf-home { padding: 18px 5px; gap: calc(var(--cf-section-gap, 60px) * 0.767); }
     .cf-hero { padding: 44px 20px; }
     .cf-hero-title { font-size: calc(var(--cf-h1-size, 52px) * 0.577); }
     .cf-hero-stats { gap: 24px; }
@@ -1317,13 +1321,13 @@ body.cf-glow-disabled .cf-cta { background: linear-gradient(135deg, rgba(255,183
     .cf-pillars { grid-template-columns: 1fr; }
     .cf-cta { flex-direction: column; align-items: flex-start; padding: 32px 22px; }
     .cf-cta-title { font-size: calc(var(--cf-h3-size, 18px) * 1.11); }
-    .cf-site-footer { margin: 40px 16px 0; padding-top: 28px; }
+    .cf-site-footer { margin: 0 16px 0; padding-top: 28px; }
     .cf-footer-inner { flex-direction: column; gap: 28px; }
     .cf-footer-cols { gap: 28px; }
     #player-shuffle-btn, #player-repeat-btn { display: none; }
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
-    .cf-home { padding: 26px 24px; }
+    .cf-home { padding: 26px 5px; }
     .cf-footer-inner { flex-direction: column; gap: 28px; }
 }

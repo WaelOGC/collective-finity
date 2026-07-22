@@ -367,7 +367,7 @@ while ( have_posts() ) :
 </div>
 
 <style>
-    .cf-blog { padding: 30px 34px; max-width: 100%; min-width: 0; box-sizing: border-box; }
+    .cf-blog { padding: 30px 5px 5px; max-width: 100%; min-width: 0; box-sizing: border-box; }
     .cf-blog.cf-single { width: 100%; max-width: 100%; min-width: 0; }
 
     /* read progress */
@@ -716,7 +716,7 @@ while ( have_posts() ) :
         .cf-toc-collapsible { display: block; margin-bottom: 20px; }
     }
     @media (max-width: 767px) {
-        .cf-blog { padding: 18px 16px; }
+        .cf-blog { padding: 18px 5px 5px; }
         .cf-single-hero {
             width: calc(100% + 32px);
             max-width: calc(100% + 32px);

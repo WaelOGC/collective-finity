@@ -168,13 +168,17 @@ $cf_carousel_close = static function () {
 };
 ?>
 
-<div id="primary" class="content-area">
+<div id="primary" class="content-area cf-library-page">
 	<main id="main" class="site-main">
-		<div class="tracks-header">
-			<p class="tracks-header-kicker">Collective Finity</p>
-			<h1><?php echo esc_html( $cf_header_title ); ?></h1>
-			<p class="tracks-header-copy"><?php echo esc_html( $cf_header_copy ); ?></p>
-		</div>
+		<section class="cf-library-hero" aria-labelledby="cf-library-hero-heading">
+			<div class="cf-library-hero__border" aria-hidden="true"></div>
+			<div class="cf-library-hero__center-glow" aria-hidden="true"></div>
+			<div class="cf-library-hero__content">
+				<span class="cf-library-hero__badge"><?php esc_html_e( 'Collective Finity', 'collective-finity' ); ?></span>
+				<h1 id="cf-library-hero-heading" class="cf-library-hero__title"><?php echo esc_html( $cf_header_title ); ?></h1>
+				<p class="cf-library-hero__lead"><?php echo esc_html( $cf_header_copy ); ?></p>
+			</div>
+		</section>
 
 		<div class="tracks-grid-container">
 
@@ -333,34 +337,132 @@ $cf_carousel_close = static function () {
 </div>
 
 <style>
-	.tracks-header {
+	.cf-library-page {
+		padding: 48px 5px 5px;
+		box-sizing: border-box;
+		max-width: 100%;
+		min-width: 0;
+	}
+	.cf-library-hero {
+		position: relative;
 		text-align: center;
-		padding: 90px 20px 40px;
-		background: linear-gradient(180deg, rgba(255, 183, 0, 0.08) 0%, transparent 100%);
+		padding: clamp(48px, 7vw, 80px) clamp(20px, 4vw, 40px) clamp(56px, 8vw, 88px);
+		border-radius: 18px;
+		background: #0B0B0B;
+		border: 1px solid rgba(30, 30, 30, 0.9);
+		overflow: hidden;
+		min-width: 0;
+		max-width: 100%;
+		width: 100%;
+		margin: 0 auto 32px;
+		box-sizing: border-box;
 	}
-	.tracks-header-kicker {
-		margin: 0 0 8px;
-		color: var(--primary-color, #FFB700);
-		font-size: 12px;
-		font-weight: 700;
-		letter-spacing: 0.24em;
+	@property --cf-library-hero-border-angle {
+		syntax: '<angle>';
+		initial-value: 0deg;
+		inherits: false;
+	}
+	.cf-library-hero__border {
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		padding: 1.5px;
+		pointer-events: none;
+		z-index: 2;
+		background: conic-gradient(
+			from var(--cf-library-hero-border-angle),
+			transparent 0%,
+			transparent 72%,
+			rgba(255, 183, 0, 0.05) 80%,
+			rgba(255, 183, 0, 0.35) 86%,
+			var(--cf-accent, #FFB700) 90%,
+			#FFD060 93%,
+			rgba(255, 183, 0, 0.2) 96%,
+			transparent 100%
+		);
+		-webkit-mask:
+			linear-gradient(#fff 0 0) content-box,
+			linear-gradient(#fff 0 0);
+		-webkit-mask-composite: xor;
+		mask-composite: exclude;
+		animation: cfLibraryBorderTravel 5.5s linear infinite;
+		filter: drop-shadow(0 0 6px rgba(255, 183, 0, 0.35));
+	}
+	@keyframes cfLibraryBorderTravel {
+		to { --cf-library-hero-border-angle: 360deg; }
+	}
+	.cf-library-hero__center-glow {
+		position: absolute;
+		left: 50%;
+		top: 46%;
+		width: min(70%, 520px);
+		aspect-ratio: 1;
+		transform: translate(-50%, -50%);
+		pointer-events: none;
+		z-index: 0;
+		border-radius: 50%;
+		background: radial-gradient(
+			circle,
+			rgba(255, 183, 0, 0.14) 0%,
+			rgba(255, 183, 0, 0.05) 38%,
+			transparent 70%
+		);
+		animation: cfLibraryCenterGlow 8.2s ease-in-out infinite;
+		will-change: transform, opacity;
+	}
+	@keyframes cfLibraryCenterGlow {
+		0%, 100% {
+			opacity: 0.35;
+			transform: translate(-50%, -50%) scale(0.82);
+		}
+		50% {
+			opacity: 0.7;
+			transform: translate(-50%, -50%) scale(1.08);
+		}
+	}
+	.cf-library-hero__content {
+		position: relative;
+		z-index: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 14px;
+	}
+	.cf-library-hero__badge {
+		display: inline-block;
+		font-family: var(--cf-mono, 'Space Mono', monospace);
+		font-size: 11px;
+		letter-spacing: 0.1em;
 		text-transform: uppercase;
+		color: var(--cf-accent, #FFB700);
+		border: 1px solid rgba(255, 183, 0, 0.35);
+		border-radius: 999px;
+		padding: 7px 16px;
+		background: rgba(255, 183, 0, 0.08);
 	}
-	.tracks-header h1 {
-		font-size: clamp(28px, 3.2vw, 42px);
+	.cf-library-hero__title {
+		margin: 0;
+		font-family: var(--cf-mono, 'Space Mono', monospace);
+		font-size: clamp(28px, 5vw, 40px);
 		font-weight: 700;
+		line-height: 1.15;
 		color: #fff;
-		margin: 0 0 12px;
 	}
-	.tracks-header-copy {
-		font-size: 15px;
-		color: #9a9a9a;
-		max-width: 640px;
-		margin: 0 auto;
+	.cf-library-hero__lead {
+		margin: 0;
+		max-width: 520px;
+		font-size: 14px;
 		line-height: 1.7;
+		color: #B3B3B3;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.cf-library-hero__border,
+		.cf-library-hero__center-glow {
+			animation: none;
+		}
 	}
 
-	.tracks-grid-container { max-width: 1200px; margin: 0 auto; padding: 0 20px 60px; }
+	.tracks-grid-container { max-width: 1200px; margin: 0 auto; padding: 0; }
 
 	.cf-section-label { font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 	.cf-section-label a { font-size: 12px; font-weight: 600; color: #7A7A7A; text-decoration: none; white-space: nowrap; }

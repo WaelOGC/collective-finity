@@ -6,16 +6,21 @@
  * @package Collective_Finity
  */
 
-$cf_community_url    = collective_finity_get_page_link( 'join-community', '/join-community/' );
-$cf_music_library_url = collective_finity_get_page_link( 'music-library', '/music-library/' );
-$cf_discord_url      = collective_finity_get_theme_option( 'social_discord' );
-$cf_facebook_url     = collective_finity_get_theme_option( 'social_facebook' );
+$cf_community_url      = collective_finity_get_page_link( 'join-community', '/join-community/' );
+$cf_discord_url        = collective_finity_get_theme_option( 'social_discord' );
+$cf_facebook_url       = collective_finity_get_theme_option( 'social_facebook' );
+// Facebook Page (social_facebook) and Facebook Group (social_facebook_group) are separate
+// theme options — both must be filled with their real (different) URLs in WP admin for these links to work.
+$cf_facebook_group_url = collective_finity_get_theme_option( 'social_facebook_group' );
 
 if ( ! $cf_discord_url ) {
 	$cf_discord_url = $cf_community_url;
 }
 if ( ! $cf_facebook_url ) {
 	$cf_facebook_url = '#';
+}
+if ( ! $cf_facebook_group_url ) {
+	$cf_facebook_group_url = '#';
 }
 
 $cf_contact_methods = array(
@@ -31,6 +36,7 @@ $cf_contact_methods = array(
 		'title' => __( 'Our Location', 'collective-finity' ),
 		'desc'  => __( 'Based in the heart of Europe.', 'collective-finity' ),
 		'value' => __( 'Netherlands', 'collective-finity' ),
+		'href'  => 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode( 'The Hague, Netherlands' ),
 	),
 	array(
 		'icon'       => 'fa-brands fa-discord',
@@ -46,7 +52,7 @@ $cf_contact_methods = array(
 		'title' => __( 'Facebook Group', 'collective-finity' ),
 		'desc'  => __( 'Connect with fellow music lovers.', 'collective-finity' ),
 		'btn'   => __( 'Join the group', 'collective-finity' ),
-		'href'  => $cf_facebook_url,
+		'href'  => $cf_facebook_group_url,
 	),
 	array(
 		'icon'      => 'fa-brands fa-facebook-f',
@@ -57,6 +63,21 @@ $cf_contact_methods = array(
 		'full_row'  => true,
 	),
 );
+
+$cf_blog_url       = get_option( 'page_for_posts' ) ? get_permalink( (int) get_option( 'page_for_posts' ) ) : '';
+$cf_blog_available = (int) wp_count_posts( 'post' )->publish;
+$cf_blog_limit     = min( 3, max( 0, $cf_blog_available ) );
+$cf_recent_posts   = ( $cf_blog_limit > 0 )
+	? new WP_Query(
+		array(
+			'post_type'           => 'post',
+			'posts_per_page'      => $cf_blog_limit,
+			'post_status'         => 'publish',
+			'ignore_sticky_posts' => true,
+			'no_found_rows'       => true,
+		)
+	)
+	: new WP_Query( array( 'post__in' => array( 0 ) ) );
 
 wp_enqueue_style(
 	'cf-contact-font-awesome',
@@ -72,21 +93,19 @@ get_header();
 	<div class="cf-contact-page__inner">
 
 		<section class="cf-contact-hero" aria-labelledby="cf-contact-hero-heading">
-			<div class="cf-contact-hero__dots" aria-hidden="true"></div>
+			<div class="cf-contact-hero__border" aria-hidden="true"></div>
+			<div class="cf-contact-hero__center-glow" aria-hidden="true"></div>
 			<div class="cf-contact-hero__content">
-				<span class="cf-contact-hero__badge"><?php esc_html_e( 'Music beyond imagination', 'collective-finity' ); ?></span>
+				<span class="cf-contact-hero__badge"><?php esc_html_e( 'Get In Touch', 'collective-finity' ); ?></span>
 				<h1 id="cf-contact-hero-heading" class="cf-contact-hero__title">
-					<?php esc_html_e( 'Where music meets ', 'collective-finity' ); ?><span class="cf-contact-hero__accent"><?php esc_html_e( 'infinite imagination', 'collective-finity' ); ?></span>
+					<?php esc_html_e( 'Let\'s Talk', 'collective-finity' ); ?>
 				</h1>
 				<p class="cf-contact-hero__lead">
-					<?php esc_html_e( 'A vibrant global community for music producers, creators, and sonic artists. Connect, collaborate, and push the boundaries of sound with infinite possibilities.', 'collective-finity' ); ?>
+					<?php esc_html_e( 'Have a question, feedback, or a partnership idea? Reach out through any of the channels below.', 'collective-finity' ); ?>
 				</p>
 				<div class="cf-contact-hero__actions">
-					<a class="cf-contact-btn cf-contact-btn--primary" href="<?php echo esc_url( $cf_community_url ); ?>">
-						<?php esc_html_e( 'Join collective', 'collective-finity' ); ?>
-					</a>
-					<a class="cf-contact-btn cf-contact-btn--outline" href="<?php echo esc_url( $cf_music_library_url ); ?>">
-						<?php esc_html_e( 'Explore music', 'collective-finity' ); ?>
+					<a class="cf-contact-btn cf-contact-btn--primary" href="#cf-contact-form">
+						<?php esc_html_e( 'Send a message', 'collective-finity' ); ?>
 					</a>
 				</div>
 			</div>
@@ -136,7 +155,7 @@ get_header();
 					</div>
 				</div>
 
-				<div class="cf-contact-together__right">
+				<div class="cf-contact-together__right" id="cf-contact-form">
 					<div class="cf-contact-form-wrap">
 						<?php echo do_shortcode( '[contact-form-7 id="04d6245" title="Contact form Finity"]' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 					</div>
@@ -148,6 +167,45 @@ get_header();
 			<?php echo do_shortcode( '[cf_latest_releases limit="4"]' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		</section>
 
+		<?php if ( $cf_recent_posts->have_posts() ) : ?>
+			<section class="cf-from-blog" aria-labelledby="cf-contact-blog-heading">
+				<div class="cf-section-head">
+					<h2 id="cf-contact-blog-heading" class="cf-section-title"><?php esc_html_e( 'From the Blog', 'collective-finity' ); ?></h2>
+					<?php if ( $cf_blog_url ) : ?>
+						<a class="cf-section-link" href="<?php echo esc_url( $cf_blog_url ); ?>"><?php esc_html_e( 'View All', 'collective-finity' ); ?> &rarr;</a>
+					<?php endif; ?>
+				</div>
+				<div class="cf-blog-rail">
+					<?php
+					while ( $cf_recent_posts->have_posts() ) :
+						$cf_recent_posts->the_post();
+						$cf_pid   = get_the_ID();
+						$cf_thumb = get_the_post_thumbnail_url( $cf_pid, 'medium_large' );
+						$cf_cats  = get_the_category();
+						$cf_cat   = ! empty( $cf_cats ) ? $cf_cats[0]->name : __( 'Article', 'collective-finity' );
+
+						if ( $cf_thumb ) {
+							$cf_card_art = "background-image: url('" . esc_url( $cf_thumb ) . "');";
+						} else {
+							$cf_card_art = 'background: ' . esc_attr( collective_finity_gradient_for( $cf_pid + 60 ) ) . ';';
+						}
+						?>
+						<a class="cf-blog-card" href="<?php the_permalink(); ?>">
+							<div class="cf-blog-card-art-wrap">
+								<div class="cf-blog-card-art" style="<?php echo $cf_card_art; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>"></div>
+							</div>
+							<div class="cf-blog-card-body">
+								<span class="cf-blog-card-cat"><?php echo esc_html( strtoupper( $cf_cat ) ); ?></span>
+								<div class="cf-blog-card-title"><?php the_title(); ?></div>
+								<div class="cf-blog-card-meta"><?php echo esc_html( get_the_date() ); ?></div>
+							</div>
+						</a>
+					<?php endwhile; ?>
+					<?php wp_reset_postdata(); ?>
+				</div>
+			</section>
+		<?php endif; ?>
+
 	</div>
 </main>
 
@@ -155,13 +213,13 @@ get_header();
 .cf-contact-page {
 	background: #0B0B0B;
 	color: #fff;
-	padding: 48px clamp(16px, 3vw, 20px) 120px;
+	padding: 48px 5px 5px;
 	box-sizing: border-box;
 	max-width: 100%;
 	min-width: 0;
 }
 .cf-contact-page__inner {
-	max-width: min(1100px, 100%);
+	max-width: 100%;
 	min-width: 0;
 	margin: 0 auto;
 	display: flex;
@@ -171,26 +229,87 @@ get_header();
 .cf-contact-hero {
 	position: relative;
 	text-align: center;
-	padding: 64px 24px;
+	padding: clamp(48px, 7vw, 80px) clamp(20px, 4vw, 40px) clamp(56px, 8vw, 88px);
 	border-radius: 18px;
-	background: radial-gradient(ellipse at 50% 0%, rgba(255, 183, 0, 0.12), transparent 60%), #0B0B0B;
-	border: 1px solid #1E1E1E;
+	background: #0B0B0B;
+	border: 1px solid rgba(30, 30, 30, 0.9);
 	overflow: hidden;
+	min-width: 0;
+	max-width: 100%;
+	width: 100%;
+	margin: 0 auto;
+	box-sizing: border-box;
 }
-.cf-contact-hero__dots {
+@property --cf-contact-hero-border-angle {
+	syntax: '<angle>';
+	initial-value: 0deg;
+	inherits: false;
+}
+.cf-contact-hero__border {
 	position: absolute;
 	inset: 0;
-	opacity: 0.5;
+	border-radius: inherit;
+	padding: 1.5px;
 	pointer-events: none;
-	background-image: radial-gradient(circle, rgba(255, 183, 0, 0.35) 1px, transparent 1.4px);
-	background-size: 26px 26px;
+	z-index: 2;
+	background: conic-gradient(
+		from var(--cf-contact-hero-border-angle),
+		transparent 0%,
+		transparent 72%,
+		rgba(255, 183, 0, 0.05) 80%,
+		rgba(255, 183, 0, 0.35) 86%,
+		var(--cf-accent, #FFB700) 90%,
+		#FFD060 93%,
+		rgba(255, 183, 0, 0.2) 96%,
+		transparent 100%
+	);
+	-webkit-mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
+	-webkit-mask-composite: xor;
+	mask-composite: exclude;
+	animation: cfContactBorderTravel 5.5s linear infinite;
+	filter: drop-shadow(0 0 6px rgba(255, 183, 0, 0.35));
+}
+@keyframes cfContactBorderTravel {
+	to { --cf-contact-hero-border-angle: 360deg; }
+}
+.cf-contact-hero__center-glow {
+	position: absolute;
+	left: 50%;
+	top: 46%;
+	width: min(70%, 520px);
+	aspect-ratio: 1;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+	z-index: 0;
+	border-radius: 50%;
+	background: radial-gradient(
+		circle,
+		rgba(255, 183, 0, 0.14) 0%,
+		rgba(255, 183, 0, 0.05) 38%,
+		transparent 70%
+	);
+	animation: cfContactCenterGlow 8.2s ease-in-out infinite;
+	will-change: transform, opacity;
+}
+@keyframes cfContactCenterGlow {
+	0%, 100% {
+		opacity: 0.35;
+		transform: translate(-50%, -50%) scale(0.82);
+	}
+	50% {
+		opacity: 0.7;
+		transform: translate(-50%, -50%) scale(1.08);
+	}
 }
 .cf-contact-hero__content {
 	position: relative;
+	z-index: 1;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 20px;
+	gap: 14px;
 }
 .cf-contact-hero__badge,
 .cf-contact-eyebrow {
@@ -214,9 +333,9 @@ get_header();
 .cf-contact-together__title {
 	margin: 0;
 	font-family: 'Space Mono', monospace;
-	font-size: clamp(30px, 5vw, 46px);
+	font-size: clamp(28px, 5vw, 40px);
 	font-weight: 700;
-	line-height: 1.2;
+	line-height: 1.15;
 	color: #fff;
 }
 .cf-contact-together__title {
@@ -228,9 +347,9 @@ get_header();
 .cf-contact-hero__lead,
 .cf-contact-together__lead {
 	margin: 0;
-	max-width: 640px;
-	font-size: 14.5px;
-	line-height: 1.8;
+	max-width: 520px;
+	font-size: 14px;
+	line-height: 1.7;
 	color: #B3B3B3;
 }
 .cf-contact-together__lead {
@@ -243,7 +362,13 @@ get_header();
 	flex-wrap: wrap;
 	gap: 12px;
 	justify-content: center;
-	margin-top: 6px;
+	margin-top: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+	.cf-contact-hero__border,
+	.cf-contact-hero__center-glow {
+		animation: none;
+	}
 }
 .cf-contact-btn {
 	display: inline-flex;
@@ -473,7 +598,7 @@ get_header();
 }
 @media (max-width: 900px) {
 	.cf-contact-page {
-		padding-bottom: 100px;
+		padding-bottom: 5px;
 	}
 	.cf-contact-page__inner {
 		gap: 40px;

@@ -226,7 +226,7 @@ get_header();
 
 <style>
     .cf-about-page.cf-page-shell {
-        padding: 2.5rem clamp(16px, 3vw, 20px) 140px;
+        padding: 2.5rem 5px 5px;
         max-width: 100%;
         min-width: 0;
         box-sizing: border-box;

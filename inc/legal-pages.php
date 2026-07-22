@@ -109,7 +109,7 @@ function collective_finity_get_bundled_legal_page_content( $slug ) {
  * Sync bundled legal page content into WordPress pages (idempotent).
  */
 function collective_finity_sync_legal_page_content() {
-    $target_version = 2;
+    $target_version = 3;
     if ( (int) get_option( 'cf_legal_pages_content_version', 0 ) >= $target_version ) {
         return;
     }

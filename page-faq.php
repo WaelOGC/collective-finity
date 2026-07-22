@@ -233,7 +233,7 @@ get_header();
 
 <style>
 	.cf-faq-page.cf-page-shell {
-		padding: 2.5rem clamp(16px, 3vw, 20px) 140px;
+		padding: 2.5rem 5px 5px;
 		max-width: 100%;
 		min-width: 0;
 		box-sizing: border-box;
@@ -292,6 +292,8 @@ get_header();
 		overflow: hidden;
 		min-width: 0;
 		max-width: 100%;
+		width: 100%;
+		margin: 0 auto;
 		box-sizing: border-box;
 	}
 

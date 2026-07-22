@@ -65,6 +65,11 @@ This file tracks every feature, fix, and pending item implemented in the collect
 - `single-tracks.php` only renders enabled visualizer dropdown options and only shows streaming icons when both URL is set and Show is enabled
 - **Lyrics/Story visibility**: checkbox on the Lyrics File field (`track_show_lyrics`, default enabled); when off, the Story & Concept / Lyrics Narrative Sync block is not rendered on the single track page
 
+### PageSpeed — Reduce Render-Blocking Requests (Homepage)
+- Frontend-only: deregister/re-register core `jquery` + `jquery-migrate` to load in the footer (`collective_finity_scripts()` in `functions.php`); skips admin, admin-ajax, and wp-login
+- Defer `cf-cookie-consent` CSS via `media="print"` + `onload="this.media='all'"` (`style_loader_tag` filter) with `<noscript>` fallback; critical CSS (`main-style`, `cf-shell`, `cf-content-layout`), dashicons, and Google Fonts unchanged
+- `single-tracks.php` mid-page jQuery block waits for `window.jQuery` before `jQuery(fn)` so footer jQuery does not throw `jQuery is not defined`
+
 ### Single Track — Audio Effect Style Overhaul (12 styles)
 - Removed 8 legacy styles (Neon Glow Ring, Glowing Sine Wave, Cosmic Beat Pulse, Dual Orbit Ring, Particle Burst, Frequency Wave, Starfield Pulse, Hexagon Grid)
 - Kept and improved Spectrum Equalizer Bars (circular ring around cover) and Aurora Fill (larger outer halo)

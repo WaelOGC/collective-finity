@@ -250,7 +250,7 @@ get_header();
 .cf-community-page {
 	background: var(--cf-bg-panel, #0B0B0B);
 	color: #fff;
-	padding: 48px clamp(12px, 2vw, 20px) 140px;
+	padding: 48px 5px 5px;
 	box-sizing: border-box;
 	width: 100%;
 	max-width: 100%;
@@ -259,7 +259,7 @@ get_header();
 }
 .cf-community-page__inner {
 	width: 100%;
-	max-width: min(1100px, 100%);
+	max-width: 100%;
 	min-width: 0;
 	margin: 0 auto;
 	display: flex;
@@ -276,6 +276,8 @@ get_header();
 	overflow: hidden;
 	min-width: 0;
 	max-width: 100%;
+	width: 100%;
+	margin: 0 auto;
 	box-sizing: border-box;
 }
 @property --cf-hero-border-angle {
@@ -783,12 +785,12 @@ a.cf-community-row--featured:focus-visible {
 }
 @media (max-width: 1023px) {
 	.cf-community-page {
-		padding-bottom: 110px;
+		padding-bottom: 5px;
 	}
 }
 @media (max-width: 767px) {
 	.cf-community-page {
-		padding: 24px 16px 100px;
+		padding: 24px 5px 5px;
 	}
 	.cf-community-page__inner {
 		gap: 40px;

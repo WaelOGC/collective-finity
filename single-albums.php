@@ -367,6 +367,9 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $album_queue ); ?>;
     min-height: 100vh;
     background: #050505;
     overflow-x: hidden;
+    padding-left: 5px;
+    padding-right: 5px;
+    box-sizing: border-box;
 }
 .cf-album-hero {
     position: relative;
@@ -406,7 +409,7 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $album_queue ); ?>;
 .cf-album-shell {
     position: relative;
     z-index: 1;
-    padding: 40px 0 80px;
+    padding: 40px 0 5px;
 }
 .cf-container {
     width: min(1120px, 92%);

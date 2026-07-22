@@ -93,7 +93,7 @@ get_header();
 .cf-donate-page {
 	background: var(--darker-bg, #050505);
 	color: #fff;
-	padding: 48px 20px 140px;
+	padding: 48px 5px 5px;
 	box-sizing: border-box;
 	width: 100%;
 	max-width: 100%;
@@ -119,6 +119,8 @@ get_header();
 	overflow: hidden;
 	min-width: 0;
 	max-width: 100%;
+	width: 100%;
+	margin: 0 auto;
 	box-sizing: border-box;
 }
 .cf-donate-hero__grid {
@@ -852,7 +854,7 @@ get_header();
 }
 @media (max-width: 767px) {
 	.cf-donate-page {
-		padding: 24px 16px 100px;
+		padding: 24px 5px 5px;
 	}
 	.cf-donate-page__inner {
 		gap: 32px;

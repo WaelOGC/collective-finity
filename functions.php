@@ -701,6 +701,13 @@ function collective_finity_get_shell_nav() {
             'icon'   => 'playlist',
             'active' => false,
         ),
+        array(
+            'id'     => 'affiliate',
+            'label'  => __( 'Affiliate & Rewards', 'collective-finity' ),
+            'url'    => collective_finity_get_page_link( 'affiliate', '/affiliate/' ),
+            'icon'   => 'star',
+            'active' => is_page( 'affiliate' ),
+        ),
     );
 
     return array( 'main' => $main, 'secondary' => $secondary );
@@ -785,6 +792,7 @@ function collective_finity_get_footer_menu_sections() {
 				array( 'label' => __( 'About', 'collective-finity' ), 'url' => collective_finity_get_page_link( 'about', '/about/' ) ),
 				array( 'label' => __( 'FAQ', 'collective-finity' ), 'url' => collective_finity_get_page_link( 'faq', '/faq/' ) ),
 				array( 'label' => __( 'Join Community', 'collective-finity' ), 'url' => collective_finity_get_page_link( 'join-community', '/join-community/' ) ),
+				array( 'label' => __( 'Affiliate & Rewards', 'collective-finity' ), 'url' => collective_finity_get_page_link( 'affiliate', '/affiliate/' ) ),
 				array( 'label' => __( 'Contact', 'collective-finity' ), 'url' => collective_finity_get_page_link( array( 'contact', 'contact-us' ), '/contact/' ) ),
 			),
 		),
@@ -939,6 +947,16 @@ function collective_finity_create_default_pages() {
             ),
         ),
         array(
+            'post_title'   => 'Affiliate & Rewards Program',
+            'post_name'    => 'affiliate',
+            'post_content' => 'Affiliate & Rewards Program content is managed by the theme.',
+            'post_status'  => 'publish',
+            'post_type'    => 'page',
+            'meta_input'   => array(
+                '_wp_page_template' => 'page-affiliate.php',
+            ),
+        ),
+        array(
             'post_title'   => 'Privacy Policy',
             'post_name'    => 'privacy-policy',
             'post_content' => 'Privacy Policy content is managed by the theme for a smooth user experience.',
@@ -989,6 +1007,26 @@ function collective_finity_scripts() {
     wp_enqueue_style( 'cf-content-layout', get_template_directory_uri() . '/assets/css/cf-content-layout.css', array( 'cf-shell' ), $layout_css_ver );
 
     wp_enqueue_style( 'dashicons' );
+
+    // Move jQuery (+ jquery-migrate) to the footer on the public frontend only.
+    // Core registers them for <head>; footer loading removes a render-blocking request.
+    $is_login_request = ( isset( $GLOBALS['pagenow'] ) && 'wp-login.php' === $GLOBALS['pagenow'] )
+        || ( function_exists( 'is_login' ) && is_login() );
+    if ( ! is_admin() && ! wp_doing_ajax() && ! $is_login_request ) {
+        $scripts = wp_scripts();
+        if ( isset( $scripts->registered['jquery-core'], $scripts->registered['jquery-migrate'] ) ) {
+            $jquery_core    = $scripts->registered['jquery-core'];
+            $jquery_migrate = $scripts->registered['jquery-migrate'];
+
+            wp_deregister_script( 'jquery' );
+            wp_deregister_script( 'jquery-core' );
+            wp_deregister_script( 'jquery-migrate' );
+
+            wp_register_script( 'jquery-core', $jquery_core->src, array(), $jquery_core->ver, true );
+            wp_register_script( 'jquery-migrate', $jquery_migrate->src, array( 'jquery-core' ), $jquery_migrate->ver, true );
+            wp_register_script( 'jquery', false, array( 'jquery-core', 'jquery-migrate' ), $jquery_core->ver, true );
+        }
+    }
     wp_enqueue_script( 'jquery' );
     wp_enqueue_script( 'music-player-js', get_template_directory_uri() . '/js/music-player.js', array( 'jquery', 'cf-auth-script' ), $player_ver, true );
 
@@ -1005,7 +1043,7 @@ function collective_finity_scripts() {
     $cookie_css_ver  = file_exists( $cookie_css_path ) ? filemtime( $cookie_css_path ) : $theme_version;
     $cookie_js_ver   = file_exists( $cookie_js_path ) ? filemtime( $cookie_js_path ) : $theme_version;
 
-    wp_enqueue_style( 'cf-cookie-consent', get_template_directory_uri() . '/assets/css/cookie-consent.css', array( 'main-style' ), $cookie_css_ver );
+    wp_enqueue_style( 'cf-cookie-consent', get_template_directory_uri() . '/assets/css/cookie-consent.css', array( 'main-style' ), $cookie_css_ver, 'print' );
     wp_enqueue_script( 'cf-cookie-consent', get_template_directory_uri() . '/assets/js/cookie-consent.js', array(), $cookie_js_ver, true );
 
     $cookie_policy_page = get_page_by_path( 'cookie-policy', OBJECT, 'page' );
@@ -1028,6 +1066,38 @@ function collective_finity_scripts() {
     ) );
 }
 add_action( 'wp_enqueue_scripts', 'collective_finity_scripts' );
+
+/**
+ * Defer non-critical cookie-consent.css: print media + onload swap to all, with noscript fallback.
+ *
+ * @param string $html   The link tag for the enqueued style.
+ * @param string $handle Style handle.
+ * @param string $href   Stylesheet URL.
+ * @param string $media  Media attribute.
+ * @return string
+ */
+function collective_finity_defer_cookie_consent_css( $html, $handle, $href, $media ) {
+    if ( 'cf-cookie-consent' !== $handle ) {
+        return $html;
+    }
+
+    $html = str_replace(
+        array( "media='print'", 'media="print"' ),
+        array(
+            "media='print' onload=\"this.media='all'\"",
+            'media="print" onload="this.media=\'all\'"',
+        ),
+        $html
+    );
+
+    $html .= sprintf(
+        '<noscript><link rel="stylesheet" href="%s" media="all" /></noscript>' . "\n",
+        esc_url( $href )
+    );
+
+    return $html;
+}
+add_filter( 'style_loader_tag', 'collective_finity_defer_cookie_consent_css', 10, 4 );
 
 
 /**

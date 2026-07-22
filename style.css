@@ -42,7 +42,7 @@ body {
 .main-content-container,
 .cf-page-shell,
 .cf-home-shell {
-    padding-bottom: 140px;
+    padding-bottom: 5px;
     box-sizing: border-box;
 }
 

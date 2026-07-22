@@ -449,9 +449,10 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
 .cf-single-track-page {
     background: radial-gradient(circle at top, rgba(255, 183, 0, 0.16), transparent 32%), #000;
     min-height: 100vh;
-    padding-bottom: 40px;
+    padding: 0 5px 5px;
     max-width: 100%;
     overflow-x: hidden;
+    box-sizing: border-box;
 }
 .cf-cinematic-hero {
     background: #0a0a0a;
@@ -605,8 +606,8 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
     .cf-container {
         width: 100%;
         max-width: 100%;
-        padding-left: 16px;
-        padding-right: 16px;
+        padding-left: 5px;
+        padding-right: 5px;
     }
     .cf-track-header-layout { 
         flex-direction: column !important; 
@@ -663,7 +664,19 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
 
 <!-- Upgraded jQuery Interaction Controller Script -->
 <script type="text/javascript">
-jQuery(document).ready(function($) {
+/* jQuery loads in the footer; wait until it exists before binding. */
+(function cfWaitForJQuery(fn) {
+    if (window.jQuery) {
+        jQuery(fn);
+        return;
+    }
+    var timer = setInterval(function () {
+        if (window.jQuery) {
+            clearInterval(timer);
+            jQuery(fn);
+        }
+    }, 20);
+})(function($) {
     
     // --- 3. Interactive Emojis Click Handler ---
     $(document).on('click', '.cf-emoji-btn', function(e) {

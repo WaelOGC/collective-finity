@@ -6,15 +6,21 @@
 
 get_header(); ?>
 
-<div id="primary" class="content-area">
+<div id="primary" class="content-area cf-albums-page">
     <main id="main" class="site-main">
-        <div class="albums-header">
-            <p class="albums-header-kicker">Collective Finity</p>
-            <h1><?php _e( 'Albums & Collections', 'collective-finity' ); ?></h1>
-            <p class="albums-header-copy">
-                <?php _e( 'Explore our cinematic music collections, each telling a unique story through sound.', 'collective-finity' ); ?>
-            </p>
-        </div>
+        <section class="cf-albums-hero" aria-labelledby="cf-albums-hero-heading">
+            <div class="cf-albums-hero__border" aria-hidden="true"></div>
+            <div class="cf-albums-hero__center-glow" aria-hidden="true"></div>
+            <div class="cf-albums-hero__content">
+                <span class="cf-albums-hero__badge"><?php esc_html_e( 'Collective Finity', 'collective-finity' ); ?></span>
+                <h1 id="cf-albums-hero-heading" class="cf-albums-hero__title">
+                    <?php esc_html_e( 'Albums & Collections', 'collective-finity' ); ?>
+                </h1>
+                <p class="cf-albums-hero__lead">
+                    <?php esc_html_e( 'Explore our cinematic music collections, each telling a unique story through sound.', 'collective-finity' ); ?>
+                </p>
+            </div>
+        </section>
 
         <?php
         $cf_album_genre_filter = isset( $_GET['genre'] ) ? sanitize_title( wp_unslash( $_GET['genre'] ) ) : '';
@@ -24,11 +30,18 @@ get_header(); ?>
         <div class="albums-grid-container">
 
             <?php if ( ! empty( $cf_album_genres ) && ! is_wp_error( $cf_album_genres ) ) : ?>
-                <div class="cf-filter-row">
-                    <a href="<?php echo esc_url( remove_query_arg( 'genre' ) ); ?>" class="cf-filter-pill<?php echo '' === $cf_album_genre_filter ? ' active' : ''; ?>"><?php esc_html_e( 'All genres', 'collective-finity' ); ?></a>
-                    <?php foreach ( $cf_album_genres as $cf_ag_term ) : ?>
-                        <a href="<?php echo esc_url( add_query_arg( 'genre', $cf_ag_term->slug ) ); ?>" class="cf-filter-pill<?php echo $cf_album_genre_filter === $cf_ag_term->slug ? ' active' : ''; ?>"><?php echo esc_html( $cf_ag_term->name ); ?></a>
-                    <?php endforeach; ?>
+                <div class="cf-filter-row-wrap">
+                    <div class="cf-filter-row">
+                        <a href="<?php echo esc_url( remove_query_arg( 'genre' ) ); ?>" class="cf-filter-pill<?php echo '' === $cf_album_genre_filter ? ' active' : ''; ?>"><?php esc_html_e( 'All genres', 'collective-finity' ); ?></a>
+                        <?php foreach ( $cf_album_genres as $cf_ag_term ) : ?>
+                            <a href="<?php echo esc_url( add_query_arg( 'genre', $cf_ag_term->slug ) ); ?>" class="cf-filter-pill<?php echo $cf_album_genre_filter === $cf_ag_term->slug ? ' active' : ''; ?>"><?php echo esc_html( $cf_ag_term->name ); ?></a>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="cf-filter-row-fade" aria-hidden="true">
+                        <svg class="cf-filter-row-fade__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false">
+                            <path d="M6 3.5L10.5 8L6 12.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -81,36 +94,177 @@ get_header(); ?>
 </div>
 
 <style>
-    .albums-header {
+    .cf-albums-page {
+        padding: 48px 5px 5px;
+        box-sizing: border-box;
+        max-width: 100%;
+        min-width: 0;
+    }
+    .cf-albums-hero {
+        position: relative;
         text-align: center;
-        padding: 90px 20px 40px;
-        background: linear-gradient(180deg, rgba(255, 183, 0, 0.08) 0%, transparent 100%);
+        padding: clamp(48px, 7vw, 80px) clamp(20px, 4vw, 40px) clamp(56px, 8vw, 88px);
+        border-radius: 18px;
+        background: #0B0B0B;
+        border: 1px solid rgba(30, 30, 30, 0.9);
+        overflow: hidden;
+        min-width: 0;
+        max-width: 100%;
+        width: 100%;
+        margin: 0 auto 32px;
+        box-sizing: border-box;
     }
-    .albums-header-kicker {
-        margin: 0 0 8px;
-        color: var(--primary-color, #FFB700);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.24em;
+    @property --cf-albums-hero-border-angle {
+        syntax: '<angle>';
+        initial-value: 0deg;
+        inherits: false;
+    }
+    .cf-albums-hero__border {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1.5px;
+        pointer-events: none;
+        z-index: 2;
+        background: conic-gradient(
+            from var(--cf-albums-hero-border-angle),
+            transparent 0%,
+            transparent 72%,
+            rgba(255, 183, 0, 0.05) 80%,
+            rgba(255, 183, 0, 0.35) 86%,
+            var(--cf-accent, #FFB700) 90%,
+            #FFD060 93%,
+            rgba(255, 183, 0, 0.2) 96%,
+            transparent 100%
+        );
+        -webkit-mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        animation: cfAlbumsBorderTravel 5.5s linear infinite;
+        filter: drop-shadow(0 0 6px rgba(255, 183, 0, 0.35));
+    }
+    @keyframes cfAlbumsBorderTravel {
+        to { --cf-albums-hero-border-angle: 360deg; }
+    }
+    .cf-albums-hero__center-glow {
+        position: absolute;
+        left: 50%;
+        top: 46%;
+        width: min(70%, 520px);
+        aspect-ratio: 1;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 0;
+        border-radius: 50%;
+        background: radial-gradient(
+            circle,
+            rgba(255, 183, 0, 0.14) 0%,
+            rgba(255, 183, 0, 0.05) 38%,
+            transparent 70%
+        );
+        animation: cfAlbumsCenterGlow 8.2s ease-in-out infinite;
+        will-change: transform, opacity;
+    }
+    @keyframes cfAlbumsCenterGlow {
+        0%, 100% {
+            opacity: 0.35;
+            transform: translate(-50%, -50%) scale(0.82);
+        }
+        50% {
+            opacity: 0.7;
+            transform: translate(-50%, -50%) scale(1.08);
+        }
+    }
+    .cf-albums-hero__content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+    }
+    .cf-albums-hero__badge {
+        display: inline-block;
+        font-family: var(--cf-mono, 'Space Mono', monospace);
+        font-size: 11px;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
+        color: var(--cf-accent, #FFB700);
+        border: 1px solid rgba(255, 183, 0, 0.35);
+        border-radius: 999px;
+        padding: 7px 16px;
+        background: rgba(255, 183, 0, 0.08);
     }
-    .albums-header h1 {
-        font-size: clamp(28px, 3.2vw, 42px);
+    .cf-albums-hero__title {
+        margin: 0;
+        font-family: var(--cf-mono, 'Space Mono', monospace);
+        font-size: clamp(28px, 5vw, 40px);
         font-weight: 700;
+        line-height: 1.15;
         color: #fff;
-        margin: 0 0 12px;
     }
-    .albums-header-copy {
-        font-size: 15px;
-        color: #9a9a9a;
-        max-width: 640px;
-        margin: 0 auto;
+    .cf-albums-hero__lead {
+        margin: 0;
+        max-width: 520px;
+        font-size: 14px;
         line-height: 1.7;
+        color: #B3B3B3;
     }
-    .albums-grid-container { max-width: 1200px; margin: 0 auto; padding: 0 20px 60px; }
+    @media (prefers-reduced-motion: reduce) {
+        .cf-albums-hero__border,
+        .cf-albums-hero__center-glow {
+            animation: none;
+        }
+    }
+    .albums-grid-container { max-width: 1200px; margin: 0 auto; padding: 0; }
 
-    .cf-filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 28px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .cf-filter-row-wrap {
+        position: relative;
+        margin-bottom: 28px;
+    }
+    .cf-filter-row {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
     .cf-filter-row::-webkit-scrollbar { display: none; }
+    .cf-filter-row-fade {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 4px;
+        width: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 2px;
+        box-sizing: border-box;
+        background: linear-gradient(
+            to right,
+            transparent 0%,
+            var(--cf-bg-darkest, #050505) 72%
+        );
+        color: #B3B3B3;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+        cursor: pointer;
+    }
+    .cf-filter-row-fade.is-visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .cf-filter-row-fade__icon {
+        display: block;
+        flex-shrink: 0;
+        width: 16px;
+        height: 16px;
+    }
     .cf-filter-pill { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: none; background: #141414; color: #B3B3B3; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; }
     .cf-filter-pill.active { background: var(--primary-color, #FFB700); color: #1a1400; }
 
@@ -171,6 +325,14 @@ get_header(); ?>
     @media (max-width: 640px) {
         .cf-card-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
         .cf-filter-row { padding: 0 4px 4px; }
+        .cf-filter-row-fade {
+            width: 40px;
+            bottom: 4px;
+        }
+        .cf-filter-row-fade__icon {
+            width: 14px;
+            height: 14px;
+        }
     }
 
     @media (hover: none) {
@@ -213,5 +375,44 @@ get_header(); ?>
         line-height: 1.7;
     }
 </style>
+
+<script>
+(function () {
+	var wrap = document.querySelector('.cf-albums-page .cf-filter-row-wrap');
+	if (!wrap) {
+		return;
+	}
+	var row = wrap.querySelector('.cf-filter-row');
+	var fade = wrap.querySelector('.cf-filter-row-fade');
+	if (!row || !fade) {
+		return;
+	}
+
+	function updateFade() {
+		var maxScroll = row.scrollWidth - row.clientWidth;
+		var hasOverflow = maxScroll > 2;
+		var atEnd = row.scrollLeft >= maxScroll - 2;
+		fade.classList.toggle('is-visible', hasOverflow && !atEnd);
+	}
+
+	fade.addEventListener('click', function () {
+		row.scrollBy({ left: 200, behavior: 'smooth' });
+	});
+
+	row.addEventListener('scroll', updateFade, { passive: true });
+	window.addEventListener('resize', updateFade);
+
+	if (typeof ResizeObserver !== 'undefined') {
+		var ro = new ResizeObserver(updateFade);
+		ro.observe(row);
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', updateFade);
+	} else {
+		updateFade();
+	}
+})();
+</script>
 
 <?php get_footer(); ?>

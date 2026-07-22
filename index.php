@@ -35,7 +35,7 @@ get_header();
 
 <style>
     .cf-home-shell {
-        padding: 90px 20px 140px;
+        padding: 90px 5px 5px;
         max-width: 1200px;
         margin: 0 auto;
     }

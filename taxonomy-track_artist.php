@@ -616,7 +616,7 @@ $cf_render_album_card = static function ( $album_id ) {
 	.cf-artist-hero {
 		position: relative;
 		height: 420px;
-		padding: 0 20px;
+		padding: 0 5px;
 		overflow: hidden;
 		display: flex;
 		align-items: center;
@@ -797,7 +797,7 @@ $cf_render_album_card = static function ( $album_id ) {
 	.cf-artist-body {
 		max-width: 1200px;
 		margin: 0 auto;
-		padding: 36px 20px 80px;
+		padding: 36px 5px 0;
 	}
 	.cf-artist-section { margin-bottom: 48px; }
 	.cf-artist-section-head {
@@ -1084,7 +1084,7 @@ $cf_render_album_card = static function ( $album_id ) {
 	@media (max-width: 767px) {
 		.cf-artist-hero {
 			height: 360px;
-			padding: 0 16px;
+			padding: 0 5px;
 		}
 		.cf-artist-hero-inner {
 			flex-direction: column;

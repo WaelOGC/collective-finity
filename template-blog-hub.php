@@ -217,7 +217,7 @@ $cf_categories = get_categories(
 </div>
 
 <style>
-    .cf-blog { padding: 30px clamp(16px, 3vw, 34px); display: flex; flex-direction: column; gap: 26px; max-width: 100%; min-width: 0; box-sizing: border-box; }
+    .cf-blog { padding: 30px 5px 5px; display: flex; flex-direction: column; gap: 26px; max-width: 100%; min-width: 0; box-sizing: border-box; }
     .cf-bh-title { font-size: 26px; font-weight: 700; color: #fff; margin: 0; }
 
     /* breadcrumb + category head */
@@ -292,7 +292,7 @@ $cf_categories = get_categories(
     .cf-bh-empty { color: var(--cf-text-3); font-size: 13.5px; }
 
     @media (max-width: 767px) {
-        .cf-blog { padding: 18px 16px; gap: 22px; }
+        .cf-blog { padding: 18px 5px 5px; gap: 22px; }
         .cf-bh-featured { flex-direction: column; }
         .cf-bh-featured-body { padding: 20px; }
         .cf-bh-featured-title { font-size: 19px; }

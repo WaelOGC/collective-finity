@@ -16,7 +16,7 @@ $genre_description = $current_genre->description;
     <main id="main" class="site-main">
         
         <!-- Page Header -->
-        <div class="genre-header" style="text-align: center; padding: 60px 20px 40px; background: linear-gradient(180deg, rgba(0,255,255,0.05) 0%, transparent 100%);">
+        <div class="genre-header" style="text-align: center; padding: 60px 5px 40px; background: linear-gradient(180deg, rgba(0,255,255,0.05) 0%, transparent 100%);">
             <h1 style="font-family: 'Mulish', sans-serif; font-size: 38px; font-weight: 700; color: #fff; margin-bottom: 12px;">
                 <?php echo esc_html( $genre_name ); ?>
             </h1>
@@ -37,7 +37,7 @@ $genre_description = $current_genre->description;
         </div>
 
         <!-- Tracks Grid -->
-        <div class="genre-tracks-container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px 60px;">
+        <div class="genre-tracks-container" style="max-width: 1200px; margin: 0 auto; padding: 0 5px;">
             
             <?php if ( have_posts() ) : ?>
                 
