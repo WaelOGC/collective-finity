@@ -9,45 +9,58 @@ if ( ! $cf_tracks_url ) {
     $cf_tracks_url = home_url( '/tracks/' );
 }
 
-$cf_hero_portrait_url = 'https://collectivefinity.com/wp-content/uploads/2026/07/Wael-Safan-%E2%80%94-Founder-of-Collective-Finity.jpg';
-$cf_bts_image_url     = 'https://collectivefinity.com/wp-content/uploads/2026/07/Wael-Safan-behind-the-camera-Amsterdam.jpg';
+$cf_community_url = function_exists( 'collective_finity_get_page_link' )
+    ? collective_finity_get_page_link( 'join-community', '/join-community/' )
+    : home_url( '/join-community/' );
+
+$cf_hero_image_url = get_template_directory_uri() . '/assets/images/hero-section/about-collective-finity-ai-music-vision.webp';
+$cf_founder_photo_url = 'https://collectivefinity.com/wp-content/uploads/2026/07/Wael-Safan-%E2%80%94-Founder-of-Collective-Finity.jpg';
 
 $cf_about_pillars = array(
     array(
         'number' => '01',
-        'title'  => 'Cinematic at Heart',
-        'text'   => "'Cinematic' isn't a genre limit here — it's how I approach production. Whether it's electronic, classical, rock, or traditional Arabic vocal music, every track is built to feel like it's telling a story, not just filling space.",
+        'title'  => 'Human Creativity First',
+        'text'   => 'Artificial intelligence is our instrument—not our replacement. Every piece of music begins with imagination, emotion, and artistic direction before technology becomes part of the creative process.',
         'accent' => false,
     ),
     array(
         'number' => '02',
-        'title'  => 'A Real Musical Ear',
-        'text'   => "I'm not a trained musician — but years of playing piano, messing with guitar, and building tracks by ear taught me what actually sounds right. Every track goes through real iteration until it holds up, not just the first AI output.",
+        'title'  => 'Learn Through Experience',
+        'text'   => 'Everything published on Collective Finity comes from real experimentation. No recycled tutorials. No generic advice. Only practical knowledge gained through thousands of hours of testing, refining, and creating.',
         'accent' => true,
     ),
     array(
         'number' => '03',
-        'title'  => 'Built in the Open',
-        'text'   => "I write about the actual process — prompts, decisions, what worked and what didn't — so other people learning to generate music with AI can skip some of the trial and error I went through.",
+        'title'  => 'Build Together',
+        'text'   => 'Collective Finity is not meant to remain a personal project. It is the foundation of a future community where artists, producers, and creators can collaborate, learn, and inspire one another.',
         'accent' => false,
     ),
 );
 
-$cf_about_timeline = array(
+$cf_about_roadmap = array(
     array(
-        'quarter' => 'Q1 2025',
-        'title'   => 'The Foundation',
-        'text'    => 'Years of loving and playing music by ear, then years of hands-on experimentation with AI music generation — refining prompts and workflow long before Collective Finity had a name.',
+        'title' => 'Launch Collective Finity',
+        'text'  => 'Building the first collection of cinematic AI-assisted music and educational content.',
     ),
     array(
-        'quarter' => 'Q3 2025',
-        'title'   => 'Collective Finity Takes Shape',
-        'text'    => 'Built the catalog, the site, and started writing about the process — turning thousands of generated tracks into a curated, cinematic library.',
+        'title' => 'Growing the Library',
+        'text'  => 'Continuously expanding the music catalog and publishing practical resources for AI music creators.',
     ),
     array(
-        'quarter' => 'Q1 2026',
-        'title'   => 'Building the Platform',
-        'text'    => 'The next phase: growing the music catalog and article library toward a real community, as the groundwork for an app open to other AI-assisted artists.',
+        'title' => 'Building the Community',
+        'text'  => 'Creating a collaborative environment where artists exchange knowledge, workflows, and inspiration.',
+    ),
+    array(
+        'title' => 'Educational Resources',
+        'text'  => 'Launching premium written courses, creator guides, and advanced learning materials.',
+    ),
+    array(
+        'title' => 'Artist Platform',
+        'text'  => 'Opening Collective Finity to independent AI-assisted artists to publish and showcase their own work.',
+    ),
+    array(
+        'title' => 'Nova Xfinity',
+        'text'  => 'Transforming Collective Finity into a complete streaming ecosystem with dedicated web and mobile applications built specifically for AI-assisted music creators.',
     ),
 );
 
@@ -84,27 +97,26 @@ get_header();
             <section class="cf-about-hero" aria-labelledby="cf-about-heading">
                 <div class="cf-about-hero__grid">
                     <div class="cf-about-hero__copy">
-                        <p class="cf-about-eyebrow">ABOUT COLLECTIVE FINITY</p>
-                        <h1 id="cf-about-heading" class="cf-about-hero__title">About Collective Finity</h1>
-                        <p class="cf-about-hero__tagline">One Musician, One Mission: Cinematic Sound Through AI</p>
-                        <p class="cf-about-hero__lead">I'm Wael Safan — someone who's loved music my whole life, long before AI music generation existed, and one of the earliest people to take it seriously as a real creative tool. Collective Finity is where that comes together: a genuine ear for music, real hands-on instinct, and AI as an instrument I direct — not a shortcut.</p>
+                        <h1 id="cf-about-heading" class="cf-about-hero__title">More Than AI Music. A Vision for the Future of Human Creativity.</h1>
+                        <p class="cf-about-hero__tagline">Where imagination, technology, and music converge to create something meaningful.</p>
+                        <p class="cf-about-hero__lead">Collective Finity is an independent creative platform dedicated to exploring the future of music through the collaboration between human creativity and artificial intelligence. We create original AI-assisted music, publish in-depth educational content, and build a growing community for artists who believe technology should expand creativity—not replace it. This is more than a music website. It is the beginning of a creative ecosystem designed for the next generation of musicians, producers, and storytellers.</p>
                         <div class="cf-about-hero__actions">
                             <a class="cf-about-btn cf-about-btn--primary" href="<?php echo esc_url( $cf_tracks_url ); ?>">Explore Music</a>
-                            <a class="cf-about-btn cf-about-btn--ghost" href="#cf-about-who-i-am">Read My Story</a>
+                            <a class="cf-about-btn cf-about-btn--ghost" href="<?php echo esc_url( $cf_community_url ); ?>">Join Community</a>
                         </div>
                     </div>
 
                     <div class="cf-about-hero__visual">
                         <div class="cf-about-hero__visual-frame">
-                            <div class="cf-about-hero__portrait-wrap">
-                                <div class="cf-about-hero__portrait-glow" aria-hidden="true"></div>
+                            <div class="cf-about-hero__image-wrap">
+                                <div class="cf-about-hero__image-glow" aria-hidden="true"></div>
                                 <img
-                                    class="cf-about-hero__portrait"
-                                    src="<?php echo esc_url( $cf_hero_portrait_url ); ?>"
-                                    alt="Portrait of Wael Safan, musician and founder of Collective Finity"
-                                    width="220"
-                                    height="220"
-                                    loading="lazy"
+                                    class="cf-about-hero__image"
+                                    src="<?php echo esc_url( $cf_hero_image_url ); ?>"
+                                    alt=""
+                                    width="640"
+                                    height="400"
+                                    loading="eager"
                                     decoding="async"
                                 >
                             </div>
@@ -113,36 +125,31 @@ get_header();
                 </div>
             </section>
 
-            <div class="cf-about-story-grid">
-                <section id="cf-about-who-i-am" class="cf-about-section">
-                    <div class="cf-about-section__intro">
-                        <div class="cf-about-section__intro-copy">
-                            <p class="cf-about-section__label">01 / THE ARTIST</p>
-                            <h2 class="cf-about-section__title">Who I Am</h2>
-                        </div>
-                        <figure class="cf-about-section__accent">
-                            <img
-                                src="<?php echo esc_url( $cf_bts_image_url ); ?>"
-                                alt="Black and white photo of Wael Safan holding a camera"
-                                width="140"
-                                height="105"
-                                loading="lazy"
-                                decoding="async"
-                            >
-                        </figure>
-                    </div>
-                    <p class="cf-about-section__body">I've never been a professional or formally trained musician — but I've always had a genuine love for music and a good ear for it. I play piano, I've practiced guitar, and long before AI music generation existed, I was already building tracks myself with music software and a keyboard. That hands-on background — knowing what actually sounds right, even without formal training — is exactly what lets me get real results from AI music tools instead of just generating generic output. I've generated more than ten thousand pieces of music since I started. What you'll find on this site is the roughly 1,500 I consider genuinely worth sharing.</p>
-                    <blockquote class="cf-about-quote">“AI doesn't replace the ear. It just needs someone who has one.”</blockquote>
-                </section>
+            <section id="cf-about-why" class="cf-about-section">
+                <h2 class="cf-about-section__title">Why Collective Finity Exists</h2>
+                <p class="cf-about-section__body">Every day, thousands of AI-generated songs are created. Most disappear within hours. Not because the technology isn't powerful... But because creativity without direction quickly becomes noise. Collective Finity was created to challenge that idea. We believe AI should never replace artistic expression. Instead, it should become an instrument that helps artists create deeper stories, stronger emotions, and more meaningful music. This platform exists to combine original music, real-world knowledge, and an open creative community into one destination.</p>
+            </section>
 
-                <section id="cf-about-future" class="cf-about-section">
-                    <p class="cf-about-section__label">02 / THE FUTURE</p>
-                    <h2 class="cf-about-section__title">Where This Is Going</h2>
-                    <p class="cf-about-section__body">Right now, Collective Finity is me: writing, producing, and publishing alone, plus a growing set of articles on how I actually get good results from AI music generation — real prompt techniques, not surface-level tips. Everything here is free, and stays free.</p>
-                    <p class="cf-about-section__body">The bigger plan is a dedicated app — not just for my own music, but a place where any artist making AI-assisted music can publish theirs too, and listeners can discover it. This website, and the community forming around it, is the foundation that comes first.</p>
-                    <blockquote class="cf-about-quote">“This site is the beginning. The platform is the plan.”</blockquote>
-                </section>
-            </div>
+            <section id="cf-about-founder" class="cf-about-section cf-about-founder">
+                <div class="cf-about-section__intro">
+                    <div class="cf-about-section__intro-copy">
+                        <h2 class="cf-about-section__title">Meet the Founder</h2>
+                    </div>
+                    <figure class="cf-about-founder__photo">
+                        <div class="cf-about-founder__photo-glow" aria-hidden="true"></div>
+                        <img
+                            src="<?php echo esc_url( $cf_founder_photo_url ); ?>"
+                            alt="Portrait of Wael Safan, founder of Collective Finity"
+                            width="160"
+                            height="160"
+                            loading="lazy"
+                            decoding="async"
+                        >
+                    </figure>
+                </div>
+                <p class="cf-about-section__body">Music has been part of my life long before artificial intelligence entered the creative world. My name is Wael Safan, and Collective Finity is the result of years of curiosity, experimentation, and thousands of hours spent exploring AI music generation. Through prompt engineering, production workflows, composition, and continuous experimentation, I discovered that technology alone doesn't create meaningful music. Human vision does. Every article, every track, and every resource published here reflects that philosophy. Rather than keeping that knowledge private, I chose to build a place where creators can learn faster, create better music, and grow together.</p>
+                <blockquote class="cf-about-quote">“Artificial intelligence doesn't replace creativity. It expands what's possible for those willing to learn.”</blockquote>
+            </section>
 
             <section class="cf-about-pillars" aria-labelledby="cf-about-pillars-heading">
                 <header class="cf-about-section-head">
@@ -162,22 +169,19 @@ get_header();
                 </div>
             </section>
 
-            <section class="cf-about-timeline" aria-labelledby="cf-about-timeline-heading">
+            <section class="cf-about-roadmap" aria-labelledby="cf-about-roadmap-heading">
                 <header class="cf-about-section-head">
-                    <p class="cf-about-section-head__eyebrow">THE CHRONOLOGY</p>
-                    <h2 id="cf-about-timeline-heading" class="cf-about-section-head__title">The Journey So Far</h2>
-                    <p class="cf-about-section-head__sub">Where This Started, Where It's Headed</p>
+                    <h2 id="cf-about-roadmap-heading" class="cf-about-section-head__title">Roadmap</h2>
                 </header>
-                <div class="cf-about-timeline__track">
-                    <div class="cf-about-timeline__line" aria-hidden="true"></div>
-                    <ol class="cf-about-timeline__stops">
-                        <?php foreach ( $cf_about_timeline as $milestone ) : ?>
-                            <li class="cf-about-timeline__stop">
-                                <span class="cf-about-timeline__dot" aria-hidden="true"></span>
-                                <div class="cf-about-timeline__content">
-                                    <p class="cf-about-milestone__quarter"><?php echo esc_html( $milestone['quarter'] ); ?></p>
-                                    <h3 class="cf-about-milestone__title"><?php echo esc_html( $milestone['title'] ); ?></h3>
-                                    <p class="cf-about-milestone__text"><?php echo esc_html( $milestone['text'] ); ?></p>
+                <div class="cf-about-roadmap__year-wrap">
+                    <p class="cf-about-roadmap__year">2026</p>
+                    <ol class="cf-about-roadmap__list">
+                        <?php foreach ( $cf_about_roadmap as $index => $item ) : ?>
+                            <li class="cf-about-roadmap__item">
+                                <span class="cf-about-roadmap__num" aria-hidden="true"><?php echo esc_html( str_pad( (string) ( $index + 1 ), 2, '0', STR_PAD_LEFT ) ); ?></span>
+                                <div class="cf-about-roadmap__content">
+                                    <h3 class="cf-about-roadmap__title"><?php echo esc_html( $item['title'] ); ?></h3>
+                                    <p class="cf-about-roadmap__text"><?php echo esc_html( $item['text'] ); ?></p>
                                 </div>
                             </li>
                         <?php endforeach; ?>
@@ -217,6 +221,17 @@ get_header();
                             </div>
                         </div>
                     <?php endforeach; ?>
+                </div>
+            </section>
+
+            <section class="cf-about-cta" aria-labelledby="cf-about-cta-heading">
+                <header class="cf-about-section-head">
+                    <h2 id="cf-about-cta-heading" class="cf-about-section-head__title">Join the Journey</h2>
+                </header>
+                <p class="cf-about-cta__body">Collective Finity is only getting started. Whether you're here to discover cinematic music, learn AI music production, or become part of a growing creative community, we'd love to have you with us from the very beginning.</p>
+                <div class="cf-about-cta__actions">
+                    <a class="cf-about-btn cf-about-btn--primary" href="<?php echo esc_url( $cf_tracks_url ); ?>">Explore Music</a>
+                    <a class="cf-about-btn cf-about-btn--ghost" href="<?php echo esc_url( $cf_community_url ); ?>">Join Community</a>
                 </div>
             </section>
 
@@ -262,7 +277,8 @@ get_header();
     .cf-about-eyebrow,
     .cf-about-section__label,
     .cf-about-section-head__eyebrow,
-    .cf-about-milestone__quarter {
+    .cf-about-roadmap__year,
+    .cf-about-roadmap__num {
         margin: 0;
         font-family: 'Space Mono', monospace;
         color: var(--primary-color, #FFB700);
@@ -277,10 +293,10 @@ get_header();
 
     .cf-about-hero__title {
         margin: 0;
-        font-size: 36px;
+        font-size: 32px;
         font-weight: 700;
         color: #fff;
-        line-height: 1.15;
+        line-height: 1.2;
     }
 
     .cf-about-hero__tagline {
@@ -312,36 +328,34 @@ get_header();
 
     .cf-about-hero__visual-frame {
         position: relative;
-        width: min(100%, 240px);
+        width: 100%;
         margin: 0 auto;
         padding: 8px 0 0;
     }
 
-    .cf-about-hero__portrait-wrap {
+    .cf-about-hero__image-wrap {
         position: relative;
-        width: min(100%, 220px);
+        width: 100%;
         margin: 0 auto;
     }
 
-    .cf-about-hero__portrait-glow {
+    .cf-about-hero__image-glow {
         position: absolute;
-        inset: 6%;
+        inset: 8%;
         z-index: 0;
-        border-radius: 50%;
+        border-radius: 18px;
         background: radial-gradient(circle, rgba(255, 183, 0, 0.28) 0%, rgba(255, 183, 0, 0.1) 45%, transparent 72%);
         filter: blur(18px);
         pointer-events: none;
     }
 
-    .cf-about-hero__portrait {
+    .cf-about-hero__image {
         position: relative;
         z-index: 1;
         display: block;
         width: 100%;
-        max-width: 220px;
-        aspect-ratio: 1;
-        margin: 0 auto;
-        border-radius: 50%;
+        height: auto;
+        border-radius: 14px;
         border: 1px solid rgba(255, 183, 0, 0.3);
         object-fit: cover;
         box-shadow:
@@ -390,12 +404,6 @@ get_header();
         color: #fff;
     }
 
-    .cf-about-story-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 40px;
-    }
-
     .cf-about-section__intro {
         display: flex;
         align-items: flex-start;
@@ -409,21 +417,37 @@ get_header();
         min-width: 0;
     }
 
-    .cf-about-section__accent {
+    .cf-about-founder__photo {
+        position: relative;
         flex: 0 0 auto;
         margin: 0;
-        width: min(100%, 120px);
+        width: 120px;
         max-width: 140px;
     }
 
-    .cf-about-section__accent img {
+    .cf-about-founder__photo-glow {
+        position: absolute;
+        inset: 6%;
+        z-index: 0;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 183, 0, 0.28) 0%, rgba(255, 183, 0, 0.1) 45%, transparent 72%);
+        filter: blur(14px);
+        pointer-events: none;
+    }
+
+    .cf-about-founder__photo img {
+        position: relative;
+        z-index: 1;
         display: block;
         width: 100%;
+        aspect-ratio: 1;
         height: auto;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.55);
-        opacity: 0.92;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 183, 0, 0.3);
+        object-fit: cover;
+        box-shadow:
+            0 0 20px rgba(255, 183, 0, 0.2),
+            0 8px 20px -10px rgba(0, 0, 0, 0.55);
     }
 
     .cf-about-section__label {
@@ -438,11 +462,19 @@ get_header();
         color: #fff;
     }
 
+    .cf-about-section__intro .cf-about-section__title {
+        margin-bottom: 0;
+    }
+
     .cf-about-section__body {
         margin: 0 0 16px;
         font-size: 14.5px;
         line-height: 1.7;
         color: #B3B3B3;
+    }
+
+    .cf-about-section__body:last-child {
+        margin-bottom: 0;
     }
 
     .cf-about-quote {
@@ -542,68 +574,67 @@ get_header();
         color: #7A7A7A;
     }
 
-    .cf-about-timeline__track {
-        position: relative;
-        padding-top: 18px;
-    }
-
-    .cf-about-timeline__line {
-        display: none;
-        position: absolute;
-        top: 23px;
-        right: 10%;
-        left: 10%;
-        height: 1px;
-        background: linear-gradient(90deg, transparent 0%, rgba(255, 183, 0, 0.28) 12%, rgba(255, 183, 0, 0.28) 88%, transparent 100%);
-        box-shadow: 0 0 12px rgba(255, 183, 0, 0.12);
-    }
-
-    .cf-about-timeline__stops {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+    .cf-about-roadmap__year-wrap {
+        display: flex;
+        flex-direction: column;
         gap: 20px;
+    }
+
+    .cf-about-roadmap__year {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        text-align: center;
+    }
+
+    .cf-about-roadmap__list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
         margin: 0;
         padding: 0;
         list-style: none;
     }
 
-    .cf-about-timeline__stop {
-        position: relative;
+    .cf-about-roadmap__item {
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
+        gap: 16px;
+        align-items: flex-start;
+        padding: 18px 20px;
+        border: 1px solid #232323;
+        border-radius: 12px;
+        background: #141414;
+        transition: box-shadow 0.25s ease, border-color 0.25s ease;
     }
 
-    .cf-about-timeline__dot {
-        position: relative;
-        z-index: 1;
-        width: 12px;
-        height: 12px;
-        margin-bottom: 16px;
-        border-radius: 50%;
-        background: var(--primary-color, #FFB700);
-        box-shadow:
-            0 0 0 4px rgba(255, 183, 0, 0.12),
-            0 0 16px rgba(255, 183, 0, 0.38),
-            0 0 28px rgba(255, 183, 0, 0.16);
+    .cf-about-roadmap__item:hover {
+        border-color: rgba(255, 183, 0, 0.22);
+        box-shadow: 0 0 28px rgba(255, 183, 0, 0.1), 0 16px 36px -18px rgba(0, 0, 0, 0.55);
     }
 
-    .cf-about-milestone__quarter {
-        margin: 0 0 6px;
+    .cf-about-roadmap__num {
+        flex-shrink: 0;
         font-size: 12px;
+        letter-spacing: 0.04em;
         line-height: 1.4;
+        padding-top: 2px;
     }
 
-    .cf-about-milestone__title {
-        margin: 0 0 10px;
+    .cf-about-roadmap__content {
+        min-width: 0;
+    }
+
+    .cf-about-roadmap__title {
+        margin: 0 0 8px;
         font-size: 15px;
         font-weight: 700;
         line-height: 1.35;
         color: #fff;
     }
 
-    .cf-about-milestone__text {
+    .cf-about-roadmap__text {
         margin: 0;
         font-size: 13.5px;
         line-height: 1.6;
@@ -665,10 +696,37 @@ get_header();
         color: #B3B3B3;
     }
 
+    .cf-about-cta {
+        text-align: center;
+        padding: 36px 24px;
+        border: 1px solid #232323;
+        border-radius: 12px;
+        background: #141414;
+    }
+
+    .cf-about-cta .cf-about-section-head {
+        margin-bottom: 16px;
+    }
+
+    .cf-about-cta__body {
+        margin: 0 auto 22px;
+        max-width: 640px;
+        font-size: 14.5px;
+        line-height: 1.7;
+        color: #B3B3B3;
+    }
+
+    .cf-about-cta__actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+
     @media (min-width: 768px) {
         .cf-about-hero__grid {
             display: grid;
-            grid-template-columns: minmax(0, 1.2fr) minmax(180px, 0.8fr);
+            grid-template-columns: minmax(0, 1.15fr) minmax(220px, 0.85fr);
             gap: 32px;
             align-items: center;
         }
@@ -677,16 +735,8 @@ get_header();
             display: flex;
         }
 
-        .cf-about-timeline__line {
-            display: block;
-        }
-    }
-
-    @media (min-width: 1024px) {
-        .cf-about-story-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 40px;
-            align-items: start;
+        .cf-about-founder__photo {
+            width: 140px;
         }
     }
 
@@ -696,7 +746,7 @@ get_header();
         }
 
         .cf-about-hero__title {
-            font-size: 26px;
+            font-size: 24px;
         }
 
         .cf-about-hero__tagline {
@@ -707,18 +757,19 @@ get_header();
             display: flex;
         }
 
-        .cf-about-pillars__grid,
-        .cf-about-timeline__stops {
+        .cf-about-pillars__grid {
             grid-template-columns: 1fr;
         }
 
-        .cf-about-timeline__stop {
-            align-items: flex-start;
-            text-align: left;
+        .cf-about-section__intro {
+            flex-direction: column-reverse;
+            align-items: center;
+            text-align: center;
         }
 
-        .cf-about-timeline__dot {
-            margin-bottom: 12px;
+        .cf-about-founder__photo {
+            width: 120px;
+            margin-bottom: 8px;
         }
     }
 </style>

@@ -93,6 +93,16 @@ This file tracks every feature, fix, and pending item implemented in the collect
 - Latest Tracks carousel restricted to standalone singles only (`track_release_type=single` or missing meta); album tracks excluded — same filter pattern as article sidebar Latest Singles
 - Popular, ad slots, carousel behavior, and card rendering unchanged
 
+### Albums Archive Genre Filter (`archive-albums.php`)
+- Genre filter row uses real prev/next carousel-style nav buttons (hidden when no overflow / at that edge); removed right-only fade chevron hint
+- Filter pills limited to `music_genre` terms assigned to at least one published album (`object_ids` from albums CPT); track-only / empty genres excluded
+- Album grid, cards, and "All genres" pill behavior unchanged
+
+### About Page Rebuild (`page-about.php`)
+- New section order: Hero → Why Collective Finity Exists → Meet the Founder → Our Foundation (Core Pillars cards) → Roadmap (2026, 6 items) → FAQ (unchanged) → CTA (Join the Journey)
+- Hero uses theme image `assets/images/hero-section/about-collective-finity-ai-music-vision.webp`; founder portrait only in Meet the Founder; CTAs are Explore Music + Join Community
+- Visual system preserved (glow, cards, quote, buttons, FAQ accordion); content uses provided copy only
+
 ### Share Button (Tracks) + Share Tracking (Articles, Albums) — Theme Phase 1
 - Article share (`single-post.php` `[data-cf-share]`): fire-and-forget `window.CF_Auth.trackShare(postId, 'post', 'native'|'copy')` when the helper exists; button has `data-post-id`
 - Track page (`single-tracks.php`): new Share button in hero actions (native share / copy + "Link copied" label swap); tracks via `trackShare(trackId, 'track', …)` with `data-track-id`

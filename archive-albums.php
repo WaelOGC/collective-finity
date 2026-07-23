@@ -24,24 +24,47 @@ get_header(); ?>
 
         <?php
         $cf_album_genre_filter = isset( $_GET['genre'] ) ? sanitize_title( wp_unslash( $_GET['genre'] ) ) : '';
-        $cf_album_genres       = get_terms( array( 'taxonomy' => 'music_genre', 'hide_empty' => false ) );
+
+        // Only genres assigned to at least one published album (not track-only genres).
+        $cf_album_ids_for_genres = get_posts(
+            array(
+                'post_type'      => 'albums',
+                'post_status'    => 'publish',
+                'posts_per_page' => -1,
+                'fields'         => 'ids',
+                'no_found_rows'  => true,
+            )
+        );
+        $cf_album_genres = ! empty( $cf_album_ids_for_genres )
+            ? get_terms(
+                array(
+                    'taxonomy'   => 'music_genre',
+                    'hide_empty' => false,
+                    'object_ids' => $cf_album_ids_for_genres,
+                )
+            )
+            : array();
+        if ( is_wp_error( $cf_album_genres ) ) {
+            $cf_album_genres = array();
+        }
         ?>
 
         <div class="albums-grid-container">
 
-            <?php if ( ! empty( $cf_album_genres ) && ! is_wp_error( $cf_album_genres ) ) : ?>
-                <div class="cf-filter-row-wrap">
+            <?php if ( ! empty( $cf_album_genres ) ) : ?>
+                <div class="cf-filter-row-wrap" data-cf-filter-carousel>
+                    <button type="button" class="cf-filter-nav-btn cf-filter-nav-prev" aria-label="<?php esc_attr_e( 'Previous genres', 'collective-finity' ); ?>" hidden>
+                        <span class="dashicons dashicons-arrow-left-alt2"></span>
+                    </button>
                     <div class="cf-filter-row">
                         <a href="<?php echo esc_url( remove_query_arg( 'genre' ) ); ?>" class="cf-filter-pill<?php echo '' === $cf_album_genre_filter ? ' active' : ''; ?>"><?php esc_html_e( 'All genres', 'collective-finity' ); ?></a>
                         <?php foreach ( $cf_album_genres as $cf_ag_term ) : ?>
                             <a href="<?php echo esc_url( add_query_arg( 'genre', $cf_ag_term->slug ) ); ?>" class="cf-filter-pill<?php echo $cf_album_genre_filter === $cf_ag_term->slug ? ' active' : ''; ?>"><?php echo esc_html( $cf_ag_term->name ); ?></a>
                         <?php endforeach; ?>
                     </div>
-                    <div class="cf-filter-row-fade" aria-hidden="true">
-                        <svg class="cf-filter-row-fade__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false">
-                            <path d="M6 3.5L10.5 8L6 12.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
+                    <button type="button" class="cf-filter-nav-btn cf-filter-nav-next" aria-label="<?php esc_attr_e( 'Next genres', 'collective-finity' ); ?>" hidden>
+                        <span class="dashicons dashicons-arrow-right-alt2"></span>
+                    </button>
                 </div>
             <?php endif; ?>
 
@@ -221,50 +244,44 @@ get_header(); ?>
     .albums-grid-container { max-width: 1200px; margin: 0 auto; padding: 0; }
 
     .cf-filter-row-wrap {
-        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 8px;
         margin-bottom: 28px;
     }
     .cf-filter-row {
+        flex: 1;
+        min-width: 0;
         display: flex;
         gap: 8px;
         overflow-x: auto;
         padding-bottom: 4px;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
     }
     .cf-filter-row::-webkit-scrollbar { display: none; }
-    .cf-filter-row-fade {
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 4px;
-        width: 48px;
+    .cf-filter-nav-btn {
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid #2c2c2c;
+        background: #141414;
+        color: #fff;
         display: flex;
         align-items: center;
-        justify-content: flex-end;
-        padding-right: 2px;
-        box-sizing: border-box;
-        background: linear-gradient(
-            to right,
-            transparent 0%,
-            var(--cf-bg-darkest, #050505) 72%
-        );
-        color: #B3B3B3;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.2s ease;
+        justify-content: center;
         cursor: pointer;
+        padding: 0;
+        transition: border-color .15s ease, color .15s ease, background .15s ease;
     }
-    .cf-filter-row-fade.is-visible {
-        opacity: 1;
-        pointer-events: auto;
+    .cf-filter-nav-btn:hover {
+        border-color: var(--primary-color, #FFB700);
+        color: var(--primary-color, #FFB700);
     }
-    .cf-filter-row-fade__icon {
-        display: block;
-        flex-shrink: 0;
-        width: 16px;
-        height: 16px;
-    }
+    .cf-filter-nav-btn[hidden] { display: none !important; }
+    .cf-filter-nav-btn .dashicons { font-size: 18px; width: 18px; height: 18px; }
     .cf-filter-pill { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: none; background: #141414; color: #B3B3B3; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; }
     .cf-filter-pill.active { background: var(--primary-color, #FFB700); color: #1a1400; }
 
@@ -324,15 +341,9 @@ get_header(); ?>
 
     @media (max-width: 640px) {
         .cf-card-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
-        .cf-filter-row { padding: 0 4px 4px; }
-        .cf-filter-row-fade {
-            width: 40px;
-            bottom: 4px;
-        }
-        .cf-filter-row-fade__icon {
-            width: 14px;
-            height: 14px;
-        }
+        .cf-filter-row { padding: 0 0 4px; }
+        .cf-filter-nav-btn { width: 32px; height: 32px; }
+        .cf-filter-nav-btn .dashicons { font-size: 16px; width: 16px; height: 16px; }
     }
 
     @media (hover: none) {
@@ -378,39 +389,47 @@ get_header(); ?>
 
 <script>
 (function () {
-	var wrap = document.querySelector('.cf-albums-page .cf-filter-row-wrap');
+	var wrap = document.querySelector('.cf-albums-page [data-cf-filter-carousel]');
 	if (!wrap) {
 		return;
 	}
 	var row = wrap.querySelector('.cf-filter-row');
-	var fade = wrap.querySelector('.cf-filter-row-fade');
-	if (!row || !fade) {
+	var prev = wrap.querySelector('.cf-filter-nav-prev');
+	var next = wrap.querySelector('.cf-filter-nav-next');
+	if (!row || !prev || !next) {
 		return;
 	}
 
-	function updateFade() {
-		var maxScroll = row.scrollWidth - row.clientWidth;
-		var hasOverflow = maxScroll > 2;
-		var atEnd = row.scrollLeft >= maxScroll - 2;
-		fade.classList.toggle('is-visible', hasOverflow && !atEnd);
+	function pageWidth() {
+		return Math.max(160, Math.floor(row.clientWidth * 0.7));
 	}
 
-	fade.addEventListener('click', function () {
-		row.scrollBy({ left: 200, behavior: 'smooth' });
+	function updateButtons() {
+		var maxScroll = Math.max(0, row.scrollWidth - row.clientWidth);
+		var hasOverflow = maxScroll > 2;
+		prev.hidden = !hasOverflow || row.scrollLeft <= 2;
+		next.hidden = !hasOverflow || row.scrollLeft >= maxScroll - 2;
+	}
+
+	prev.addEventListener('click', function () {
+		row.scrollBy({ left: -pageWidth(), behavior: 'smooth' });
+	});
+	next.addEventListener('click', function () {
+		row.scrollBy({ left: pageWidth(), behavior: 'smooth' });
 	});
 
-	row.addEventListener('scroll', updateFade, { passive: true });
-	window.addEventListener('resize', updateFade);
+	row.addEventListener('scroll', updateButtons, { passive: true });
+	window.addEventListener('resize', updateButtons);
 
 	if (typeof ResizeObserver !== 'undefined') {
-		var ro = new ResizeObserver(updateFade);
+		var ro = new ResizeObserver(updateButtons);
 		ro.observe(row);
 	}
 
 	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', updateFade);
+		document.addEventListener('DOMContentLoaded', updateButtons);
 	} else {
-		updateFade();
+		updateButtons();
 	}
 })();
 </script>
