@@ -59,23 +59,23 @@ This file tracks every feature, fix, and pending item implemented in the collect
 - `inc/theme-options.php`: donate leadscreen message fields (`cf_leadscreen_msg_*`) have `maxlength="150"` (increased from the original 40-character limit)
 - `footer_description` field remains at its own separate `maxlength="140"`, unchanged
 
-### Track Metabox — Visualizer Styles & Streaming Visibility
-- Track Custom Audio Settings metabox (`functions.php`) includes a **Visualizer Styles** section with per-style checkboxes for all frontend visualizer options; each stored as `track_show_visualizer_{slug}`, default enabled when unset
+### Track Metabox — Streaming Visibility & Lyrics Toggle
 - **Streaming Links** section: per-platform Show checkbox (hide without deleting URL) plus Amazon Music and Google Play Music URL fields; visibility stored as `track_show_{platform}`, default enabled
-- `single-tracks.php` only renders enabled visualizer dropdown options and only shows streaming icons when both URL is set and Show is enabled
+- `single-tracks.php` only shows streaming icons when both URL is set and Show is enabled
 - **Lyrics/Story visibility**: checkbox on the Lyrics File field (`track_show_lyrics`, default enabled); when off, the Story & Concept / Lyrics Narrative Sync block is not rendered on the single track page
+- **Removed**: Visualizer Styles admin section and `collective_finity_track_visualizer_*` helpers (canvas visualizer retired from the track page)
 
 ### PageSpeed — Reduce Render-Blocking Requests (Homepage)
 - Frontend-only: deregister/re-register core `jquery` + `jquery-migrate` to load in the footer (`collective_finity_scripts()` in `functions.php`); skips admin, admin-ajax, and wp-login
 - Defer `cf-cookie-consent` CSS via `media="print"` + `onload="this.media='all'"` (`style_loader_tag` filter) with `<noscript>` fallback; critical CSS (`main-style`, `cf-shell`, `cf-content-layout`), dashicons, and Google Fonts unchanged
 - `single-tracks.php` mid-page jQuery block waits for `window.jQuery` before `jQuery(fn)` so footer jQuery does not throw `jQuery is not defined`
 
-### Single Track — Audio Effect Style Overhaul (12 styles)
-- Removed 8 legacy styles (Neon Glow Ring, Glowing Sine Wave, Cosmic Beat Pulse, Dual Orbit Ring, Particle Burst, Frequency Wave, Starfield Pulse, Hexagon Grid)
-- Kept and improved Spectrum Equalizer Bars (circular ring around cover) and Aurora Fill (larger outer halo)
-- Added 10 styles: Ember Drift, Crimson Pulse Ring, Smoke Wisp, Shard Fracture, Radar Sweep, Ink Bleed, Frost Veins, Blood Drip Trails, Halo Breathe, Fracture Cracks
-- Shared rotating multi-color system on all 12: brand gold `#FFB700` first, then bright red/purple/blue/orange; conic rotation and intensity driven by live AnalyserNode frequency data (no gray/grayscale)
-- Registry: `collective_finity_track_visualizer_styles()` in `functions.php`; drawing in `single-tracks.php`
+### Single Track Page Overhaul (`single-tracks.php`)
+- **Removed** canvas / Web Audio circular visualizer (frontend dropdown + JS draw loop + admin Visualizer Styles metabox + related PHP helpers)
+- Cover art is now a CSS-only ambient “planet” sphere: fixed radial shade overlay + continuously sliding sheen highlight (~8s loop); image itself never spins/flips; old `.playing` spin removed
+- Mood / BPM / Key / Release Date meta boxes restyled as compact horizontal pills (flex row, content-sized)
+- External platform icons replaced with official Simple Icons SVG path data (Spotify, Apple Music, SoundCloud, YouTube, Bandcamp, Amazon Music, Google Play); fill still white / gold on hover via CSS
+- Listener comments paginated at 5 per page via `?cf_comment_page=` (reuses profile `cf-pagination-*` classes; hidden when ≤1 page); emoji picker + comment form + Story/Lyrics blocks unchanged
 
 ### Share Button (Tracks) + Share Tracking (Articles, Albums) — Theme Phase 1
 - Article share (`single-post.php` `[data-cf-share]`): fire-and-forget `window.CF_Auth.trackShare(postId, 'post', 'native'|'copy')` when the helper exists; button has `data-post-id`

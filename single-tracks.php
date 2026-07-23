@@ -1,9 +1,9 @@
 <?php
 /**
  * Fully Upgraded Single Track Template - "Collective Finity" Custom Theme
- * Features: 5-Style Dynamic Canvas Visualizer Dropdown, Live Play/Likes Stats bar, 
- * Styled Card with Palette, Mood/Duration/Release metadata cards, Official SVGs, 
- * Synchronized Lyrics/Story, and FULLY CUSTOM COMMENTS FORM WITH EMOJI SELECTOR.
+ * Features: Ambient CSS planet cover art, Live Play/Likes Stats bar,
+ * compact Mood/BPM/Key/Release pills, official platform SVGs,
+ * Synchronized Lyrics/Story, and custom comments with emoji picker + pagination.
  * Responsive Update: Aspect-ratio scaled vinyl, mobile stacked forms, tablet grids.
  */
 
@@ -17,13 +17,25 @@ $updated_plays = $plays_count + 1;
 
 $likes_count = intval( get_post_meta( $track_id, '_cf_total_likes_count', true ) ) ?: 0;
 
-// Fetch existing comments manually to bypass standard comments_template requirements
+// Fetch comments with fixed 5-per-page pagination (cf_comment_page query var)
+$comments_per_page = 5;
+$comments_count    = (int) get_comments( array(
+    'post_id' => $track_id,
+    'status'  => 'approve',
+    'count'   => true,
+) );
+$comment_page = isset( $_GET['cf_comment_page'] ) ? max( 1, absint( wp_unslash( $_GET['cf_comment_page'] ) ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$comment_total_pages = max( 1, (int) ceil( $comments_count / $comments_per_page ) );
+if ( $comment_page > $comment_total_pages ) {
+    $comment_page = $comment_total_pages;
+}
 $track_comments = get_comments( array(
     'post_id' => $track_id,
     'status'  => 'approve',
     'order'   => 'ASC',
+    'number'  => $comments_per_page,
+    'offset'  => ( $comment_page - 1 ) * $comments_per_page,
 ) );
-$comments_count = count($track_comments);
 ?>
 
 <div class="cf-single-track-page">
@@ -114,15 +126,6 @@ $comments_count = count($track_comments);
             }
         }
 
-        // Visualizer styles enabled for this track
-        $visualizer_styles  = collective_finity_track_visualizer_styles();
-        $enabled_visualizers = array();
-        foreach ( $visualizer_styles as $style_slug => $style_label ) {
-            if ( collective_finity_track_show_visualizer( get_the_ID(), $style_slug ) ) {
-                $enabled_visualizers[ $style_slug ] = $style_label;
-            }
-        }
-
         // Genre Taxonomy
         $genres = wp_get_post_terms( get_the_ID(), 'music_genre' );
         $genre_name = ! empty( $genres ) ? $genres[0]->name : 'Ambient';
@@ -151,30 +154,15 @@ $comments_count = count($track_comments);
             
             <div class="cf-track-header-layout">
                 
-                <!-- 2. SPINNING VINYL DISC WITH SPECTRUM AUDIO VISUALIZER CANVAS (Fully responsive aspect-ratio) -->
+                <!-- 2. Cover art as ambient CSS "planet" sphere -->
                 <div class="cf-vinyl-wrapper">
                     <div class="cf-vinyl-inner">
-                        <canvas id="cf-circular-visualizer" width="360" height="360"></canvas>
-                        <img src="<?php echo esc_url($cover_url); ?>" class="cf-vinyl-disc" id="cf-track-spinning-vinyl" alt="<?php the_title(); ?>">
+                        <div class="cf-vinyl-planet">
+                            <img src="<?php echo esc_url($cover_url); ?>" class="cf-vinyl-disc" id="cf-track-spinning-vinyl" alt="<?php the_title(); ?>">
+                            <span class="cf-vinyl-sphere-shade" aria-hidden="true"></span>
+                            <span class="cf-vinyl-sphere-sheen" aria-hidden="true"></span>
+                        </div>
                     </div>
-                    
-                    <!-- 2. Visualizer drop down selector -->
-                    <?php if ( ! empty( $enabled_visualizers ) ) : ?>
-                    <div class="cf-visualizer-selector-wrapper">
-                        <label for="cf-visualizer-type"><?php _e('Audio Effect Style:', 'collective-finity'); ?></label>
-                        <select id="cf-visualizer-type">
-                            <?php
-                            $is_first_visualizer = true;
-                            foreach ( $enabled_visualizers as $style_slug => $style_label ) :
-                                ?>
-                                <option value="<?php echo esc_attr( $style_slug ); ?>" <?php selected( $is_first_visualizer ); ?>><?php echo esc_html( $style_label ); ?></option>
-                                <?php
-                                $is_first_visualizer = false;
-                            endforeach;
-                            ?>
-                        </select>
-                    </div>
-                    <?php endif; ?>
                 </div>
 
                 <!-- 3. MAIN DETAILS CARD -->
@@ -246,28 +234,36 @@ $comments_count = count($track_comments);
             <!-- 4. VISITOR-FRIENDLY EMOTIONAL METADATA CARDS -->
             <div class="cf-meta-grid">
                 <div class="cf-meta-box cf-glass-card">
-                    <span class="cf-meta-icon dashicons dashicons-heart"></span>
-                    <span class="cf-meta-title"><?php _e('MOOD / VIBE', 'collective-finity'); ?></span>
+                    <span class="cf-meta-left">
+                        <span class="cf-meta-icon dashicons dashicons-heart"></span>
+                        <span class="cf-meta-title"><?php _e('MOOD / VIBE', 'collective-finity'); ?></span>
+                    </span>
                     <span class="cf-meta-value"><?php _e('Cinematic & Emotional', 'collective-finity'); ?></span>
                 </div>
                 <?php if ( $show_bpm ) : ?>
                 <div class="cf-meta-box cf-glass-card">
-                    <span class="cf-meta-icon dashicons dashicons-clock"></span>
-                    <span class="cf-meta-title"><?php _e('BPM', 'collective-finity'); ?></span>
+                    <span class="cf-meta-left">
+                        <span class="cf-meta-icon dashicons dashicons-clock"></span>
+                        <span class="cf-meta-title"><?php _e('BPM', 'collective-finity'); ?></span>
+                    </span>
                     <span class="cf-meta-value"><?php echo $bpm ? esc_html($bpm) : __('—', 'collective-finity'); ?></span>
                 </div>
                 <?php endif; ?>
                 <?php if ( $show_key ) : ?>
                 <div class="cf-meta-box cf-glass-card">
-                    <span class="cf-meta-icon dashicons dashicons-admin-customizer"></span>
-                    <span class="cf-meta-title"><?php _e('KEY', 'collective-finity'); ?></span>
+                    <span class="cf-meta-left">
+                        <span class="cf-meta-icon dashicons dashicons-admin-customizer"></span>
+                        <span class="cf-meta-title"><?php _e('KEY', 'collective-finity'); ?></span>
+                    </span>
                     <span class="cf-meta-value"><?php echo $track_key ? esc_html($track_key) : __('—', 'collective-finity'); ?></span>
                 </div>
                 <?php endif; ?>
                 <div class="cf-meta-box cf-glass-card">
-                    <span class="cf-meta-icon dashicons dashicons-calendar-alt"></span>
-                    <span class="cf-meta-title"><?php _e('RELEASE DATE', 'collective-finity'); ?></span>
-                    <span class="cf-meta-value" style="color: #FFB700;"><?php echo get_the_date('M Y'); ?></span>
+                    <span class="cf-meta-left">
+                        <span class="cf-meta-icon dashicons dashicons-calendar-alt"></span>
+                        <span class="cf-meta-title"><?php _e('RELEASE DATE', 'collective-finity'); ?></span>
+                    </span>
+                    <span class="cf-meta-value"><?php echo get_the_date('M Y'); ?></span>
                 </div>
             </div>
 
@@ -278,37 +274,37 @@ $comments_count = count($track_comments);
                 <div class="cf-platforms-grid">
                     <?php if ( ! empty( $streaming_links['spotify'] ) ) : ?>
                         <a href="<?php echo esc_url( $streaming_links['spotify'] ); ?>" target="_blank" class="cf-platform-icon-btn" title="Spotify">
-                            <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.417.387-.714.207-2.39-1.46-5.4-1.79-8.946-.983-.34.078-.615-.187-.69-.47-.075-.333.15-.658.463-.733 3.882-.888 7.21-.5 9.873 1.13.292.176.31.554.114.85zm1.224-2.724c-.226.367-.626.49-.982.262-2.735-1.68-6.904-2.17-10.128-1.192-.41.124-.836-.14-.954-.537-.118-.396.11-.844.516-.96 3.694-1.12 8.283-.573 11.414 2.247.332.22.427.674.134 1.18zm.107-2.836C14.502 8.78 8.04 8.567 4.3 9.702c-.575.174-1.18-.184-1.353-.75-.173-.565.155-1.196.732-1.37 4.3-1.304 11.436-1.047 15.485 1.36.518.516 0 1 .37 1.35.37.28.84.45 1.45.45.54 0 1-.22 1.35-.45.37-.35.37-.84.37-1.35z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
                         </a>
                     <?php endif; ?>
                     <?php if ( ! empty( $streaming_links['apple'] ) ) : ?>
                         <a href="<?php echo esc_url( $streaming_links['apple'] ); ?>" target="_blank" class="cf-platform-icon-btn" title="Apple Music">
-                            <svg viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm4.333 13.914c-.39.26-.816.388-1.258.388-.34 0-.676-.08-1.008-.242l-2.067-1.034v.538c0 .858-.458 1.636-1.198 2.032-.39.21-.817.314-1.242.314-.492 0-.974-.14-1.4-.412L6.11 16.146c-.732-.472-1.144-1.272-1.144-2.138v-3.076c0-.858.458-1.636 1.198-2.032l2.054-1.11c.39-.21.817-.314 1.242-.314.492 0 .974.14 1.4.412l2.054 1.358c.732.472 1.144 1.272 1.144 2.138v.538l2.067-1.034c.332-.162.668-.242 1.008-.242.442 0 .868.128 1.258.388.756.504 1.167 1.358 1.167 2.29v1.238c0 .932-.411 1.786-1.167 2.29z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M23.994 6.124a9.23 9.23 0 00-.24-2.19c-.317-1.31-1.062-2.31-2.18-3.043a5.022 5.022 0 00-1.877-.726 10.496 10.496 0 00-1.564-.15c-.04-.003-.083-.01-.124-.013H5.986c-.152.01-.303.017-.455.026-.747.043-1.49.123-2.193.4-1.336.53-2.3 1.452-2.865 2.78-.192.448-.292.925-.363 1.408-.056.392-.088.785-.1 1.18 0 .032-.007.062-.01.093v12.223c.01.14.017.283.027.424.05.815.154 1.624.497 2.373.65 1.42 1.738 2.353 3.234 2.801.42.127.856.187 1.293.228.555.053 1.11.06 1.667.06h11.03a12.5 12.5 0 001.57-.1c.822-.106 1.596-.35 2.295-.81a5.046 5.046 0 001.88-2.207c.186-.42.293-.87.37-1.324.113-.675.138-1.358.137-2.04-.002-3.8 0-7.595-.003-11.393zm-6.423 3.99v5.712c0 .417-.058.827-.244 1.206-.29.59-.76.962-1.388 1.14-.35.1-.706.157-1.07.173-.95.045-1.773-.6-1.943-1.536a1.88 1.88 0 011.038-2.022c.323-.16.67-.25 1.018-.324.378-.082.758-.153 1.134-.24.274-.063.457-.23.51-.516a.904.904 0 00.02-.193c0-1.815 0-3.63-.002-5.443a.725.725 0 00-.026-.185c-.04-.15-.15-.243-.304-.234-.16.01-.318.035-.475.066-.76.15-1.52.303-2.28.456l-2.325.47-1.374.278c-.016.003-.032.01-.048.013-.277.077-.377.203-.39.49-.002.042 0 .086 0 .13-.002 2.602 0 5.204-.003 7.805 0 .42-.047.836-.215 1.227-.278.64-.77 1.04-1.434 1.233-.35.1-.71.16-1.075.172-.96.036-1.755-.6-1.92-1.544-.14-.812.23-1.685 1.154-2.075.357-.15.73-.232 1.108-.31.287-.06.575-.116.86-.177.383-.083.583-.323.6-.714v-.15c0-2.96 0-5.922.002-8.882 0-.123.013-.25.042-.37.07-.285.273-.448.546-.518.255-.066.515-.112.774-.165.733-.15 1.466-.296 2.2-.444l2.27-.46c.67-.134 1.34-.27 2.01-.403.22-.043.442-.088.663-.106.31-.025.523.17.554.482.008.073.012.148.012.223.002 1.91.002 3.822 0 5.732z"/></svg>
                         </a>
                     <?php endif; ?>
                     <?php if ( ! empty( $streaming_links['soundcloud'] ) ) : ?>
                         <a href="<?php echo esc_url( $streaming_links['soundcloud'] ); ?>" target="_blank" class="cf-platform-icon-btn" title="Soundcloud">
-                            <svg viewBox="0 0 24 24"><path d="M11.56 16.5c0-.18.01-.36.03-.53l.03-.23c-1.39-.12-2.5-1.14-2.5-2.43 0-1.14.87-2.07 2.05-2.28-.01-.13-.02-.27-.02-.4 0-1.74 1.75-3.15 3.91-3.15 1.5 0 2.8 1 3.48 2.45.39-.14.8-.23 1.24-.23 1.95 0 3.53 1.41 3.53 3.15 0 1.95-1.58 3.53-3.53 3.53h-8.2zm-1.04-4.8c-.37-.5-1.02-.73-1.62-.57-.4.1-.73.38-.9.77-.1.25-.13.52-.09.78.1.53.52.92 1.06.94l1.55.08V11.7z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M23.999 14.165c-.052 1.796-1.612 3.169-3.4 3.169h-8.18a.68.68 0 0 1-.675-.683V7.862a.747.747 0 0 1 .452-.724s.75-.513 2.333-.513a5.364 5.364 0 0 1 2.763.755 5.433 5.433 0 0 1 2.57 3.54c.282-.08.574-.121.868-.12.884 0 1.73.358 2.347.992s.948 1.49.922 2.373ZM10.721 8.421c.247 2.98.427 5.697 0 8.672a.264.264 0 0 1-.53 0c-.395-2.946-.22-5.718 0-8.672a.264.264 0 0 1 .53 0ZM9.072 9.448c.285 2.659.37 4.986-.006 7.655a.277.277 0 0 1-.55 0c-.331-2.63-.256-5.02 0-7.655a.277.277 0 0 1 .556 0Zm-1.663-.257c.27 2.726.39 5.171 0 7.904a.266.266 0 0 1-.532 0c-.38-2.69-.257-5.21 0-7.904a.266.266 0 0 1 .532 0Zm-1.647.77a26.108 26.108 0 0 1-.008 7.147.272.272 0 0 1-.542 0 27.955 27.955 0 0 1 0-7.147.275.275 0 0 1 .55 0Zm-1.67 1.769c.421 1.865.228 3.5-.029 5.388a.257.257 0 0 1-.514 0c-.21-1.858-.398-3.549 0-5.389a.272.272 0 0 1 .543 0Zm-1.655-.273c.388 1.897.26 3.508-.01 5.412-.026.28-.514.283-.54 0-.244-1.878-.347-3.54-.01-5.412a.283.283 0 0 1 .56 0Zm-1.668.911c.4 1.268.257 2.292-.026 3.572a.257.257 0 0 1-.514 0c-.241-1.262-.354-2.312-.023-3.572a.283.283 0 0 1 .563 0Z"/></svg>
                         </a>
                     <?php endif; ?>
                     <?php if ( ! empty( $streaming_links['youtube'] ) ) : ?>
                         <a href="<?php echo esc_url( $streaming_links['youtube'] ); ?>" target="_blank" class="cf-platform-icon-btn" title="YouTube">
-                            <svg viewBox="0 0 24 24"><path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.517 3.545 12 3.545 12 3.545s0 0 0 0h-.002s-7.517 0-9.388.507a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.871.507 9.388.507 9.388.507s7.517 0 9.388-.507a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                         </a>
                     <?php endif; ?>
                     <?php if ( ! empty( $streaming_links['bandcamp'] ) ) : ?>
                         <a href="<?php echo esc_url( $streaming_links['bandcamp'] ); ?>" target="_blank" class="cf-platform-icon-btn" title="Bandcamp">
-                            <svg viewBox="0 0 24 24"><path d="M22 6H12l-2.5 4H2v8h20V6z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M0 18.75l7.437-13.5H24l-7.438 13.5H0z"/></svg>
                         </a>
                     <?php endif; ?>
                     <?php if ( ! empty( $streaming_links['amazon'] ) ) : ?>
                         <a href="<?php echo esc_url( $streaming_links['amazon'] ); ?>" target="_blank" class="cf-platform-icon-btn" title="Amazon Music">
-                            <svg viewBox="0 0 24 24"><path d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.525.13.12.172.09.336-.12.48-.256.19-.76.385-1.51.585-.797.252-1.597.504-2.402.754-3.158 1.006-6.626 1.51-10.406 1.51-4.324 0-8.162-.734-11.52-2.203-.176-.072-.296-.16-.36-.256-.1-.133-.076-.27.073-.41z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M14.8454 9.4083c-1.3907 1.0194-3.405 1.563-5.1424 1.563a9.333 9.333 0 0 1-6.2768-2.3835c-.1313-.117-.0143-.277.1415-.1846a12.693 12.693 0 0 0 6.285 1.6574c1.5384 0 3.2348-.318 4.7917-.9764.2359-.0985.4328.1538.203.324h-.002zm.5784-.6564c-.1784-.2257-1.1753-.1087-1.6225-.0554-.1374.0164-.158-.1026-.0349-.1867.796-.5558 2.0984-.3958 2.2502-.2092.1539.1867-.041 1.4872-.7856 2.1087-.1149.0964-.2236.0451-.1723-.082.1682-.4165.5436-1.3498.3651-1.5754zm-1.5917-4.1702v-.5394c0-.082.0615-.1375.1374-.1375h2.4348c.078 0 .1395.0554.1395.1354v.4636c0 .078-.0656.1805-.1846.3405L15.0997 6.635c.4677-.0102.9641.0595 1.3887.2974.0964.0534.123.1334.1292.2113v.5744c0 .082-.0882.1723-.1784.123a2.8163 2.8163 0 0 0-2.5723.0062c-.0861.0451-.1743-.0451-.1743-.1251v-.5477c0-.0882.002-.238.0902-.3713l1.4626-2.0881h-1.2718c-.078 0-.1415-.0534-.1436-.1354l.002.002zm4.808-.7466c1.0995 0 1.6944.9395 1.6944 2.1333 0 1.1528-.6564 2.0676-1.6943 2.0676-1.079 0-1.6656-.9395-1.6656-2.1087 0-1.1774.5948-2.0922 1.6656-2.0922zm.0062.7713c-.5456 0-.5805.7384-.5805 1.202 0 .4615-.0061 1.4481.5744 1.4481.5743 0 .601-.7958.601-1.282 0-.318-.0144-.6994-.1108-1.001-.082-.2625-.2482-.3671-.4841-.3671zm-6.008 3.3414c-.0493.041-.1395.0451-.1744.0164-.2543-.1949-.4246-.4923-.4246-.4923-.4061.4123-.6954.5374-1.2225.5374-.6215 0-1.1077-.3835-1.1077-1.1486a1.2512 1.2512 0 0 1 .7897-1.2041c.402-.1764.9641-.2072 1.3928-.2564 0 0 .0349-.4615-.0902-.6297a.521.521 0 0 0-.4164-.1908c-.2728 0-.5395.1477-.5928.4328-.0144.082-.0739.1518-.1395.1436L9.945 5.08a.1292.1292 0 0 1-.1108-.1537c.1641-.8657.9498-1.1282 1.6554-1.1282.361 0 .8307.0964 1.1158.3671.359.3344.3262.7795.3262 1.2677v1.1487c0 .3446.1436.4964.279.681.0471.0677.0574.1477-.002.197-.1519.125-.5703.4881-.5703.4881zm-.7467-1.7969v-.16c-.5353 0-1.1015.115-1.1015.7426 0 .318.1662.5333.4513.5333.2051 0 .3938-.1272.5128-.3344.1436-.2564.1374-.4943.1374-.7815zM2.9278 7.948c-.0472.041-.1375.045-.1723.0163-.2544-.1949-.4246-.4923-.4246-.4923-.4082.4123-.6954.5374-1.2226.5374-.6235 0-1.1076-.3835-1.1076-1.1486a1.2512 1.2512 0 0 1 .7897-1.2041c.402-.1764.964-.2072 1.3928-.2564 0 0 .0348-.4615-.0903-.6297a.521.521 0 0 0-.4164-.1908c-.2748 0-.5395.1477-.5928.4328-.0143.082-.0759.1518-.1395.1436L.2345 5.08a.1292.1292 0 0 1-.1087-.1537c.162-.8657.9497-1.1282 1.6553-1.1282.361 0 .8308.0964 1.1159.3671.359.3344.324 1.2677v1.1487c0 .3446.1437.4964.279.681.0472.0677.0575.1477-.002.197-.1518.125-.5702.4881-.5702.4881zm-.7446-1.797v-.16c-.5354 0-1.1015.115-1.1015.7426 0 .318.164.5333.4512.5333.2052 0 .3939-.1272.5128-.3344.1436-.2564.1375-.4943.1375-.7815zm2.9127-.3343v2.002a.1379.1379 0 0 1-.1395.1374H4.218a.1374.1374 0 0 1-.1395-.1374v-3.766a.1379.1379 0 0 1 .1395-.1375h.6913a.1374.1374 0 0 1 .1374.1374v.482h.0143c.1805-.4758.519-.6994.9744-.6994.4636 0 .7528.2236.962.6995a1.0523 1.0523 0 0 1 1.0215-.6995c.3118 0 .6502.1272.8574.4143.236.318.1867.7795.1867 1.1857v2.3855c0 .076-.0636.1354-.1436.1354H8.181a.1374.1374 0 0 1-.1334-.1354v-2.004c0-.16.0144-.558-.0205-.7077-.0554-.2564-.2215-.3282-.4369-.3282a.4923.4923 0 0 0-.441.3118c-.076.1908-.0698.5087-.0698.724v2.0041c0 .076-.0635.1354-.1435.1354h-.7385a.1374.1374 0 0 1-.1333-.1354v-2.004c0-.4226.0677-1.042-.4574-1.042-.5334 0-.5128.603-.5128 1.042h.002zm16.8077 2.002a.1374.1374 0 0 1-.1374.1374h-.7405a.1374.1374 0 0 1-.1374-.1374v-3.766a.1374.1374 0 0 1 .1374-.1375h.683c.0821 0 .1396.0636.1396.1067v.5764h.0143c.2051-.517.4964-.7631 1.0092-.7631.3323 0 .6564.119.8636.4451.1928.3036.1928.8123.1928 1.1774V7.837a.1395.1395 0 0 1-.1415.119h-.7426a.1395.1395 0 0 1-.1313-.119V5.552c0-.763-.2933-.7856-.4635-.7856-.197 0-.357.1538-.4246.2953a1.7025 1.7025 0 0 0-.1231.722l.002 2.0349zM.1914 20.0582c-.1271 0-.1907-.0615-.1907-.1907v-4.4491c0-.1272.0636-.1908.1907-.1908H.616c.0616 0 .1129.0144.1477.039.0349.0246.0595.0738.0718.1436l.0575.3035c.6133-.4184 1.2102-.6276 1.7907-.6276.5948 0 .9969.2256 1.2081.6769.6318-.4513 1.2636-.677 1.8954-.677.441 0 .7794.1231 1.0153.3693.236.2502.3549.603.3549 1.0584v3.3538c0 .1271-.0656.1907-.1928.1907h-.5641c-.1272 0-.1928-.0615-.1928-.1907v-3.085c0-.318-.0616-.5539-.1805-.7057-.1231-.1538-.3139-.2297-.5744-.2297-.4677 0-.9353.1436-1.4092.4307a.997.997 0 0 1 .0103.1416v3.448c0 .1272-.0636.1908-.1908.1908H3.297c-.1272 0-.1908-.0615-.1908-.1907v-3.085c0-.318-.0615-.5539-.1825-.7057-.1231-.1538-.3139-.2297-.5744-.2297-.4861 0-.9517.1395-1.399.4205v3.5999c0 .1271-.0615.1907-.1907.1907H.1914zm9.731.1436c-.4533 0-.8-.1272-1.044-.3815-.242-.2544-.3631-.6133-.3631-1.0769v-3.321c0-.1292.0615-.1927.1908-.1927h.564c.1293 0 .1929.0635.1929.1907v3.0215c0 .3425.0656.5948.201.7569.1333.162.3487.242.642.242.4595 0 .923-.1518 1.3887-.4574v-3.565c0-.1272.0615-.1908.1908-.1908h.564c.1293 0 .1929.0636.1929.1908v4.4511c0 .1252-.0636.1887-.1928.1887h-.4103c-.0636 0-.1149-.0123-.1497-.0369-.0349-.0266-.0575-.0738-.0718-.1436l-.0657-.3323c-.5948.437-1.204.6564-1.8297.6564zm5.4399 0c-.5374 0-1.0195-.0882-1.4461-.2666a.3754.3754 0 0 1-.158-.1047c-.0287-.039-.043-.0984-.043-.1805v-.2687c0-.1148.0369-.1723.1148-.1723.0452 0 .1231.0205.238.0575.4225.1333.8615.199 1.3128.199.3138 0 .5517-.0616.7138-.1806.164-.121.244-.2954.244-.523a.4923.4923 0 0 0-.1476-.3734 1.606 1.606 0 0 0-.5415-.285l-.8144-.3037c-.7097-.2605-1.0625-.7056-1.0625-1.3333 0-.4143.16-.7487.484-1.001.3221-.2543.7447-.3815 1.2677-.3815a3.487 3.487 0 0 1 1.2164.2195c.076.0246.1313.0574.1641.0985s.043.1026.043.1908v.2584c0 .1149-.041.1723-.123.1723a.8615.8615 0 0 1-.2216-.0472 3.5495 3.5495 0 0 0-1.0359-.1538c-.6112 0-.919.2072-.919.6195 0 .164.0514.2953.154.3897.1025.0964.3035.201.603.3159l.7466.2872c.3774.1436.6482.318.8144.519.1661.1989.2482.4574.2482.7753 0 .4513-.1682.8102-.5067 1.0769-.3385.2666-.7877.4-1.3497.4v.002zm3.0645-.1436c-.1272 0-.1928-.0615-.1928-.1907v-4.4491c0-.1272.0656-.1908.1928-.1908h.5641c.1272 0 .1928.0636.1928.1908v4.4511c0 .1251-.0656.1887-.1928.1887h-.564zm.2872-5.688c-.1846 0-.3303-.0513-.437-.1559a.558.558 0 0 1-.1579-.4143c0-.1724.0534-.3098.158-.4144a.5907.5907 0 0 1 .4369-.158c.1846 0 .3282.0534.4349.158.1066.1026.1579.242.1579.4144 0 .1702-.0513.3076-.158.4143-.1046.1026-.2502.1559-.4348.1559zm4.002 5.7926c-.7529 0-1.3293-.2133-1.7272-.642-.4-.4307-.599-1.0502-.599-1.8625 0-.8061.2052-1.4318.6175-1.8728.4102-.441.9948-.6625 1.7476-.6625.3446 0 .683.0615 1.0154.1825.0697.0247.119.0554.1477.0944s.043.1026.043.1908v.2564c0 .1271-.041.1907-.123.1907-.0329 0-.082-.0082-.1539-.0287a2.8307 2.8307 0 0 0-.7959-.1128c-.5353 0-.923.1333-1.1589.404s-.3528.6996-.3528 1.2924v.123c0 .5764.119 1.001.359 1.2718.24.2687.6174.404 1.1343.404.2666 0 .5538-.043.8615-.1332.0718-.0206.119-.0288.1436-.0288.082 0 .1251.0636.1251.1908v.2585c0 .082-.0123.1435-.039.1805-.0246.0369-.0759.0718-.1518.1025-.3138.1354-.6769.201-1.0933.201z"/></svg>
                         </a>
                     <?php endif; ?>
                     <?php if ( ! empty( $streaming_links['google_play'] ) ) : ?>
                         <a href="<?php echo esc_url( $streaming_links['google_play'] ); ?>" target="_blank" class="cf-platform-icon-btn" title="Google Play Music">
-                            <svg viewBox="0 0 24 24"><path d="M3.61 1.81A1.5 1.5 0 0 0 1.5 3.18v17.64a1.5 1.5 0 0 0 2.11 1.37l15.84-8.82a1.5 1.5 0 0 0 0-2.64L3.61 1.81zm1.39 3.4 10.38 5.79L5 16.79V5.21z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M22.018 13.298l-3.919 2.218-3.515-3.493 3.543-3.521 3.891 2.202a1.49 1.49 0 0 1 0 2.594zM1.337.924a1.486 1.486 0 0 0-.112.568v21.017c0 .217.045.419.124.6l11.155-11.087L1.337.924zm12.207 10.065l3.258-3.238L3.45.195a1.466 1.466 0 0 0-.946-.179l11.04 10.973zm0 2.067l-11 10.933c.298.036.612-.016.906-.183l13.324-7.54-3.23-3.21z"/></svg>
                         </a>
                     <?php endif; ?>
                 </div>
@@ -416,6 +412,56 @@ $comments_count = count($track_comments);
                                     </li>
                                 <?php endforeach; ?>
                             </ul>
+                            <?php if ( $comment_total_pages > 1 ) :
+                                $comment_pages = array();
+                                if ( $comment_total_pages <= 9 ) {
+                                    for ( $i = 1; $i <= $comment_total_pages; $i++ ) {
+                                        $comment_pages[] = $i;
+                                    }
+                                } elseif ( $comment_page <= 5 ) {
+                                    for ( $i = 1; $i <= 8; $i++ ) {
+                                        $comment_pages[] = $i;
+                                    }
+                                    $comment_pages[] = '…';
+                                    $comment_pages[] = $comment_total_pages;
+                                } elseif ( $comment_page >= $comment_total_pages - 4 ) {
+                                    $comment_pages[] = 1;
+                                    $comment_pages[] = '…';
+                                    for ( $i = $comment_total_pages - 7; $i <= $comment_total_pages; $i++ ) {
+                                        $comment_pages[] = $i;
+                                    }
+                                } else {
+                                    $comment_pages[] = 1;
+                                    $comment_pages[] = '…';
+                                    for ( $i = $comment_page - 2; $i <= $comment_page + 2; $i++ ) {
+                                        $comment_pages[] = $i;
+                                    }
+                                    $comment_pages[] = '…';
+                                    $comment_pages[] = $comment_total_pages;
+                                }
+                                $comment_base = get_permalink( $track_id );
+                                ?>
+                            <div class="cf-pagination-wrap">
+                                <nav class="cf-pagination" aria-label="<?php esc_attr_e( 'Comments pagination', 'collective-finity' ); ?>">
+                                    <div class="cf-pagination-pages">
+                                        <?php foreach ( $comment_pages as $p ) : ?>
+                                            <?php if ( $p === '…' ) : ?>
+                                                <span class="cf-pagination-ellipsis" aria-hidden="true">…</span>
+                                            <?php elseif ( (int) $p === $comment_page ) : ?>
+                                                <span class="cf-pagination-page is-active" aria-current="page"><?php echo (int) $p; ?></span>
+                                            <?php else : ?>
+                                                <a class="cf-pagination-page" href="<?php echo esc_url( add_query_arg( 'cf_comment_page', (int) $p, $comment_base ) . '#cf-track-comments' ); ?>"><?php echo (int) $p; ?></a>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                        <?php if ( $comment_page < $comment_total_pages ) : ?>
+                                            <a class="cf-pagination-page cf-pagination-next" href="<?php echo esc_url( add_query_arg( 'cf_comment_page', $comment_page + 1, $comment_base ) . '#cf-track-comments' ); ?>">
+                                                <?php esc_html_e( 'Next', 'collective-finity' ); ?>
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
+                                </nav>
+                            </div>
+                            <?php endif; ?>
                         <?php else : ?>
                             <p class="cf-empty-comments-message" style="color:#666; font-style:italic; padding: 20px; background:rgba(255,255,255,0.01); border-radius:6px; border:1px solid rgba(255,255,255,0.03);"><?php _e( 'No comments yet. Share your cinematic connection with this track first!', 'collective-finity' ); ?></p>
                         <?php endif; ?>
@@ -502,16 +548,15 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
 .cf-container { width: 90%; max-width: 1100px; margin: 0 auto; box-sizing: border-box; }
 .cf-track-header-layout { display: flex; align-items: center; gap: 50px; margin-bottom: 0; flex-wrap: wrap; min-width: 0; max-width: 100%; }
 
-/* 2. Visualizer Canvas styling (Upgraded for fluid aspect-ratio mobile responsiveness) */
+/* 2. Cover art planet sphere (CSS-only ambient motion) */
 .cf-vinyl-wrapper { flex: 1 1 250px; min-width: 0; max-width: 100%; display: flex; flex-direction: column; align-items: center; position: relative; }
 .cf-vinyl-inner { position: relative; width: 100%; max-width: 340px; aspect-ratio: 1 / 1; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
-#cf-circular-visualizer { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; max-width: 360px; max-height: 360px; z-index: 1; pointer-events: none; }
-.cf-vinyl-disc { width: 82% !important; height: 82% !important; max-width: 280px; max-height: 280px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 0 25px rgba(0,0,0,0.8); object-fit: cover; z-index: 2; transition: transform 0.2s, box-shadow 0.2s; }
-.cf-vinyl-disc.playing { animation: spin 15s linear infinite; }
-.cf-visualizer-selector-wrapper { text-align: center; width: 100%; max-width: 320px; margin-top: 10px; }
-.cf-visualizer-selector-wrapper label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 8px; color: #888; letter-spacing: 0.08em; text-transform: uppercase; }
-#cf-visualizer-type { width: 100%; background: rgba(26,26,26,0.9); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 13px; cursor: pointer; }
-#cf-visualizer-type:focus { border-color: var(--primary-color); outline: none; }
+.cf-vinyl-planet { position: relative; width: 82%; max-width: 280px; aspect-ratio: 1 / 1; border-radius: 50%; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 0 25px rgba(0,0,0,0.8), inset 0 0 40px rgba(0,0,0,0.35); }
+.cf-vinyl-disc { display: block; width: 100% !important; height: 100% !important; max-width: none; border-radius: 50%; object-fit: cover; position: relative; z-index: 1; }
+.cf-vinyl-sphere-shade { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; z-index: 2; background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.08) 28%, transparent 48%, rgba(0,0,0,0.25) 72%, rgba(0,0,0,0.55) 100%); }
+.cf-vinyl-sphere-sheen { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; z-index: 3; overflow: hidden; }
+.cf-vinyl-sphere-sheen::before { content: ''; position: absolute; top: -12%; bottom: -12%; width: 26%; left: -35%; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 35%, rgba(255,255,255,0.28) 50%, rgba(255,255,255,0.08) 65%, transparent 100%); transform: skewX(-8deg); animation: cf-planet-sheen 8s linear infinite; }
+@keyframes cf-planet-sheen { 0% { transform: skewX(-8deg) translateX(0); } 100% { transform: skewX(-8deg) translateX(480%); } }
 
 /* 3. Central Details Panel Styles */
 .cf-details-panel { flex: 1.5 1 300px; min-width: 0; max-width: 100%; box-sizing: border-box; padding: 36px; border-radius: 18px; text-align: left; }
@@ -570,14 +615,15 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
 .cf-entry-content a { color: var(--text-color); text-decoration: underline; transition: color 0.25s; }
 .cf-entry-content a:hover { color: var(--primary-color); }
 
-/* 4. Upgraded Metadata Cards */
-.cf-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 40px; }
-.cf-meta-box { padding: 25px; border-radius: 12px; text-align: center; display: flex; flex-direction: column; align-items: center; transition: border-color 0.25s, transform 0.25s; border: 1px solid rgba(255,255,255,0.05); }
-.cf-meta-box:hover { border-color: rgba(255, 183, 0, 0.4); transform: translateY(-2px); }
-.cf-meta-icon { font-size: 24px; color: #FFFFFF; margin-bottom: 12px; transition: color 0.25s; }
+/* 4. Compact metadata pills */
+.cf-meta-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 40px; }
+.cf-meta-box { width: fit-content; max-width: 100%; padding: 8px 14px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; transition: border-color 0.25s, transform 0.25s; border: 1px solid rgba(255,255,255,0.08); }
+.cf-meta-box:hover { border-color: rgba(255, 183, 0, 0.4); transform: translateY(-1px); }
+.cf-meta-left { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.cf-meta-icon { font-size: 14px; width: 14px; height: 14px; color: #FFFFFF; margin: 0; transition: color 0.25s; }
 .cf-meta-box:hover .cf-meta-icon { color: var(--primary-color); }
-.cf-meta-title { display: block; font-size: 11px; color: #888; margin-bottom: 8px; font-weight: bold; letter-spacing: 1px; }
-.cf-meta-value { font-size: 18px; font-weight: bold; color: #fff; }
+.cf-meta-title { display: inline; font-size: 10px; color: #888; margin: 0; font-weight: bold; letter-spacing: 0.06em; white-space: nowrap; }
+.cf-meta-value { font-size: 13px; font-weight: bold; color: #fff; white-space: nowrap; }
 
 /* 5. External Platforms Grid with Styled Icons */
 .cf-external-platforms-wrapper { padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 40px; }
@@ -612,13 +658,8 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
 /* Custom Comment Meta style fixes */
 .cf-comment-list-item .avatar { border-radius: 50% !important; border: 1px solid var(--primary-color) !important; }
 
-@keyframes spin { 100% { transform: rotate(360deg); } }
-
 /* TABLET & MOBILE MEDIA QUERIES FOR PERFECT FLUID RESPONSIVENESS */
 @media(max-width: 1024px) {
-    .cf-meta-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
     .cf-track-header-layout {
         gap: 36px;
     }
@@ -663,8 +704,11 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
         justify-content: center !important;
     }
     .cf-meta-grid {
-        grid-template-columns: 1fr !important; /* Stacks cards cleanly on smaller phones */
-        gap: 15px !important;
+        gap: 10px !important;
+    }
+    .cf-meta-box {
+        width: 100%;
+        justify-content: space-between;
     }
     .cf-form-row-flex {
         flex-direction: column !important;
@@ -739,643 +783,8 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
                 });
             });
 
-            audio.addEventListener('play', function() {
-                var vinyl = document.getElementById('cf-track-spinning-vinyl');
-                if (vinyl) {
-                    vinyl.classList.add('playing');
-                }
-            });
-            audio.addEventListener('pause', function() {
-                var vinyl = document.getElementById('cf-track-spinning-vinyl');
-                if (vinyl) {
-                    vinyl.classList.remove('playing');
-                }
-            });
-        }
-
-        var vinylEl = document.getElementById('cf-track-spinning-vinyl');
-        if (vinylEl) {
-            vinylEl.classList.toggle('playing', !audio.paused && !!audio.src);
         }
     }
-
-
-    // --- 5. Web Audio API circular visualizer (12 rotating multi-color styles) ---
-    var audioContext;
-    var analyser;
-    var source;
-    var canvas = document.getElementById('cf-circular-visualizer');
-    var ctx = canvas ? canvas.getContext('2d') : null;
-    var bufferLength;
-    var dataArray;
-
-    // Brand gold first, then bright saturated accents (never gray).
-    var CF_VIZ_PALETTE = [
-        [255, 183, 0],   // #FFB700 brand gold
-        [255, 59, 48],   // bright red
-        [191, 90, 242],  // bright purple
-        [10, 132, 255],  // bright blue
-        [255, 149, 0]    // bright orange
-    ];
-    var colorPhase = 0;
-    var vizEmbers = [];
-    var vizSmoke = [];
-    var vizDrips = [];
-    var vizCracks = null;
-    var vizFrost = null;
-    var vizShards = null;
-    var radarAngle = 0;
-    var breathePhase = 0;
-
-    function vizEnergy(from, to) {
-        var sum = 0;
-        var n = 0;
-        var end = Math.min(to, bufferLength);
-        for (var i = from; i < end; i++) {
-            sum += dataArray[i];
-            n++;
-        }
-        return n ? sum / (n * 255) : 0;
-    }
-
-    function vizUpdateColorPhase() {
-        var full = vizEnergy(0, bufferLength);
-        var bass = vizEnergy(0, 10);
-        colorPhase += 0.002 + full * 0.008 + bass * 0.006;
-    }
-
-    function vizRgbAtAngle(angleRad) {
-        var t = (angleRad / (Math.PI * 2)) + colorPhase;
-        t = t - Math.floor(t);
-        var scaled = t * CF_VIZ_PALETTE.length;
-        var i0 = Math.floor(scaled) % CF_VIZ_PALETTE.length;
-        var i1 = (i0 + 1) % CF_VIZ_PALETTE.length;
-        var f = scaled - Math.floor(scaled);
-        f = f * f * (3 - 2 * f);
-        var c0 = CF_VIZ_PALETTE[i0];
-        var c1 = CF_VIZ_PALETTE[i1];
-        return [
-            Math.round(c0[0] + (c1[0] - c0[0]) * f),
-            Math.round(c0[1] + (c1[1] - c0[1]) * f),
-            Math.round(c0[2] + (c1[2] - c0[2]) * f)
-        ];
-    }
-
-    function vizColorAtAngle(angleRad, alpha) {
-        var rgb = vizRgbAtAngle(angleRad);
-        var a = (typeof alpha === 'number') ? alpha : 1;
-        return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + a + ')';
-    }
-
-    function vizSeedCracks(radius) {
-        var cracks = [];
-        for (var i = 0; i < 14; i++) {
-            var base = (Math.PI * 2 / 14) * i + (Math.random() - 0.5) * 0.25;
-            var segs = [];
-            var ang = base;
-            var dist = radius + 2;
-            segs.push({ a: ang, r: dist });
-            var steps = 3 + Math.floor(Math.random() * 3);
-            for (var s = 0; s < steps; s++) {
-                ang += (Math.random() - 0.5) * 0.55;
-                dist += 8 + Math.random() * 14;
-                segs.push({ a: ang, r: dist });
-            }
-            cracks.push(segs);
-        }
-        return cracks;
-    }
-
-    function vizSeedFrost(radius) {
-        var veins = [];
-        for (var i = 0; i < 18; i++) {
-            var base = (Math.PI * 2 / 18) * i + (Math.random() - 0.5) * 0.2;
-            var branches = [];
-            var main = [];
-            var ang = base;
-            var dist = radius + 1;
-            main.push({ a: ang, r: dist });
-            var len = 4 + Math.floor(Math.random() * 3);
-            for (var s = 0; s < len; s++) {
-                ang += (Math.random() - 0.5) * 0.35;
-                dist += 6 + Math.random() * 10;
-                main.push({ a: ang, r: dist });
-                if (s > 0 && Math.random() > 0.55) {
-                    var ba = ang + (Math.random() > 0.5 ? 0.4 : -0.4);
-                    var br = dist + 4 + Math.random() * 8;
-                    branches.push([
-                        { a: ang, r: dist },
-                        { a: ba, r: br }
-                    ]);
-                }
-            }
-            veins.push({ main: main, branches: branches });
-        }
-        return veins;
-    }
-
-    function vizSeedShards(radius) {
-        var shards = [];
-        for (var i = 0; i < 20; i++) {
-            var a = (Math.PI * 2 / 20) * i + (Math.random() - 0.5) * 0.15;
-            shards.push({
-                a: a,
-                spread: 0.06 + Math.random() * 0.08,
-                baseLen: 10 + Math.random() * 16,
-                tipBias: (Math.random() - 0.5) * 0.08
-            });
-        }
-        return shards;
-    }
-
-    function vizApplyRadialFade(centerX, centerY, canvasW, canvasH) {
-        var fadeRadius = Math.min(canvasW, canvasH) * 0.5;
-        var fadeGrad = ctx.createRadialGradient(centerX, centerY, fadeRadius * 0.3, centerX, centerY, fadeRadius);
-        fadeGrad.addColorStop(0, 'rgba(255,255,255,1)');
-        fadeGrad.addColorStop(0.9, 'rgba(255,255,255,1)');
-        fadeGrad.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.globalCompositeOperation = 'destination-in';
-        ctx.fillStyle = fadeGrad;
-        ctx.fillRect(0, 0, canvasW, canvasH);
-        ctx.globalCompositeOperation = 'source-over';
-    }
-
-    function initVisualizer() {
-        if (!audio) {
-            return;
-        }
-
-        // Reuse existing graph if MediaElementSource was already created for this element.
-        if (audio.__cfVizMediaSourceConnected) {
-            var existing = audio.__cfVizGraph;
-            if (existing) {
-                audioContext = existing.audioContext;
-                analyser = existing.analyser;
-                source = existing.source;
-                bufferLength = existing.bufferLength;
-                dataArray = existing.dataArray;
-                if (audioContext && audioContext.state === 'suspended') {
-                    audioContext.resume();
-                }
-                if (!vizDrawLoopStarted) {
-                    vizDrawLoopStarted = true;
-                    drawVisualizer();
-                }
-            }
-            return;
-        }
-
-        try {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioContext.createAnalyser();
-
-            source = audioContext.createMediaElementSource(audio);
-            source.connect(analyser);
-            analyser.connect(audioContext.destination);
-
-            analyser.fftSize = 256;
-            bufferLength = analyser.frequencyBinCount;
-            dataArray = new Uint8Array(bufferLength);
-
-            audio.__cfVizMediaSourceConnected = true;
-            audio.__cfVizGraph = {
-                audioContext: audioContext,
-                analyser: analyser,
-                source: source,
-                bufferLength: bufferLength,
-                dataArray: dataArray
-            };
-            window.cfAudioMediaSourceConnected = true;
-
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-            if (!vizDrawLoopStarted) {
-                vizDrawLoopStarted = true;
-                drawVisualizer();
-            }
-        } catch(e) {
-            // Web Audio API unavailable or MediaElementSource already connected elsewhere.
-        }
-    }
-
-    var vizDrawLoopStarted = false;
-
-    function drawVisualizer() {
-        requestAnimationFrame(drawVisualizer);
-        if (!analyser) return;
-
-        if (!canvas || !document.body.contains(canvas)) {
-            canvas = document.getElementById('cf-circular-visualizer');
-            if (!canvas) {
-                return;
-            }
-            ctx = canvas.getContext('2d');
-        }
-
-        analyser.getByteFrequencyData(dataArray);
-
-        if (!canvas || !ctx) {
-            return;
-        }
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        var centerX = canvas.width / 2;
-        var centerY = canvas.height / 2;
-        var radius = 142;
-        var selectedStyle = $('#cf-visualizer-type').val();
-        var bass = vizEnergy(0, 10);
-        var mid = vizEnergy(10, 40);
-        var full = vizEnergy(0, bufferLength);
-
-        vizUpdateColorPhase();
-
-        if (selectedStyle === 'spectrum_bars') {
-            var bars = 64;
-            var barWidth = (Math.PI * 2 * radius) / bars * 0.55;
-            for (var i = 0; i < bars; i++) {
-                var val = dataArray[i % bufferLength];
-                var barHeight = 4 + (val / 255) * 28;
-                var rads = (Math.PI * 2 / bars) * i;
-                var cos = Math.cos(rads);
-                var sin = Math.sin(rads);
-                var x0 = centerX + cos * radius;
-                var y0 = centerY + sin * radius;
-                var x1 = centerX + cos * (radius + barHeight);
-                var y1 = centerY + sin * (radius + barHeight);
-                var inten = 0.45 + (val / 255) * 0.55;
-                ctx.strokeStyle = vizColorAtAngle(rads, inten);
-                ctx.lineWidth = Math.max(2, barWidth * 0.35);
-                ctx.lineCap = 'round';
-                ctx.shadowBlur = 6 + (val / 255) * 10;
-                ctx.shadowColor = vizColorAtAngle(rads, 0.7);
-                ctx.beginPath();
-                ctx.moveTo(x0, y0);
-                ctx.lineTo(x1, y1);
-                ctx.stroke();
-            }
-            ctx.shadowBlur = 0;
-            ctx.lineCap = 'butt';
-        }
-        else if (selectedStyle === 'aurora_fill') {
-            var haloR = radius + 55 + bass * 25 + mid * 10;
-            var steps = 48;
-            for (var ai = 0; ai < steps; ai++) {
-                var a0 = (Math.PI * 2 / steps) * ai;
-                var a1 = (Math.PI * 2 / steps) * (ai + 1.15);
-                var rgb = vizRgbAtAngle(a0);
-                var alpha = 0.12 + bass * 0.35 + full * 0.15;
-                var grad = ctx.createRadialGradient(centerX, centerY, radius * 0.85, centerX, centerY, haloR);
-                grad.addColorStop(0, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0)');
-                grad.addColorStop(0.45, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + (alpha * 0.35) + ')');
-                grad.addColorStop(0.75, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + alpha + ')');
-                grad.addColorStop(1, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0)');
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, haloR, a0, a1);
-                ctx.closePath();
-                ctx.fillStyle = grad;
-                ctx.fill();
-            }
-        }
-        else if (selectedStyle === 'ember_drift') {
-            var spawnRate = 0.35 + full * 2.5 + bass * 1.5;
-            for (var e = 0; e < spawnRate; e++) {
-                if (vizEmbers.length > 80) break;
-                var ea = Math.random() * Math.PI * 2;
-                var er = radius + 4 + Math.random() * 18;
-                vizEmbers.push({
-                    a: ea,
-                    r: er,
-                    life: 1,
-                    decay: 0.008 + Math.random() * 0.012,
-                    drift: (Math.random() - 0.5) * 0.02,
-                    rise: 0.35 + Math.random() * 0.55,
-                    size: 1.2 + Math.random() * 2.2
-                });
-            }
-            for (var ei = vizEmbers.length - 1; ei >= 0; ei--) {
-                var em = vizEmbers[ei];
-                em.a += em.drift + (full - 0.5) * 0.01;
-                em.r += em.rise * (0.6 + bass * 1.4);
-                em.life -= em.decay * (0.7 + full);
-                if (em.life <= 0 || em.r > radius + 90) {
-                    vizEmbers.splice(ei, 1);
-                    continue;
-                }
-                var ex = centerX + Math.cos(em.a) * em.r;
-                var ey = centerY + Math.sin(em.a) * em.r;
-                ctx.beginPath();
-                ctx.arc(ex, ey, em.size * em.life, 0, Math.PI * 2);
-                ctx.fillStyle = vizColorAtAngle(em.a, 0.35 + em.life * 0.65);
-                ctx.shadowBlur = 8 + em.life * 10;
-                ctx.shadowColor = vizColorAtAngle(em.a, 0.8);
-                ctx.fill();
-            }
-            ctx.shadowBlur = 0;
-        }
-        else if (selectedStyle === 'crimson_pulse_ring') {
-            var pulse = 1 + bass * 0.18 + mid * 0.06;
-            var ringR = radius + 6 + bass * 14;
-            var segs = 72;
-            ctx.lineWidth = 1.5 + bass * 2.5;
-            ctx.lineCap = 'round';
-            for (var pi = 0; pi < segs; pi++) {
-                var pa0 = (Math.PI * 2 / segs) * pi;
-                var pa1 = (Math.PI * 2 / segs) * (pi + 1);
-                var pr = ringR * pulse;
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, pr, pa0, pa1);
-                ctx.strokeStyle = vizColorAtAngle(pa0, 0.55 + bass * 0.45);
-                ctx.shadowBlur = 8 + bass * 22;
-                ctx.shadowColor = vizColorAtAngle(pa0, 0.85);
-                ctx.stroke();
-            }
-            ctx.shadowBlur = 0;
-            ctx.lineCap = 'butt';
-        }
-        else if (selectedStyle === 'smoke_wisp') {
-            var smokeSpawn = 0.2 + full * 1.4;
-            for (var ss = 0; ss < smokeSpawn; ss++) {
-                if (vizSmoke.length > 36) break;
-                vizSmoke.push({
-                    a: Math.random() * Math.PI * 2,
-                    r: radius + 2 + Math.random() * 8,
-                    life: 1,
-                    decay: 0.006 + Math.random() * 0.008,
-                    swirl: (Math.random() > 0.5 ? 1 : -1) * (0.012 + Math.random() * 0.02),
-                    widen: 0.2 + Math.random() * 0.35,
-                    phase: Math.random() * Math.PI * 2
-                });
-            }
-            for (var si = vizSmoke.length - 1; si >= 0; si--) {
-                var sm = vizSmoke[si];
-                sm.phase += 0.08 + mid * 0.12;
-                sm.a += sm.swirl * (0.7 + full);
-                sm.r += 0.45 + bass * 0.9;
-                sm.life -= sm.decay * (0.8 + full * 0.6);
-                if (sm.life <= 0 || sm.r > radius + 85) {
-                    vizSmoke.splice(si, 1);
-                    continue;
-                }
-                var ribbon = 10 + sm.widen * 40 * (1 - sm.life * 0.3);
-                ctx.beginPath();
-                for (var t = 0; t <= 8; t++) {
-                    var tt = t / 8;
-                    var ra = sm.a + Math.sin(sm.phase + tt * 2.5) * 0.35 * tt;
-                    var rr = sm.r + tt * ribbon * 0.35;
-                    var sx = centerX + Math.cos(ra) * rr;
-                    var sy = centerY + Math.sin(ra) * rr;
-                    if (t === 0) ctx.moveTo(sx, sy);
-                    else ctx.lineTo(sx, sy);
-                }
-                ctx.strokeStyle = vizColorAtAngle(sm.a, 0.08 + sm.life * 0.28);
-                ctx.lineWidth = 6 + (1 - sm.life) * 10;
-                ctx.lineCap = 'round';
-                ctx.shadowBlur = 14;
-                ctx.shadowColor = vizColorAtAngle(sm.a, 0.35);
-                ctx.stroke();
-            }
-            ctx.shadowBlur = 0;
-            ctx.lineCap = 'butt';
-        }
-        else if (selectedStyle === 'shard_fracture') {
-            if (!vizShards) vizShards = vizSeedShards(radius);
-            for (var sh = 0; sh < vizShards.length; sh++) {
-                var shard = vizShards[sh];
-                var sval = dataArray[sh % bufferLength] / 255;
-                var len = shard.baseLen * (0.55 + sval * 1.35 + bass * 0.5);
-                var aL = shard.a - shard.spread;
-                var aR = shard.a + shard.spread;
-                var aT = shard.a + shard.tipBias;
-                var xL = centerX + Math.cos(aL) * radius;
-                var yL = centerY + Math.sin(aL) * radius;
-                var xR = centerX + Math.cos(aR) * radius;
-                var yR = centerY + Math.sin(aR) * radius;
-                var xT = centerX + Math.cos(aT) * (radius + len);
-                var yT = centerY + Math.sin(aT) * (radius + len);
-                ctx.beginPath();
-                ctx.moveTo(xL, yL);
-                ctx.lineTo(xT, yT);
-                ctx.lineTo(xR, yR);
-                ctx.closePath();
-                ctx.fillStyle = vizColorAtAngle(shard.a, 0.25 + sval * 0.55);
-                ctx.strokeStyle = vizColorAtAngle(shard.a, 0.55 + sval * 0.45);
-                ctx.lineWidth = 1;
-                ctx.shadowBlur = 4 + sval * 12;
-                ctx.shadowColor = vizColorAtAngle(shard.a, 0.7);
-                ctx.fill();
-                ctx.stroke();
-            }
-            ctx.shadowBlur = 0;
-        }
-        else if (selectedStyle === 'radar_sweep') {
-            radarAngle += 0.025 + full * 0.08 + bass * 0.06;
-            var sweepLen = Math.PI * 0.55;
-            var trailSteps = 40;
-            for (var ri = 0; ri < trailSteps; ri++) {
-                var frac = ri / trailSteps;
-                var ra0 = radarAngle - sweepLen * (1 - frac);
-                var ra1 = radarAngle - sweepLen * (1 - (ri + 1) / trailSteps);
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radius + 38 + bass * 12, ra0, ra1);
-                ctx.closePath();
-                ctx.fillStyle = vizColorAtAngle(ra0, 0.02 + frac * 0.22 * (0.4 + full));
-                ctx.fill();
-            }
-            ctx.beginPath();
-            ctx.moveTo(centerX + Math.cos(radarAngle) * (radius - 4), centerY + Math.sin(radarAngle) * (radius - 4));
-            ctx.lineTo(centerX + Math.cos(radarAngle) * (radius + 42 + bass * 14), centerY + Math.sin(radarAngle) * (radius + 42 + bass * 14));
-            ctx.strokeStyle = vizColorAtAngle(radarAngle, 0.85 + bass * 0.15);
-            ctx.lineWidth = 2;
-            ctx.shadowBlur = 12 + bass * 16;
-            ctx.shadowColor = vizColorAtAngle(radarAngle, 0.9);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius + 2, 0, Math.PI * 2);
-            ctx.strokeStyle = vizColorAtAngle(radarAngle, 0.2 + mid * 0.25);
-            ctx.lineWidth = 1;
-            ctx.shadowBlur = 0;
-            ctx.stroke();
-        }
-        else if (selectedStyle === 'ink_bleed') {
-            var bleedR = radius + 20 + bass * 40 + mid * 15;
-            var inkSteps = 36;
-            for (var ii = 0; ii < inkSteps; ii++) {
-                var ia = (Math.PI * 2 / inkSteps) * ii;
-                var wobble = 1 + Math.sin(ia * 3 + colorPhase * 4) * 0.08 * (0.5 + full);
-                var ir = bleedR * wobble;
-                var rgb = vizRgbAtAngle(ia);
-                var alpha = 0.18 + bass * 0.4;
-                var igrad = ctx.createRadialGradient(
-                    centerX + Math.cos(ia) * radius,
-                    centerY + Math.sin(ia) * radius,
-                    2,
-                    centerX + Math.cos(ia) * radius,
-                    centerY + Math.sin(ia) * radius,
-                    ir - radius + 8
-                );
-                igrad.addColorStop(0, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + alpha + ')');
-                igrad.addColorStop(0.55, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + (alpha * 0.35) + ')');
-                igrad.addColorStop(1, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0)');
-                ctx.beginPath();
-                ctx.arc(
-                    centerX + Math.cos(ia) * (radius + 4),
-                    centerY + Math.sin(ia) * (radius + 4),
-                    (ir - radius) * 0.9,
-                    0,
-                    Math.PI * 2
-                );
-                ctx.fillStyle = igrad;
-                ctx.fill();
-            }
-        }
-        else if (selectedStyle === 'frost_veins') {
-            if (!vizFrost) vizFrost = vizSeedFrost(radius);
-            for (var fi = 0; fi < vizFrost.length; fi++) {
-                var vein = vizFrost[fi];
-                var fval = dataArray[fi % bufferLength] / 255;
-                var fAlpha = 0.25 + fval * 0.55 + bass * 0.2;
-                var baseA = vein.main[0].a;
-                ctx.beginPath();
-                for (var fm = 0; fm < vein.main.length; fm++) {
-                    var mp = vein.main[fm];
-                    var mx = centerX + Math.cos(mp.a) * mp.r;
-                    var my = centerY + Math.sin(mp.a) * mp.r;
-                    if (fm === 0) ctx.moveTo(mx, my);
-                    else ctx.lineTo(mx, my);
-                }
-                ctx.strokeStyle = vizColorAtAngle(baseA, fAlpha);
-                ctx.lineWidth = 1 + fval * 1.5;
-                ctx.shadowBlur = 3 + fval * 8;
-                ctx.shadowColor = vizColorAtAngle(baseA, 0.7);
-                ctx.stroke();
-                for (var fb = 0; fb < vein.branches.length; fb++) {
-                    var br = vein.branches[fb];
-                    ctx.beginPath();
-                    ctx.moveTo(centerX + Math.cos(br[0].a) * br[0].r, centerY + Math.sin(br[0].a) * br[0].r);
-                    ctx.lineTo(centerX + Math.cos(br[1].a) * br[1].r, centerY + Math.sin(br[1].a) * br[1].r);
-                    ctx.strokeStyle = vizColorAtAngle(br[0].a, fAlpha * 0.75);
-                    ctx.lineWidth = 0.8;
-                    ctx.stroke();
-                }
-            }
-            ctx.shadowBlur = 0;
-        }
-        else if (selectedStyle === 'blood_drip_trails') {
-            var dripSpawn = 0.15 + bass * 1.8 + full * 0.6;
-            for (var ds = 0; ds < dripSpawn; ds++) {
-                if (vizDrips.length > 50) break;
-                var da = Math.random() * Math.PI * 2;
-                // Irregular clusters: bias some angles
-                if (Math.random() > 0.7) da = Math.floor(Math.random() * 8) * (Math.PI / 4) + (Math.random() - 0.5) * 0.3;
-                vizDrips.push({
-                    a: da,
-                    r: radius + 48 + Math.random() * 22,
-                    target: radius + 2 + Math.random() * 6,
-                    speed: 0.4 + Math.random() * 0.9,
-                    life: 1,
-                    thickness: 1 + Math.random() * 1.8,
-                    wobble: (Math.random() - 0.5) * 0.03,
-                    trail: []
-                });
-            }
-            for (var di = vizDrips.length - 1; di >= 0; di--) {
-                var dr = vizDrips[di];
-                dr.a += dr.wobble * (0.5 + mid);
-                dr.r -= dr.speed * (0.7 + bass * 1.5 + full * 0.5);
-                dr.trail.push({ a: dr.a, r: dr.r });
-                if (dr.trail.length > 12) dr.trail.shift();
-                if (dr.r <= dr.target) {
-                    dr.life -= 0.04;
-                }
-                if (dr.life <= 0) {
-                    vizDrips.splice(di, 1);
-                    continue;
-                }
-                ctx.beginPath();
-                for (var dt = 0; dt < dr.trail.length; dt++) {
-                    var tp = dr.trail[dt];
-                    var tx = centerX + Math.cos(tp.a) * tp.r;
-                    var ty = centerY + Math.sin(tp.a) * tp.r;
-                    if (dt === 0) ctx.moveTo(tx, ty);
-                    else ctx.lineTo(tx, ty);
-                }
-                ctx.strokeStyle = vizColorAtAngle(dr.a, 0.35 + dr.life * 0.55);
-                ctx.lineWidth = dr.thickness;
-                ctx.lineCap = 'round';
-                ctx.shadowBlur = 5;
-                ctx.shadowColor = vizColorAtAngle(dr.a, 0.6);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.arc(centerX + Math.cos(dr.a) * dr.r, centerY + Math.sin(dr.a) * dr.r, dr.thickness * 0.9, 0, Math.PI * 2);
-                ctx.fillStyle = vizColorAtAngle(dr.a, 0.5 + dr.life * 0.5);
-                ctx.fill();
-            }
-            ctx.shadowBlur = 0;
-            ctx.lineCap = 'butt';
-        }
-        else if (selectedStyle === 'halo_breathe') {
-            breathePhase += 0.02 + full * 0.04;
-            var breath = 0.5 + 0.5 * Math.sin(breathePhase);
-            var breathBoost = breath * (0.65 + bass * 0.7 + mid * 0.25);
-            var haloInner = radius + 2;
-            var haloOuter = radius + 28 + breathBoost * 42;
-            var hSteps = 40;
-            for (var hi = 0; hi < hSteps; hi++) {
-                var ha0 = (Math.PI * 2 / hSteps) * hi;
-                var ha1 = (Math.PI * 2 / hSteps) * (hi + 1.2);
-                var hrgb = vizRgbAtAngle(ha0);
-                var hAlpha = 0.1 + breathBoost * 0.35;
-                var hgrad = ctx.createRadialGradient(centerX, centerY, haloInner, centerX, centerY, haloOuter);
-                hgrad.addColorStop(0, 'rgba(' + hrgb[0] + ',' + hrgb[1] + ',' + hrgb[2] + ',0)');
-                hgrad.addColorStop(0.55, 'rgba(' + hrgb[0] + ',' + hrgb[1] + ',' + hrgb[2] + ',' + (hAlpha * 0.45) + ')');
-                hgrad.addColorStop(0.85, 'rgba(' + hrgb[0] + ',' + hrgb[1] + ',' + hrgb[2] + ',' + hAlpha + ')');
-                hgrad.addColorStop(1, 'rgba(' + hrgb[0] + ',' + hrgb[1] + ',' + hrgb[2] + ',0)');
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, haloOuter, ha0, ha1);
-                ctx.closePath();
-                ctx.fillStyle = hgrad;
-                ctx.fill();
-            }
-        }
-        else if (selectedStyle === 'fracture_cracks') {
-            if (!vizCracks) vizCracks = vizSeedCracks(radius);
-            var intensity = 0.2 + bass * 0.8 + mid * 0.25;
-            for (var ci = 0; ci < vizCracks.length; ci++) {
-                var crack = vizCracks[ci];
-                var cval = dataArray[ci % bufferLength] / 255;
-                var cAlpha = intensity * (0.35 + cval * 0.65);
-                ctx.beginPath();
-                for (var cs = 0; cs < crack.length; cs++) {
-                    var cp = crack[cs];
-                    var cx = centerX + Math.cos(cp.a) * cp.r;
-                    var cy = centerY + Math.sin(cp.a) * cp.r;
-                    if (cs === 0) ctx.moveTo(cx, cy);
-                    else ctx.lineTo(cx, cy);
-                }
-                ctx.strokeStyle = vizColorAtAngle(crack[0].a, cAlpha);
-                ctx.lineWidth = 1 + cval * 2 + bass * 1.5;
-                ctx.shadowBlur = 2 + intensity * 14;
-                ctx.shadowColor = vizColorAtAngle(crack[0].a, 0.75);
-                ctx.stroke();
-            }
-            ctx.shadowBlur = 0;
-        }
-
-        vizApplyRadialFade(centerX, centerY, canvas.width, canvas.height);
-    }
-
-    // Trigger visualizer initialize on stream trigger
-    $(document).off('click.cfViz', '.cf-play-btn-hero').on('click.cfViz', '.cf-play-btn-hero', function() {
-        initVisualizer();
-        if (audioContext && audioContext.state === 'suspended') {
-            audioContext.resume();
-        }
-    });
 
 });
 </script>

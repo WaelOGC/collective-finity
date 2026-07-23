@@ -99,8 +99,8 @@ function collective_finity_track_show_lyrics( $track_id ) {
 
 /**
  * Track meta visibility toggle that defaults to enabled when unset.
- * Used for visualizer styles and streaming platform visibility so existing
- * tracks keep their current frontend behavior until an admin opts out.
+ * Used for streaming platform visibility so existing tracks keep their
+ * current frontend behavior until an admin opts out.
  *
  * @param int    $track_id Post ID.
  * @param string $meta_key Post meta key.
@@ -112,52 +112,6 @@ function collective_finity_track_meta_enabled_by_default( $track_id, $meta_key )
         return true;
     }
     return (string) $value === '1';
-}
-
-/**
- * Available audio visualizer styles for single track pages.
- *
- * @return array<string, string> Style slug => label.
- */
-function collective_finity_track_visualizer_styles() {
-    return array(
-        'spectrum_bars'       => __( 'Spectrum Equalizer Bars', 'collective-finity' ),
-        'aurora_fill'         => __( 'Aurora Fill', 'collective-finity' ),
-        'ember_drift'         => __( 'Ember Drift', 'collective-finity' ),
-        'crimson_pulse_ring'  => __( 'Crimson Pulse Ring', 'collective-finity' ),
-        'smoke_wisp'          => __( 'Smoke Wisp', 'collective-finity' ),
-        'shard_fracture'      => __( 'Shard Fracture', 'collective-finity' ),
-        'radar_sweep'         => __( 'Radar Sweep', 'collective-finity' ),
-        'ink_bleed'           => __( 'Ink Bleed', 'collective-finity' ),
-        'frost_veins'         => __( 'Frost Veins', 'collective-finity' ),
-        'blood_drip_trails'   => __( 'Blood Drip Trails', 'collective-finity' ),
-        'halo_breathe'        => __( 'Halo Breathe', 'collective-finity' ),
-        'fracture_cracks'     => __( 'Fracture Cracks', 'collective-finity' ),
-    );
-}
-
-/**
- * Post meta key for a visualizer style show/hide toggle.
- *
- * @param string $style_slug Visualizer style slug.
- * @return string
- */
-function collective_finity_track_visualizer_meta_key( $style_slug ) {
-    return 'track_show_visualizer_' . $style_slug;
-}
-
-/**
- * Whether a visualizer style is enabled for a track (defaults to on).
- *
- * @param int    $track_id   Post ID.
- * @param string $style_slug Visualizer style slug.
- * @return bool
- */
-function collective_finity_track_show_visualizer( $track_id, $style_slug ) {
-    return collective_finity_track_meta_enabled_by_default(
-        $track_id,
-        collective_finity_track_visualizer_meta_key( $style_slug )
-    );
 }
 
 /**
@@ -2173,13 +2127,6 @@ function collective_finity_render_tracks_meta_box( $post ) {
         );
     }
 
-    // Visualizer style visibility (default enabled)
-    $visualizer_styles = collective_finity_track_visualizer_styles();
-    $visualizer_shown  = array();
-    foreach ( array_keys( $visualizer_styles ) as $style_slug ) {
-        $visualizer_shown[ $style_slug ] = collective_finity_track_show_visualizer( $post->ID, $style_slug );
-    }
-
     // Fetch current Genre taxonomy term assigned to this track
     $assigned_genres = wp_get_post_terms( $post->ID, 'music_genre', array( 'fields' => 'ids' ) );
     $current_genre_id = ! empty( $assigned_genres ) ? $assigned_genres[0] : '';
@@ -2344,20 +2291,6 @@ function collective_finity_render_tracks_meta_box( $post ) {
         </section>
 
         <section class="cf-meta-section">
-            <h3 class="cf-meta-section-title"><span class="dashicons dashicons-art"></span><?php esc_html_e( 'Visualizer Styles', 'collective-finity' ); ?></h3>
-            <p class="cf-field-hint"><?php esc_html_e( 'Choose which audio visualizer styles appear in the dropdown on this track page. All styles are enabled by default.', 'collective-finity' ); ?></p>
-            <div class="cf-visualizer-styles-box">
-                <?php foreach ( $visualizer_styles as $style_slug => $style_label ) : ?>
-                    <?php $style_meta_key = collective_finity_track_visualizer_meta_key( $style_slug ); ?>
-                    <label class="cf-visibility-toggle">
-                        <input type="checkbox" name="<?php echo esc_attr( $style_meta_key ); ?>" value="1" <?php checked( ! empty( $visualizer_shown[ $style_slug ] ) ); ?> />
-                        <span><?php echo esc_html( $style_label ); ?></span>
-                    </label>
-                <?php endforeach; ?>
-            </div>
-        </section>
-
-        <section class="cf-meta-section">
             <h3 class="cf-meta-section-title"><span class="dashicons dashicons-share"></span><?php esc_html_e( 'Streaming Links', 'collective-finity' ); ?></h3>
             <p class="cf-field-hint"><?php esc_html_e( 'Uncheck Show to hide a platform on the track page without deleting its URL.', 'collective-finity' ); ?></p>
             <div class="cf-streaming-box">
@@ -2462,11 +2395,6 @@ function collective_finity_save_tracks_metadata( $post_id ) {
     update_post_meta( $post_id, 'track_show_bpm', empty( $_POST['track_show_bpm'] ) ? 0 : 1 );
     update_post_meta( $post_id, 'track_show_key', empty( $_POST['track_show_key'] ) ? 0 : 1 );
     update_post_meta( $post_id, 'track_show_lyrics', empty( $_POST['track_show_lyrics'] ) ? 0 : 1 );
-
-    foreach ( array_keys( collective_finity_track_visualizer_styles() ) as $style_slug ) {
-        $style_meta_key = collective_finity_track_visualizer_meta_key( $style_slug );
-        update_post_meta( $post_id, $style_meta_key, empty( $_POST[ $style_meta_key ] ) ? 0 : 1 );
-    }
 
     foreach ( collective_finity_track_streaming_platforms() as $platform ) {
         $show_meta = $platform['show_meta'];
