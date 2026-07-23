@@ -41,6 +41,7 @@
 
     --cf-left-w: 236px;
     --cf-left-w-collapsed: 72px;
+    --cf-left-gutter: 10px;
     --cf-right-w: 296px;
     --cf-right-w-collapsed: 76px;
     --cf-topbar-h: 60px;
@@ -66,7 +67,7 @@ body {
     font-size: var(--cf-font-size-base, 16px);
     line-height: var(--cf-body-line-height, 1.6);
     margin: 0;
-    padding: 0 var(--cf-right-w) 0 var(--cf-left-w) !important;
+    padding: 0 var(--cf-right-w) 0 calc(var(--cf-left-w) + var(--cf-left-gutter)) !important;
     transition: padding var(--cf-transition-speed, 0.2s) ease;
     overflow-x: hidden;
 }
@@ -89,7 +90,7 @@ h3, .cf-cta-title {
     letter-spacing: var(--cf-heading-tracking, 0em);
 }
 
-html.cf-sidebar-collapsed body { padding-left: var(--cf-left-w-collapsed) !important; }
+html.cf-sidebar-collapsed body { padding-left: calc(var(--cf-left-w-collapsed) + var(--cf-left-gutter)) !important; }
 html.cf-player-collapsed body { padding-right: var(--cf-right-w-collapsed) !important; }
 
 /* Main content must shrink with sidebar padding — never bleed under fixed sidebars. */
