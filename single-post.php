@@ -96,59 +96,60 @@ while ( have_posts() ) :
 <div class="cf-blog cf-single">
     <article id="post-<?php echo esc_attr( $cf_post_id ); ?>" <?php post_class( 'cf-single-article' ); ?>>
 
-        <nav class="cf-bh-breadcrumb" aria-label="<?php esc_attr_e( 'Breadcrumb', 'collective-finity' ); ?>">
-            <a href="<?php echo esc_url( $cf_blog_url ); ?>"><?php esc_html_e( 'Blog', 'collective-finity' ); ?></a>
-            <span aria-hidden="true">/</span>
-            <?php if ( $cf_cat_link ) : ?>
-                <a href="<?php echo esc_url( $cf_cat_link ); ?>"><?php echo esc_html( $cf_cat_name ); ?></a>
-                <span aria-hidden="true">/</span>
-            <?php endif; ?>
-            <span class="cf-bh-breadcrumb-current"><?php the_title(); ?></span>
-        </nav>
-
         <?php if ( has_post_thumbnail() ) : ?>
             <div class="cf-single-hero">
                 <?php the_post_thumbnail( 'large', array( 'alt' => the_title_attribute( array( 'echo' => false ) ) ) ); ?>
-            </div>
         <?php else : ?>
-            <div class="cf-single-hero cf-single-hero--grad" style="background:<?php echo esc_attr( collective_finity_gradient_for( $cf_post_id ) ); ?>"></div>
+            <div class="cf-single-hero cf-single-hero--grad" style="background:<?php echo esc_attr( collective_finity_gradient_for( $cf_post_id ) ); ?>">
         <?php endif; ?>
+                <nav class="cf-bh-breadcrumb cf-single-hero-breadcrumb" aria-label="<?php esc_attr_e( 'Breadcrumb', 'collective-finity' ); ?>">
+                    <a href="<?php echo esc_url( $cf_blog_url ); ?>"><?php esc_html_e( 'Blog', 'collective-finity' ); ?></a>
+                    <span aria-hidden="true">/</span>
+                    <?php if ( $cf_cat_link ) : ?>
+                        <a href="<?php echo esc_url( $cf_cat_link ); ?>"><?php echo esc_html( $cf_cat_name ); ?></a>
+                        <span aria-hidden="true">/</span>
+                    <?php endif; ?>
+                    <span class="cf-bh-breadcrumb-current"><?php the_title(); ?></span>
+                </nav>
 
-        <div class="cf-single-intro">
-            <?php if ( $cf_cat_link ) : ?>
-                <a class="cf-single-cat" href="<?php echo esc_url( $cf_cat_link ); ?>"><?php echo esc_html( $cf_cat_name ); ?></a>
-            <?php else : ?>
-                <span class="cf-single-cat"><?php echo esc_html( $cf_cat_name ); ?></span>
-            <?php endif; ?>
-            <h1 class="cf-single-title"><?php the_title(); ?></h1>
-        </div>
+                <div class="cf-single-hero-overlay">
+                    <div class="cf-single-intro">
+                        <?php if ( $cf_cat_link ) : ?>
+                            <a class="cf-single-cat" href="<?php echo esc_url( $cf_cat_link ); ?>"><?php echo esc_html( $cf_cat_name ); ?></a>
+                        <?php else : ?>
+                            <span class="cf-single-cat"><?php echo esc_html( $cf_cat_name ); ?></span>
+                        <?php endif; ?>
+                        <h1 class="cf-single-title"><?php the_title(); ?></h1>
+                    </div>
 
-        <div class="cf-single-meta-row">
-            <div class="cf-single-meta">
-                <?php echo collective_finity_review_avatar( $cf_author_id, 30 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                <?php if ( $cf_author_artist_link ) : ?>
-                    <a class="cf-single-author" href="<?php echo esc_url( $cf_author_artist_link ); ?>"><?php echo esc_html( $cf_author ); ?></a>
-                <?php else : ?>
-                    <span class="cf-single-author"><?php echo esc_html( $cf_author ); ?></span>
-                <?php endif; ?>
-                <span class="cf-single-dot" aria-hidden="true">&middot;</span>
-                <span class="cf-single-datetime"><?php echo esc_html( get_the_date() ); ?> &middot; <?php echo esc_html( $cf_read_time ); ?></span>
+                    <div class="cf-single-meta-row">
+                        <div class="cf-single-meta">
+                            <?php echo collective_finity_review_avatar( $cf_author_id, 30 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                            <?php if ( $cf_author_artist_link ) : ?>
+                                <a class="cf-single-author" href="<?php echo esc_url( $cf_author_artist_link ); ?>"><?php echo esc_html( $cf_author ); ?></a>
+                            <?php else : ?>
+                                <span class="cf-single-author"><?php echo esc_html( $cf_author ); ?></span>
+                            <?php endif; ?>
+                            <span class="cf-single-dot" aria-hidden="true">&middot;</span>
+                            <span class="cf-single-datetime"><?php echo esc_html( get_the_date() ); ?> &middot; <?php echo esc_html( $cf_read_time ); ?></span>
+                        </div>
+                        <div class="cf-single-engagement">
+                            <button type="button" class="cf-share-btn cf-post-like-btn<?php echo $cf_post_liked ? ' active' : ''; ?>" data-post-id="<?php echo esc_attr( (string) $cf_post_id ); ?>" aria-pressed="<?php echo $cf_post_liked ? 'true' : 'false'; ?>" title="<?php esc_attr_e( 'Like', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Like', 'collective-finity' ); ?>">
+                                <?php echo collective_finity_icon( 'heart', 16, $cf_post_liked ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                <span class="cf-post-like-count"><?php echo esc_html( number_format_i18n( $cf_like_count ) ); ?></span>
+                            </button>
+                            <span class="cf-share-btn cf-post-view-stat" aria-label="<?php esc_attr_e( 'Views', 'collective-finity' ); ?>">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <span><?php echo esc_html( number_format_i18n( $cf_view_count ) ); ?></span>
+                            </span>
+                            <button type="button" class="cf-share-btn" data-cf-share data-post-id="<?php echo esc_attr( (string) $cf_post_id ); ?>" data-url="<?php echo esc_url( get_permalink() ); ?>" data-title="<?php the_title_attribute(); ?>">
+                                <?php echo collective_finity_icon( 'share', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                <span><?php esc_html_e( 'Share', 'collective-finity' ); ?></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="cf-single-engagement">
-                <button type="button" class="cf-share-btn cf-post-like-btn<?php echo $cf_post_liked ? ' active' : ''; ?>" data-post-id="<?php echo esc_attr( (string) $cf_post_id ); ?>" aria-pressed="<?php echo $cf_post_liked ? 'true' : 'false'; ?>" title="<?php esc_attr_e( 'Like', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Like', 'collective-finity' ); ?>">
-                    <?php echo collective_finity_icon( 'heart', 16, $cf_post_liked ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                    <span class="cf-post-like-count"><?php echo esc_html( number_format_i18n( $cf_like_count ) ); ?></span>
-                </button>
-                <span class="cf-share-btn cf-post-view-stat" aria-label="<?php esc_attr_e( 'Views', 'collective-finity' ); ?>">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <span><?php echo esc_html( number_format_i18n( $cf_view_count ) ); ?></span>
-                </span>
-                <button type="button" class="cf-share-btn" data-cf-share data-post-id="<?php echo esc_attr( (string) $cf_post_id ); ?>" data-url="<?php echo esc_url( get_permalink() ); ?>" data-title="<?php the_title_attribute(); ?>">
-                    <?php echo collective_finity_icon( 'share', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                    <span><?php esc_html_e( 'Share', 'collective-finity' ); ?></span>
-                </button>
-            </div>
-        </div>
 
         <div class="cf-single-read-layout">
             <?php if ( ! empty( $cf_toc ) ) : ?>
@@ -458,7 +459,7 @@ while ( have_posts() ) :
 
 <style>
     .cf-blog { padding: 30px 5px 5px; max-width: 100%; min-width: 0; box-sizing: border-box; }
-    .cf-blog.cf-single { width: 100%; max-width: 100%; min-width: 0; }
+    .cf-blog.cf-single { width: 100%; max-width: 100%; min-width: 0; padding-top: 5px; }
 
     /* read progress */
     .cf-progress-bar { position: fixed; top: 0; left: 0; width: 100%; height: 3px; background: var(--cf-divider); z-index: 100; }
@@ -466,13 +467,27 @@ while ( have_posts() ) :
 
     .cf-single-article { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 100%; min-width: 0; }
 
-    /* breadcrumb pill */
-    .cf-bh-breadcrumb { align-self: flex-start; display: inline-block; max-width: 100%; border: 1px solid var(--cf-accent); border-radius: 999px; padding: 8px 18px; font-size: 12.5px; color: var(--cf-text-3); overflow-wrap: anywhere; word-break: break-word; }
-    .cf-bh-breadcrumb a { color: var(--cf-text-3); text-decoration: none; }
+    /* breadcrumb pill (overlaid on hero) */
+    .cf-bh-breadcrumb {
+        display: inline-block;
+        max-width: 100%;
+        border: 1px solid var(--cf-accent);
+        border-radius: 999px;
+        padding: 8px 18px;
+        font-size: 12.5px;
+        color: rgba(255, 255, 255, 0.78);
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        background: rgba(13, 13, 13, 0.55);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        box-sizing: border-box;
+    }
+    .cf-bh-breadcrumb a { color: rgba(255, 255, 255, 0.78); text-decoration: none; }
     .cf-bh-breadcrumb a:hover { color: var(--cf-accent); }
-    .cf-bh-breadcrumb-current { color: var(--cf-text-3); }
+    .cf-bh-breadcrumb-current { color: rgba(255, 255, 255, 0.92); }
 
-    /* full-width hero image (image only — title sits below) */
+    /* full-width hero with overlays */
     .cf-single-hero {
         position: relative;
         width: 100%;
@@ -492,7 +507,35 @@ while ( have_posts() ) :
         object-position: center;
         display: block;
     }
-    .cf-single-hero--grad { height: 100%; background-size: cover; background-position: center; }
+    .cf-single-hero--grad { height: 100%; background-size: cover; background-position: center; min-height: 320px; }
+
+    .cf-single-hero-breadcrumb {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        right: 14px;
+        z-index: 2;
+        max-width: calc(100% - 28px);
+    }
+
+    .cf-single-hero-overlay {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 56px 24px 22px;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.55) 45%, rgba(0, 0, 0, 0) 100%);
+        box-sizing: border-box;
+        pointer-events: none;
+    }
+    .cf-single-hero-overlay a,
+    .cf-single-hero-overlay button {
+        pointer-events: auto;
+    }
 
     /* desktop only — fixed moderate height */
     @media (min-width: 1024px) {
@@ -503,6 +546,7 @@ while ( have_posts() ) :
         .cf-single-hero > img {
             max-height: 100%;
         }
+        .cf-single-hero--grad { min-height: 450px; }
     }
 
     .cf-single-intro {
@@ -514,10 +558,10 @@ while ( have_posts() ) :
         max-width: 100%;
         min-width: 0;
     }
-    .cf-single-cat { font-family: var(--cf-mono); font-size: 11px; color: var(--cf-accent); padding: 4px 10px; border-radius: 999px; background: rgba(255,183,0,0.12); text-decoration: none; letter-spacing: 0.04em; text-transform: uppercase; }
-    .cf-single-title { font-size: 32px; font-weight: 700; color: #fff; line-height: 1.25; margin: 0; overflow-wrap: anywhere; word-break: break-word; max-width: 100%; }
+    .cf-single-cat { font-family: var(--cf-mono); font-size: 11px; color: var(--cf-accent); padding: 4px 10px; border-radius: 999px; background: rgba(255,183,0,0.18); text-decoration: none; letter-spacing: 0.04em; text-transform: uppercase; }
+    .cf-single-title { font-size: 32px; font-weight: 700; color: #fff; line-height: 1.25; margin: 0; overflow-wrap: anywhere; word-break: break-word; max-width: 100%; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35); }
 
-    /* meta row below hero */
+    /* meta row inside hero overlay */
     .cf-single-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; width: 100%; max-width: 100%; min-width: 0; }
     .cf-single-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
     .cf-single-meta .cf-review-avatar { border: 1px solid rgba(255, 183, 0, 0.28); }
@@ -525,7 +569,7 @@ while ( have_posts() ) :
     a.cf-single-author { text-decoration: none; transition: color 0.2s ease; }
     a.cf-single-author:hover { color: var(--primary-color, #FFB700); text-decoration: underline; }
     .cf-single-dot { color: rgba(255, 183, 0, 0.45); }
-    .cf-single-datetime { font-size: 12.5px; color: #B8B8B8; font-family: var(--cf-mono); letter-spacing: 0.01em; }
+    .cf-single-datetime { font-size: 12.5px; color: #D0D0D0; font-family: var(--cf-mono); letter-spacing: 0.01em; }
 
     .cf-single-engagement { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
     .cf-single-engagement .cf-share-btn {
@@ -536,8 +580,8 @@ while ( have_posts() ) :
         gap: 8px;
         padding: 9px 16px;
         border-radius: 999px;
-        border: 1px solid rgba(255, 183, 0, 0.35);
-        background: rgba(255, 183, 0, 0.08);
+        border: 1px solid rgba(255, 183, 0, 0.45);
+        background: rgba(13, 13, 13, 0.45);
         color: #FFB700;
         font-size: 13px;
         font-weight: 600;
@@ -547,10 +591,12 @@ while ( have_posts() ) :
         min-height: 40px;
         white-space: nowrap;
         flex-shrink: 0;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
     }
     .cf-single-engagement .cf-share-btn svg { flex-shrink: 0; color: currentColor; }
-    .cf-single-engagement .cf-share-btn:hover { color: #ffde99; border-color: rgba(255, 222, 153, 0.5); background: rgba(255, 183, 0, 0.14); }
-    .cf-single-engagement .cf-post-like-btn.active { color: #FFB700; border-color: rgba(255, 183, 0, 0.55); background: rgba(255, 183, 0, 0.16); }
+    .cf-single-engagement .cf-share-btn:hover { color: #ffde99; border-color: rgba(255, 222, 153, 0.5); background: rgba(255, 183, 0, 0.18); }
+    .cf-single-engagement .cf-post-like-btn.active { color: #FFB700; border-color: rgba(255, 183, 0, 0.55); background: rgba(255, 183, 0, 0.22); }
     .cf-single-engagement .cf-post-like-btn.active:hover { color: #ffde99; }
     .cf-post-view-stat { cursor: default; pointer-events: none; }
 
@@ -644,8 +690,8 @@ while ( have_posts() ) :
         .cf-single-read-layout { overflow: hidden; }
         .cf-single-widget-col {
             float: right;
-            width: 220px;
-            margin-left: 20px;
+            width: 300px;
+            margin-left: 24px;
             margin-bottom: 20px;
         }
     }
@@ -827,17 +873,30 @@ while ( have_posts() ) :
             min-height: 100%;
             max-height: 100%;
         }
+        .cf-single-hero--grad {
+            grid-area: 1 / 1;
+            min-height: 0;
+            height: auto;
+        }
+        .cf-single-hero-breadcrumb,
+        .cf-single-hero-overlay {
+            grid-area: 1 / 1;
+        }
         .cf-toc-collapsible { display: block; margin-bottom: 20px; }
     }
     @media (max-width: 767px) {
         .cf-blog { padding: 18px 5px 5px; }
+        .cf-blog.cf-single { padding-top: 5px; }
         .cf-single-hero {
             width: calc(100% + 32px);
             max-width: calc(100% + 32px);
             margin-left: -16px;
             margin-right: -16px;
+            border-radius: 0;
         }
-        .cf-single-hero::before { aspect-ratio: 4 / 3; min-height: 240px; }
+        .cf-single-hero::before { aspect-ratio: 4 / 3; min-height: 280px; }
+        .cf-single-hero-breadcrumb { top: 12px; left: 12px; right: 12px; max-width: calc(100% - 24px); }
+        .cf-single-hero-overlay { padding: 48px 16px 18px; gap: 12px; }
         .cf-single-title { font-size: 26px; line-height: 1.3; }
         .cf-single-widget-col { float: none; width: 100%; margin-left: 0; margin-bottom: 24px; }
         .cf-single-meta-row { flex-direction: column; align-items: flex-start; }

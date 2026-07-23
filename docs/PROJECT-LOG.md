@@ -82,6 +82,8 @@ This file tracks every feature, fix, and pending item implemented in the collect
 - Circular cover thumbnails reuse the exact cover fallback chains from `inc/cf-latest-releases-shortcode.php` (track: `track_cover_url` → featured → default art; album: featured → first associated track cover → default art)
 - Popular Articles items show each post’s featured image thumbnail (gradient fallback) with slightly larger padding/gap
 - `.cf-post-body` max-width ~800px so article text stays readable when both shell sidebars are collapsed
+- Hero overlays: breadcrumb (top) + category/title/author/date/engagement (bottom, with readability gradient); single article top spacing `padding-top: 5px` so hero isn’t flush to the viewport
+- Article sidebar widget column widened from 220px → 300px (desktop float)
 
 ### Shell Left Content Gutter (`assets/css/cf-shell.css`)
 - Added `--cf-left-gutter: 10px`; body `padding-left` is `calc(sidebar-width + gutter)` in both expanded and collapsed left-sidebar states so page content is never flush against the sidebar edge (tablet/mobile unchanged — left sidebar hidden, padding zeroed)
