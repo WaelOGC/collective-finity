@@ -56,7 +56,7 @@
 }
 
 .cf-about-page .cf-page-container.cf-about {
-	max-width: min(980px, 100%);
+	max-width: min(1100px, 100%);
 }
 
 .cf-page-shell .cf-page-container:has(.cf-profile-page) {
@@ -210,11 +210,13 @@
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
-	.cf-about-pillars__grid,
-	.cf-about-timeline__stops {
+	.cf-about-pillars__grid {
 		grid-template-columns: 1fr;
 	}
 
+	.cf-about-why__grid,
+	.cf-about-founder__grid,
+	.cf-about-closing__grid,
 	.cf-about-story-grid {
 		grid-template-columns: 1fr !important;
 	}
@@ -276,12 +278,8 @@
 		font-size: 19px;
 	}
 
-	.cf-about-hero__grid {
-		grid-template-columns: 1fr !important;
-	}
-
-	.cf-about-hero__visual {
-		display: flex;
+	.cf-about-hero__copy {
+		max-width: 100%;
 	}
 
 	.cf-album-grid {

@@ -99,9 +99,14 @@ This file tracks every feature, fix, and pending item implemented in the collect
 - Album grid, cards, and "All genres" pill behavior unchanged
 
 ### About Page Rebuild (`page-about.php`)
-- New section order: Hero → Why Collective Finity Exists → Meet the Founder → Our Foundation (Core Pillars cards) → Roadmap (2026, 6 items) → FAQ (unchanged) → CTA (Join the Journey)
-- Hero uses theme image `assets/images/hero-section/about-collective-finity-ai-music-vision.webp`; founder portrait only in Meet the Founder; CTAs are Explore Music + Join Community
-- Visual system preserved (glow, cards, quote, buttons, FAQ accordion); content uses provided copy only
+- Section order matches design mockup: Hero → Why Collective Finity Exists → Meet the Founder → Our Foundation → Roadmap → FAQ + Join the Journey (side-by-side)
+- Hero is full-bleed background (`about-collective-finity-ai-music-vision.webp`) with animated conic border/glow, accent highlight on “Human Creativity.”, Explore Music + Join Community CTAs
+- Why section: body copy + three icon feature cards (Meaningful Music / Real Knowledge / Creative Community)
+- Founder: circular portrait with gold glow (photo only here) + quote block attributed to Wael Safan
+- Our Foundation: three icon cards (Human Creativity First / Learn Through Experience / Build Together); keeps `#cf-about-pillars-heading` for homepage deep-link
+- Roadmap: horizontal 6-stop timeline (01–06) with icons
+- Closing row: FAQ accordion (same Q&A + behavior) beside Join the Journey card (`join-the-collective-journey.webp`)
+- Copy is locked to the provided About brief; no invented wording
 
 ### Share Button (Tracks) + Share Tracking (Articles, Albums) — Theme Phase 1
 - Article share (`single-post.php` `[data-cf-share]`): fire-and-forget `window.CF_Auth.trackShare(postId, 'post', 'native'|'copy')` when the helper exists; button has `data-post-id`
