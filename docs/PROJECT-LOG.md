@@ -107,6 +107,7 @@ This file tracks every feature, fix, and pending item implemented in the collect
 - Roadmap: horizontal 6-stop timeline (01–06) with icons
 - Closing row: FAQ accordion (same Q&A + behavior) beside Join the Journey card (`join-the-collective-journey.webp`)
 - Copy is locked to the provided About brief; no invented wording
+- Premium polish pass (layout unchanged): taller hero spacing; body line-height ~1.85 + larger paragraph gaps; Why section ultra-low-opacity gold wave/particle atmosphere; founder caption under portrait; softer card borders/shadows/hovers; About-only soft footer gold divider/glow; subtle IntersectionObserver fade-up reveals (respects `prefers-reduced-motion`)
 
 ### Share Button (Tracks) + Share Tracking (Articles, Albums) — Theme Phase 1
 - Article share (`single-post.php` `[data-cf-share]`): fire-and-forget `window.CF_Auth.trackShare(postId, 'post', 'native'|'copy')` when the helper exists; button has `data-post-id`
