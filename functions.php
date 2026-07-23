@@ -403,15 +403,21 @@ function collective_finity_get_published_track_queue() {
 /**
  * Render social share buttons.
  *
- * @param string $url   Share URL.
- * @param string $title Share title.
- * @param string $context Optional CSS context slug.
+ * @param string     $url       Share URL.
+ * @param string     $title     Share title.
+ * @param string     $context   Optional CSS context slug.
+ * @param int|string $item_id   Optional item ID for share tracking (plugin CF_Auth.trackShare).
+ * @param string     $item_type Optional item type for share tracking (e.g. album, track, post).
  */
-function collective_finity_render_share_buttons( $url, $title, $context = 'default' ) {
-    $share_url    = $url;
-    $share_title  = $title;
+function collective_finity_render_share_buttons( $url, $title, $context = 'default', $item_id = 0, $item_type = '' ) {
+    $share_url     = $url;
+    $share_title   = $title;
     $share_context = $context;
-    get_template_part( 'template-parts/share', 'social' );
+    get_template_part(
+        'template-parts/share',
+        'social',
+        compact( 'share_url', 'share_title', 'share_context', 'item_id', 'item_type' )
+    );
 }
 
 /**

@@ -77,10 +77,18 @@ This file tracks every feature, fix, and pending item implemented in the collect
 - Shared rotating multi-color system on all 12: brand gold `#FFB700` first, then bright red/purple/blue/orange; conic rotation and intensity driven by live AnalyserNode frequency data (no gray/grayscale)
 - Registry: `collective_finity_track_visualizer_styles()` in `functions.php`; drawing in `single-tracks.php`
 
+### Share Button (Tracks) + Share Tracking (Articles, Albums) — Theme Phase 1
+- Article share (`single-post.php` `[data-cf-share]`): fire-and-forget `window.CF_Auth.trackShare(postId, 'post', 'native'|'copy')` when the helper exists; button has `data-post-id`
+- Track page (`single-tracks.php`): new Share button in hero actions (native share / copy + "Link copied" label swap); tracks via `trackShare(trackId, 'track', …)` with `data-track-id`
+- Album multi-platform panel (`template-parts/share-social.php` + `collective_finity_render_share_buttons()`): optional `$item_id` / `$item_type` params (backward compatible); panel gets `data-item-id` / `data-item-type`; clicks on Facebook/Twitter/LinkedIn/WhatsApp/copy fire `trackShare` with platform slug (no `preventDefault` on outbound links)
+- Call site: `single-albums.php` passes album ID + `'album'`
+- **Plugin phase pending**: `cf_track_share` AJAX + `window.CF_Auth.trackShare` helper in cf-auth — theme calls are guarded (`typeof` check) and no-op until then
+
 ## Known Pending Items
 - Decision needed: number of reviews shown on the FAQ page (currently 4/6/8 candidates) and on the homepage carousel (3/6/9 candidates) — no final call made yet
 
 ## Future Features (Planned, Not Yet Built)
+- **Share tracking backend (cf-auth plugin)**: `cf_track_share` AJAX endpoint + `window.CF_Auth.trackShare(itemId, itemType, platform)` helper — theme front-end already wired (phase 1); plugin implementation is the next phase
 - **Real-time notifications** (WebSocket/push) — current system is polling-based; real-time planned for a later phase (6+ months out as of last discussion)
 - **Messages system**: icon present in the sidebar markup but hidden/commented out until the admin-to-user messaging feature is built
 - **Admin email broadcast dashboard**: a UI for composing and sending templated emails to users, to replace manual sending via the hosting provider's email panel

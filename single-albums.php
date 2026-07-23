@@ -221,7 +221,7 @@ get_header();
                             <?php endif; ?>
                         </div>
                         <div class="cf-album-share-wrap">
-                            <?php collective_finity_render_share_buttons( get_permalink(), get_the_title(), 'album' ); ?>
+                            <?php collective_finity_render_share_buttons( get_permalink(), get_the_title(), 'album', get_the_ID(), 'album' ); ?>
                         </div>
                     <?php endif; ?>
 

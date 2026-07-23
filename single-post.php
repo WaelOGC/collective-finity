@@ -120,7 +120,7 @@ while ( have_posts() ) :
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
                     <span><?php echo esc_html( number_format_i18n( $cf_view_count ) ); ?></span>
                 </span>
-                <button type="button" class="cf-share-btn" data-cf-share data-url="<?php echo esc_url( get_permalink() ); ?>" data-title="<?php the_title_attribute(); ?>">
+                <button type="button" class="cf-share-btn" data-cf-share data-post-id="<?php echo esc_attr( (string) $cf_post_id ); ?>" data-url="<?php echo esc_url( get_permalink() ); ?>" data-title="<?php the_title_attribute(); ?>">
                     <?php echo collective_finity_icon( 'share', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     <span><?php esc_html_e( 'Share', 'collective-finity' ); ?></span>
                 </button>
@@ -762,6 +762,11 @@ while ( have_posts() ) :
             btn.addEventListener('click', function () {
                 var url = btn.getAttribute('data-url');
                 var title = btn.getAttribute('data-title') || document.title;
+                var postId = btn.getAttribute('data-post-id');
+                var platform = navigator.share ? 'native' : 'copy';
+                if (postId && window.CF_Auth && typeof window.CF_Auth.trackShare === 'function') {
+                    window.CF_Auth.trackShare(postId, 'post', platform);
+                }
                 if (navigator.share) {
                     navigator.share({ title: title, url: url }).catch(function () {});
                 } else if (navigator.clipboard) {

@@ -230,6 +230,11 @@ $comments_count = count($track_comments);
                         <?php if ( $cta_url && $cta_label ) : ?>
                             <a href="<?php echo esc_url($cta_url); ?>" class="cf-cta-btn-hero" target="_blank"><?php echo esc_html($cta_label); ?></a>
                         <?php endif; ?>
+
+                        <button type="button" class="cf-share-btn cf-track-share-btn" data-cf-share data-track-id="<?php echo esc_attr( (string) $track_id ); ?>" data-url="<?php echo esc_url( get_permalink() ); ?>" data-title="<?php the_title_attribute(); ?>" title="<?php esc_attr_e( 'Share', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Share', 'collective-finity' ); ?>">
+                            <?php echo collective_finity_icon( 'share', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                            <span><?php esc_html_e( 'Share', 'collective-finity' ); ?></span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -535,11 +540,31 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
 .cf-hero-artist a:hover { color: var(--primary-color, #FFB700); text-decoration: underline; }
 .cf-hero-subline { margin: 0 0 24px; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #b7b7b7; }
 
-.cf-hero-actions-row { display: flex; gap: 15px; flex-wrap: wrap; }
+.cf-hero-actions-row { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
 .cf-play-btn-hero { background: linear-gradient(135deg, var(--primary-color), #ffce4d); color: #050505; border: none; padding: 14px 32px; font-size: 16px; font-weight: bold; border-radius: 999px; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.25s ease; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 8px 20px rgba(255, 183, 0, 0.22); }
 .cf-play-btn-hero:hover { background: linear-gradient(135deg, #ffd460, var(--primary-color)); transform: translateY(-1px); box-shadow: 0 10px 24px rgba(255, 183, 0, 0.3); }
 .cf-cta-btn-hero { background: transparent; color: #FFFFFF; border: 2px solid rgba(255,255,255,0.75); padding: 12px 30px; font-size: 16px; font-weight: bold; border-radius: 999px; text-decoration: none; transition: background 0.25s, color 0.25s, border-color 0.25s; }
 .cf-cta-btn-hero:hover { background: rgba(255, 183, 0, 0.12); border-color: var(--primary-color); color: var(--primary-color); }
+.cf-track-share-btn {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 22px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 183, 0, 0.35);
+    background: rgba(255, 183, 0, 0.08);
+    color: #FFB700;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    min-height: 48px;
+    white-space: nowrap;
+}
+.cf-track-share-btn svg { flex-shrink: 0; color: currentColor; stroke: currentColor; fill: none; }
+.cf-track-share-btn:hover { color: #ffde99; border-color: rgba(255, 222, 153, 0.5); background: rgba(255, 183, 0, 0.14); }
 
 /* Text & Description Links Hover Rules */
 .cf-entry-content a { color: var(--text-color); text-decoration: underline; transition: color 0.25s; }
@@ -1353,6 +1378,34 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
     });
 
 });
+</script>
+
+<script>
+(function () {
+    document.querySelectorAll('[data-cf-share]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var url = btn.getAttribute('data-url');
+            var title = btn.getAttribute('data-title') || document.title;
+            var trackId = btn.getAttribute('data-track-id');
+            var platform = navigator.share ? 'native' : 'copy';
+            if (trackId && window.CF_Auth && typeof window.CF_Auth.trackShare === 'function') {
+                window.CF_Auth.trackShare(trackId, 'track', platform);
+            }
+            if (navigator.share) {
+                navigator.share({ title: title, url: url }).catch(function () {});
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(function () {
+                    var label = btn.querySelector('span');
+                    if (label) {
+                        var prev = label.textContent;
+                        label.textContent = 'Link copied';
+                        setTimeout(function () { label.textContent = prev; }, 1600);
+                    }
+                }).catch(function () {});
+            }
+        });
+    });
+}());
 </script>
 
 <?php get_footer(); ?>
