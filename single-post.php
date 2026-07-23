@@ -56,9 +56,32 @@ while ( have_posts() ) :
     $cf_post_liked = collective_finity_user_liked_post( $cf_post_id );
     $cf_view_count = collective_finity_post_view_count( $cf_post_id );
     $cf_popular    = collective_finity_get_popular_posts( $cf_post_id, 3 );
-    $cf_latest_tracks = get_posts(
+    // Standalone singles only (excludes album_track); mirrors release-type labeling in cf-latest-releases-shortcode.php.
+    $cf_latest_singles = get_posts(
         array(
             'post_type'           => 'tracks',
+            'post_status'         => 'publish',
+            'posts_per_page'      => 2,
+            'orderby'             => 'date',
+            'order'               => 'DESC',
+            'ignore_sticky_posts' => true,
+            'meta_query'          => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+                'relation' => 'OR',
+                array(
+                    'key'     => 'track_release_type',
+                    'value'   => 'single',
+                    'compare' => '=',
+                ),
+                array(
+                    'key'     => 'track_release_type',
+                    'compare' => 'NOT EXISTS',
+                ),
+            ),
+        )
+    );
+    $cf_latest_albums = get_posts(
+        array(
+            'post_type'           => 'albums',
             'post_status'         => 'publish',
             'posts_per_page'      => 2,
             'orderby'             => 'date',
@@ -148,7 +171,19 @@ while ( have_posts() ) :
                         <div class="cf-sidebar-widget-label"><?php esc_html_e( 'Popular Articles', 'collective-finity' ); ?></div>
                         <ul class="cf-popular-articles">
                             <?php foreach ( $cf_popular as $cf_pop_post ) : ?>
-                                <li><a href="<?php echo esc_url( get_permalink( $cf_pop_post ) ); ?>"><?php echo esc_html( get_the_title( $cf_pop_post ) ); ?></a></li>
+                                <?php
+                                $cf_pop_thumb = get_the_post_thumbnail_url( $cf_pop_post, 'thumbnail' );
+                                ?>
+                                <li>
+                                    <a href="<?php echo esc_url( get_permalink( $cf_pop_post ) ); ?>">
+                                        <?php if ( $cf_pop_thumb ) : ?>
+                                            <img class="cf-popular-article-thumb" src="<?php echo esc_url( $cf_pop_thumb ); ?>" alt="" loading="lazy" width="40" height="40" />
+                                        <?php else : ?>
+                                            <span class="cf-popular-article-thumb cf-popular-article-thumb--grad" style="background:<?php echo esc_attr( collective_finity_gradient_for( $cf_pop_post->ID ) ); ?>" aria-hidden="true"></span>
+                                        <?php endif; ?>
+                                        <span class="cf-popular-article-title"><?php echo esc_html( get_the_title( $cf_pop_post ) ); ?></span>
+                                    </a>
+                                </li>
                             <?php endforeach; ?>
                         </ul>
                     </div>
@@ -158,21 +193,76 @@ while ( have_posts() ) :
                     <?php collective_finity_render_blog_sidebar_ad(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 </div>
 
-                <?php if ( ! empty( $cf_latest_tracks ) ) : ?>
+                <?php if ( ! empty( $cf_latest_singles ) ) : ?>
                     <div class="cf-sidebar-widget">
-                        <div class="cf-sidebar-widget-label"><?php esc_html_e( 'Latest Tracks', 'collective-finity' ); ?></div>
-                        <ul class="cf-latest-tracks">
+                        <div class="cf-sidebar-widget-label"><?php esc_html_e( 'Latest Singles', 'collective-finity' ); ?></div>
+                        <ul class="cf-latest-releases">
                             <?php
-                            foreach ( $cf_latest_tracks as $cf_track_post ) :
-                                $cf_track_artists = wp_get_post_terms( $cf_track_post->ID, 'track_artist' );
-                                $cf_track_artist  = ! empty( $cf_track_artists ) && ! is_wp_error( $cf_track_artists )
-                                    ? $cf_track_artists[0]->name
+                            foreach ( $cf_latest_singles as $cf_single_post ) :
+                                // Same cover chain as inc/cf-latest-releases-shortcode.php ($cf_get_track_cover).
+                                $cf_single_cover = get_post_meta( $cf_single_post->ID, 'track_cover_url', true );
+                                if ( ! $cf_single_cover ) {
+                                    $cf_single_cover = get_the_post_thumbnail_url( $cf_single_post->ID, 'medium' );
+                                }
+                                if ( ! $cf_single_cover ) {
+                                    $cf_single_cover = collective_finity_default_art_url();
+                                }
+                                $cf_single_artists = wp_get_post_terms( $cf_single_post->ID, 'track_artist' );
+                                $cf_single_artist  = ! empty( $cf_single_artists ) && ! is_wp_error( $cf_single_artists )
+                                    ? $cf_single_artists[0]->name
                                     : __( 'Collective Finity', 'collective-finity' );
                                 ?>
                                 <li>
-                                    <a href="<?php echo esc_url( get_permalink( $cf_track_post ) ); ?>">
-                                        <span class="cf-latest-track-title"><?php echo esc_html( get_the_title( $cf_track_post ) ); ?></span>
-                                        <span class="cf-latest-track-artist"><?php echo esc_html( $cf_track_artist ); ?></span>
+                                    <a href="<?php echo esc_url( get_permalink( $cf_single_post ) ); ?>">
+                                        <img class="cf-latest-release-cover" src="<?php echo esc_url( $cf_single_cover ); ?>" alt="" loading="lazy" width="40" height="40" />
+                                        <span class="cf-latest-release-meta">
+                                            <span class="cf-latest-release-title"><?php echo esc_html( get_the_title( $cf_single_post ) ); ?></span>
+                                            <span class="cf-latest-release-artist"><?php echo esc_html( $cf_single_artist ); ?></span>
+                                        </span>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ( ! empty( $cf_latest_albums ) ) : ?>
+                    <div class="cf-sidebar-widget">
+                        <div class="cf-sidebar-widget-label"><?php esc_html_e( 'Latest Albums', 'collective-finity' ); ?></div>
+                        <ul class="cf-latest-releases">
+                            <?php
+                            foreach ( $cf_latest_albums as $cf_album_post ) :
+                                // Same cover chain as inc/cf-latest-releases-shortcode.php ($cf_get_album_cover).
+                                $cf_album_cover = get_the_post_thumbnail_url( $cf_album_post->ID, 'medium' );
+                                if ( ! $cf_album_cover ) {
+                                    $cf_album_first_track = get_posts(
+                                        array(
+                                            'post_type'      => 'tracks',
+                                            'posts_per_page' => 1,
+                                            'meta_key'       => 'associated_album', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+                                            'meta_value'     => $cf_album_post->ID, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+                                            'fields'         => 'ids',
+                                        )
+                                    );
+                                    if ( ! empty( $cf_album_first_track ) ) {
+                                        $cf_album_cover = get_post_meta( $cf_album_first_track[0], 'track_cover_url', true );
+                                    }
+                                }
+                                if ( ! $cf_album_cover ) {
+                                    $cf_album_cover = collective_finity_default_art_url();
+                                }
+                                $cf_album_artist = get_the_author_meta( 'display_name', $cf_album_post->post_author );
+                                if ( ! $cf_album_artist ) {
+                                    $cf_album_artist = __( 'Collective Finity', 'collective-finity' );
+                                }
+                                ?>
+                                <li>
+                                    <a href="<?php echo esc_url( get_permalink( $cf_album_post ) ); ?>">
+                                        <img class="cf-latest-release-cover" src="<?php echo esc_url( $cf_album_cover ); ?>" alt="" loading="lazy" width="40" height="40" />
+                                        <span class="cf-latest-release-meta">
+                                            <span class="cf-latest-release-title"><?php echo esc_html( get_the_title( $cf_album_post ) ); ?></span>
+                                            <span class="cf-latest-release-artist"><?php echo esc_html( $cf_album_artist ); ?></span>
+                                        </span>
                                     </a>
                                 </li>
                             <?php endforeach; ?>
@@ -487,15 +577,17 @@ while ( have_posts() ) :
         text-transform: uppercase;
     }
     .cf-popular-articles,
-    .cf-latest-tracks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .cf-latest-releases { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
     .cf-popular-articles a,
-    .cf-latest-tracks a {
-        display: block;
+    .cf-latest-releases a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
         text-decoration: none;
         color: var(--cf-text-2);
         font-size: 13px;
         line-height: 1.45;
-        padding: 8px 10px;
+        padding: 11px 12px;
         border-radius: 8px;
         border: 1px solid var(--cf-border);
         background: var(--cf-bg-card);
@@ -504,10 +596,32 @@ while ( have_posts() ) :
         word-break: break-word;
     }
     .cf-popular-articles a:hover,
-    .cf-latest-tracks a:hover { color: #fff; border-color: var(--cf-border-strong); background: var(--cf-bg-card-hover); }
-    .cf-latest-tracks a { display: flex; flex-direction: column; gap: 3px; }
-    .cf-latest-track-title { font-size: 13px; font-weight: 600; color: #fff; }
-    .cf-latest-track-artist { font-size: 11.5px; color: var(--cf-text-3); }
+    .cf-latest-releases a:hover { color: #fff; border-color: var(--cf-border-strong); background: var(--cf-bg-card-hover); }
+    .cf-popular-article-thumb {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        border-radius: 8px;
+        object-fit: cover;
+        display: block;
+        flex-shrink: 0;
+        background: var(--cf-bg-dark);
+    }
+    .cf-popular-article-thumb--grad { display: block; }
+    .cf-popular-article-title { flex: 1; min-width: 0; }
+    .cf-latest-release-cover {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        display: block;
+        flex-shrink: 0;
+        background: var(--cf-bg-dark);
+    }
+    .cf-latest-release-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+    .cf-latest-release-title { font-size: 13px; font-weight: 600; color: #fff; }
+    .cf-latest-release-artist { font-size: 11.5px; color: var(--cf-text-3); }
 
     .cf-sidebar-ad { max-width: 100%; min-width: 0; }
     .cf-ad-slot { margin: 0 auto; max-width: 100%; text-align: center; box-sizing: border-box; }
@@ -554,8 +668,8 @@ while ( have_posts() ) :
     .cf-toc-chevron { display: inline-flex; transition: transform 0.15s ease; }
     .cf-toc-collapsible .cf-toc-list { padding: 4px 10px 14px; }
 
-    /* body content — block layout so text wraps around floated sidebar */
-    .cf-post-body { display: block; color: #C7C7C7; min-width: 0; max-width: 100%; width: 100%; box-sizing: border-box; }
+    /* body content — block layout so text wraps around floated sidebar; capped for readability when shell sidebars are collapsed */
+    .cf-post-body { display: block; color: #C7C7C7; min-width: 0; max-width: 800px; width: 100%; box-sizing: border-box; }
     .cf-post-body > * { margin: 0; max-width: 100%; min-width: 0; box-sizing: border-box; }
     .cf-post-body > * + * { margin-top: 22px; }
     .cf-post-body p { font-size: 18px; line-height: 1.8; color: #C7C7C7; overflow-wrap: anywhere; word-break: break-word; }

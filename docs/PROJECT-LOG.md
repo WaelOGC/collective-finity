@@ -77,6 +77,12 @@ This file tracks every feature, fix, and pending item implemented in the collect
 - External platform icons replaced with official Simple Icons SVG path data (Spotify, Apple Music, SoundCloud, YouTube, Bandcamp, Amazon Music, Google Play); fill still white / gold on hover via CSS
 - Listener comments paginated at 5 per page via `?cf_comment_page=` (reuses profile `cf-pagination-*` classes; hidden when ≤1 page); emoji picker + comment form + Story/Lyrics blocks unchanged
 
+### Single Article Sidebar (`single-post.php`)
+- Split former "Latest Tracks" widget into **Latest Singles** (standalone `track_release_type=single` / missing meta only) and **Latest Albums** widgets; ad slots and empty-state `! empty()` checks unchanged
+- Circular cover thumbnails reuse the exact cover fallback chains from `inc/cf-latest-releases-shortcode.php` (track: `track_cover_url` → featured → default art; album: featured → first associated track cover → default art)
+- Popular Articles items show each post’s featured image thumbnail (gradient fallback) with slightly larger padding/gap
+- `.cf-post-body` max-width ~800px so article text stays readable when both shell sidebars are collapsed
+
 ### Share Button (Tracks) + Share Tracking (Articles, Albums) — Theme Phase 1
 - Article share (`single-post.php` `[data-cf-share]`): fire-and-forget `window.CF_Auth.trackShare(postId, 'post', 'native'|'copy')` when the helper exists; button has `data-post-id`
 - Track page (`single-tracks.php`): new Share button in hero actions (native share / copy + "Link copied" label swap); tracks via `trackShare(trackId, 'track', …)` with `data-track-id`
