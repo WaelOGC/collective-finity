@@ -149,7 +149,7 @@ get_header();
 						More Than AI Music. A Vision for the Future of <span class="cf-about-hero__accent">Human Creativity.</span>
 					</h1>
 					<p class="cf-about-hero__tagline">Where imagination, technology, and music converge to create something meaningful.</p>
-					<p class="cf-about-hero__lead">Collective Finity is an independent creative platform dedicated to exploring the future of music through the collaboration between human creativity and artificial intelligence. We create original AI-assisted music, publish in-depth educational content, and build a growing community for artists who believe technology should expand creativity—not replace it. This is more than a music website. It is the beginning of a creative ecosystem designed for the next generation of musicians, producers, and storytellers.</p>
+					<p class="cf-about-hero__lead">Collective Finity is an independent creative platform exploring how artists and artificial intelligence create together. We release original AI-assisted music, publish educational resources, and build a community where creators learn, experiment, and grow.</p>
 					<div class="cf-about-hero__actions">
 						<a class="cf-about-btn cf-about-btn--primary" href="<?php echo esc_url( $cf_tracks_url ); ?>">
 							<span>Explore Music</span>
@@ -435,7 +435,7 @@ get_header();
 		z-index: 3;
 		display: flex;
 		flex-direction: column;
-		gap: 20px;
+		gap: 14px;
 		max-width: 640px;
 		padding: clamp(52px, 7vw, 84px) clamp(24px, 4.5vw, 56px) clamp(56px, 7vw, 88px);
 	}
@@ -469,7 +469,7 @@ get_header();
 	}
 
 	.cf-about-hero__tagline {
-		margin: 2px 0 0;
+		margin: 10px 0 0;
 		font-size: 17px;
 		font-weight: 600;
 		color: #F0F0F0;
@@ -477,8 +477,8 @@ get_header();
 	}
 
 	.cf-about-hero__lead {
-		margin: 2px 0 0;
-		max-width: 580px;
+		margin: 12px 0 0;
+		max-width: 540px;
 		font-size: 14.5px;
 		line-height: 1.85;
 		color: #B3B3B3;
@@ -489,7 +489,7 @@ get_header();
 		display: flex;
 		flex-wrap: wrap;
 		gap: 12px;
-		margin-top: 10px;
+		margin-top: 18px;
 	}
 
 	.cf-about-btn {
