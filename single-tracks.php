@@ -265,13 +265,11 @@ $track_comments = get_comments( array(
                     </span>
                     <span class="cf-meta-value"><?php echo get_the_date('M Y'); ?></span>
                 </div>
-            </div>
 
-            <!-- 5. LISTEN ON EXTERNAL PLATFORMS -->
-            <?php if ( ! empty( $streaming_links ) ) : ?>
-            <div class="cf-external-platforms-wrapper cf-glass-card">
-                <span class="cf-platforms-title"><?php _e('Listen on External Platforms', 'collective-finity'); ?></span>
-                <div class="cf-platforms-grid">
+                <?php if ( ! empty( $streaming_links ) ) : ?>
+                <div class="cf-external-platforms-wrapper cf-glass-card">
+                    <span class="cf-platforms-title"><?php _e('LISTEN', 'collective-finity'); ?></span>
+                    <div class="cf-platforms-grid">
                     <?php if ( ! empty( $streaming_links['spotify'] ) ) : ?>
                         <a href="<?php echo esc_url( $streaming_links['spotify'] ); ?>" target="_blank" class="cf-platform-icon-btn" title="Spotify">
                             <svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
@@ -307,9 +305,10 @@ $track_comments = get_comments( array(
                             <svg viewBox="0 0 24 24"><path d="M22.018 13.298l-3.919 2.218-3.515-3.493 3.543-3.521 3.891 2.202a1.49 1.49 0 0 1 0 2.594zM1.337.924a1.486 1.486 0 0 0-.112.568v21.017c0 .217.045.419.124.6l11.155-11.087L1.337.924zm12.207 10.065l3.258-3.238L3.45.195a1.466 1.466 0 0 0-.946-.179l11.04 10.973zm0 2.067l-11 10.933c.298.036.612-.016.906-.183l13.324-7.54-3.23-3.21z"/></svg>
                         </a>
                     <?php endif; ?>
+                    </div>
                 </div>
+                <?php endif; ?>
             </div>
-            <?php endif; ?>
 
             <?php if ( function_exists( 'collective_finity_ad_slot_wrapped' ) ) : ?>
             <?php collective_finity_ad_slot_wrapped( 'track_sidebar', '<div class="cf-track-ad-sidebar cf-glass-card">', '</div>' ); ?>
@@ -615,8 +614,8 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
 .cf-entry-content a { color: var(--text-color); text-decoration: underline; transition: color 0.25s; }
 .cf-entry-content a:hover { color: var(--primary-color); }
 
-/* 4. Compact metadata pills */
-.cf-meta-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 40px; }
+/* 4. Compact metadata pills + listen platforms (one flex row) */
+.cf-meta-grid { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 40px; }
 .cf-meta-box { width: fit-content; max-width: 100%; padding: 8px 14px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; transition: border-color 0.25s, transform 0.25s; border: 1px solid rgba(255,255,255,0.08); }
 .cf-meta-box:hover { border-color: rgba(255, 183, 0, 0.4); transform: translateY(-1px); }
 .cf-meta-left { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
@@ -625,15 +624,16 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
 .cf-meta-title { display: inline; font-size: 10px; color: #888; margin: 0; font-weight: bold; letter-spacing: 0.06em; white-space: nowrap; }
 .cf-meta-value { font-size: 13px; font-weight: bold; color: #fff; white-space: nowrap; }
 
-/* 5. External Platforms Grid with Styled Icons */
-.cf-external-platforms-wrapper { padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 40px; }
+/* 5. External platforms as compact pill in the same row */
+.cf-external-platforms-wrapper { width: fit-content; max-width: 100%; padding: 8px 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 10px; margin: 0; text-align: left; transition: border-color 0.25s, transform 0.25s; border: 1px solid rgba(255,255,255,0.08); }
+.cf-external-platforms-wrapper:hover { border-color: rgba(255, 183, 0, 0.4); transform: translateY(-1px); }
 .cf-track-ad-sidebar { margin-bottom: 40px; padding: 20px; border-radius: 12px; }
 .cf-ad-slot { margin: 0 auto; max-width: 100%; text-align: center; }
 .cf-ad-slot--preview { align-items: center; background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,183,0,0.35); border-radius: 12px; color: rgba(255,255,255,0.55); display: flex; font-family: 'Space Mono', monospace; font-size: 13px; justify-content: center; min-height: 90px; padding: 24px; }
-.cf-platforms-title { display: block; margin-bottom: 25px; font-size: 18px; color: #fff; font-weight: bold; }
-.cf-platforms-grid { display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; }
-.cf-platform-icon-btn { display: inline-flex; width: 44px; height: 44px; justify-content: center; align-items: center; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); transition: border-color 0.25s, transform 0.25s; }
-.cf-platform-icon-btn svg { width: 22px; height: 22px; fill: #FFFFFF; transition: fill 0.25s; }
+.cf-platforms-title { display: inline; margin: 0; font-size: 10px; color: #888; font-weight: bold; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+.cf-platforms-grid { display: flex; align-items: center; justify-content: flex-start; gap: 8px; flex-wrap: nowrap; }
+.cf-platform-icon-btn { display: inline-flex; width: 28px; height: 28px; justify-content: center; align-items: center; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); transition: border-color 0.25s, transform 0.25s; }
+.cf-platform-icon-btn svg { width: 14px; height: 14px; fill: #FFFFFF; transition: fill 0.25s; }
 .cf-platform-icon-btn:hover { border-color: var(--primary-color); transform: scale(1.1); }
 .cf-platform-icon-btn:hover svg { fill: var(--primary-color); }
 
@@ -710,15 +710,20 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
         width: 100%;
         justify-content: space-between;
     }
+    .cf-external-platforms-wrapper {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+    .cf-platforms-grid {
+        flex-wrap: wrap;
+    }
     .cf-form-row-flex {
         flex-direction: column !important;
         gap: 10px !important;
     }
     .cf-content-area {
         padding: 24px !important;
-    }
-    .cf-external-platforms-wrapper {
-        padding: 20px !important;
     }
 }
 @media (min-width: 769px) and (max-width: 1024px) {

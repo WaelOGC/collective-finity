@@ -73,7 +73,7 @@ This file tracks every feature, fix, and pending item implemented in the collect
 ### Single Track Page Overhaul (`single-tracks.php`)
 - **Removed** canvas / Web Audio circular visualizer (frontend dropdown + JS draw loop + admin Visualizer Styles metabox + related PHP helpers)
 - Cover art is now a CSS-only ambient “planet” sphere: fixed radial shade overlay + continuously sliding sheen highlight (~8s loop); image itself never spins/flips; old `.playing` spin removed
-- Mood / BPM / Key / Release Date meta boxes restyled as compact horizontal pills (flex row, content-sized)
+- Mood / BPM / Key / Release Date meta boxes restyled as compact horizontal pills (flex row, content-sized); external platform icons sit in the same row as a matching compact “LISTEN” pill
 - External platform icons replaced with official Simple Icons SVG path data (Spotify, Apple Music, SoundCloud, YouTube, Bandcamp, Amazon Music, Google Play); fill still white / gold on hover via CSS
 - Listener comments paginated at 5 per page via `?cf_comment_page=` (reuses profile `cf-pagination-*` classes; hidden when ≤1 page); emoji picker + comment form + Story/Lyrics blocks unchanged
 
