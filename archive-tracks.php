@@ -94,7 +94,7 @@ $cf_render_track_card = static function ( $track_id ) {
 };
 
 /**
- * Render an album card for the Collections shelf.
+ * Render an album card for the Albums shelf.
  *
  * @param int $album_id Album post ID.
  */
@@ -189,7 +189,7 @@ $cf_carousel_close = static function () {
 					collective_finity_ad_slot_wrapped( 'library_top', '<div class="cf-library-ad">', '</div>' );
 				}
 
-				// ── 1. Collections ──────────────────────────────────────
+				// ── 1. Albums ───────────────────────────────────────────
 				$cf_albums_q = new WP_Query(
 					array(
 						'post_type'      => 'albums',
@@ -200,7 +200,7 @@ $cf_carousel_close = static function () {
 					)
 				);
 				if ( $cf_albums_q->have_posts() ) :
-					$cf_carousel_open( __( 'Collections', 'collective-finity' ), get_post_type_archive_link( 'albums' ) ?: home_url( '/albums/' ) );
+					$cf_carousel_open( __( 'Albums', 'collective-finity' ), get_post_type_archive_link( 'albums' ) ?: home_url( '/albums/' ) );
 					while ( $cf_albums_q->have_posts() ) :
 						$cf_albums_q->the_post();
 						$cf_render_album_card( get_the_ID() );
@@ -209,7 +209,7 @@ $cf_carousel_close = static function () {
 					$cf_carousel_close();
 				endif;
 
-				// ── 2. Latest Tracks ────────────────────────────────────
+				// ── 2. Latest Tracks (standalone singles only) ──────────
 				$cf_latest_q = new WP_Query(
 					array(
 						'post_type'      => 'tracks',
@@ -217,6 +217,18 @@ $cf_carousel_close = static function () {
 						'post_status'    => 'publish',
 						'orderby'        => 'date',
 						'order'          => 'DESC',
+						'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+							'relation' => 'OR',
+							array(
+								'key'     => 'track_release_type',
+								'value'   => 'single',
+								'compare' => '=',
+							),
+							array(
+								'key'     => 'track_release_type',
+								'compare' => 'NOT EXISTS',
+							),
+						),
 					)
 				);
 				if ( $cf_latest_q->have_posts() ) :

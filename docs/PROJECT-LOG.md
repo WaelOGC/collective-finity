@@ -88,6 +88,11 @@ This file tracks every feature, fix, and pending item implemented in the collect
 ### Shell Left Content Gutter (`assets/css/cf-shell.css`)
 - Added `--cf-left-gutter: 10px`; body `padding-left` is `calc(sidebar-width + gutter)` in both expanded and collapsed left-sidebar states so page content is never flush against the sidebar edge (tablet/mobile unchanged — left sidebar hidden, padding zeroed)
 
+### Music Library Hub (`archive-tracks.php`)
+- Collections carousel retitled to **Albums** (same `albums` CPT query)
+- Latest Tracks carousel restricted to standalone singles only (`track_release_type=single` or missing meta); album tracks excluded — same filter pattern as article sidebar Latest Singles
+- Popular, ad slots, carousel behavior, and card rendering unchanged
+
 ### Share Button (Tracks) + Share Tracking (Articles, Albums) — Theme Phase 1
 - Article share (`single-post.php` `[data-cf-share]`): fire-and-forget `window.CF_Auth.trackShare(postId, 'post', 'native'|'copy')` when the helper exists; button has `data-post-id`
 - Track page (`single-tracks.php`): new Share button in hero actions (native share / copy + "Link copied" label swap); tracks via `trackShare(trackId, 'track', …)` with `data-track-id`
