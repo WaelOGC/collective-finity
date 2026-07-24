@@ -3,7 +3,8 @@
  * Front Page (site homepage) for Collective Finity.
  *
  * Section order: Hero → Featured Release → Latest Releases → Featured Tracks →
- * More Than Music → Latest Articles → Join the Collective → The Future Begins.
+ * More Than Music → Latest Articles → Join the Collective → The Future Begins →
+ * Vision / Newsletter panel.
  *
  * @package Collective_Finity
  */
@@ -78,37 +79,54 @@ $cf_featured_listen_meta = array(
 	'artist' => '',
 	'cover'  => '',
 );
+$cf_featured_meta = array(
+	'type'     => 'Album',
+	'tracks'   => '10 Tracks',
+	'duration' => '42 min',
+	'genre'    => 'Cinematic • Orchestral',
+	'year'     => '2024',
+);
+
+/**
+ * Format seconds as m:ss / mm:ss.
+ *
+ * @param int $seconds Duration in seconds.
+ * @return string
+ */
+$cf_format_track_time = static function ( $seconds ) {
+	$seconds = max( 0, (int) $seconds );
+	return sprintf( '%02d:%02d', (int) floor( $seconds / 60 ), $seconds % 60 );
+};
+
+/**
+ * Best-effort audio duration (seconds) from a media URL attachment.
+ *
+ * @param string $audio_url Audio URL.
+ * @return int
+ */
+$cf_audio_duration_seconds = static function ( $audio_url ) {
+	if ( ! $audio_url ) {
+		return 0;
+	}
+	$attachment_id = attachment_url_to_postid( $audio_url );
+	if ( ! $attachment_id ) {
+		return 0;
+	}
+	$meta = wp_get_attachment_metadata( $attachment_id );
+	if ( ! empty( $meta['length'] ) ) {
+		return (int) $meta['length'];
+	}
+	if ( ! empty( $meta['length_formatted'] ) && preg_match( '/^(\d+):(\d{2})$/', $meta['length_formatted'], $m ) ) {
+		return ( (int) $m[1] * 60 ) + (int) $m[2];
+	}
+	return 0;
+};
 
 if ( $cf_featured_album_id ) {
-	if ( empty( $cf_featured_cover ) ) {
-		$cf_cover_track_ids = get_posts(
-			array(
-				'post_type'      => 'tracks',
-				'posts_per_page' => 1,
-				'post_status'    => 'publish',
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
-				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-					array(
-						'key'     => 'associated_album',
-						'value'   => $cf_featured_album_id,
-						'compare' => '=',
-					),
-				),
-			)
-		);
-		if ( ! empty( $cf_cover_track_ids ) ) {
-			$cf_featured_cover = get_post_meta( $cf_cover_track_ids[0], 'track_cover_url', true );
-			if ( ! $cf_featured_cover ) {
-				$cf_featured_cover = get_the_post_thumbnail_url( $cf_cover_track_ids[0], 'large' );
-			}
-		}
-	}
-
-	$cf_first_track_ids = get_posts(
+	$cf_album_track_ids = get_posts(
 		array(
 			'post_type'      => 'tracks',
-			'posts_per_page' => 1,
+			'posts_per_page' => -1,
 			'post_status'    => 'publish',
 			'orderby'        => 'menu_order date',
 			'order'          => 'ASC',
@@ -123,8 +141,51 @@ if ( $cf_featured_album_id ) {
 			),
 		)
 	);
-	if ( ! empty( $cf_first_track_ids ) ) {
-		$cf_tid = (int) $cf_first_track_ids[0];
+
+	if ( empty( $cf_featured_cover ) && ! empty( $cf_album_track_ids ) ) {
+		$cf_featured_cover = get_post_meta( $cf_album_track_ids[0], 'track_cover_url', true );
+		if ( ! $cf_featured_cover ) {
+			$cf_featured_cover = get_the_post_thumbnail_url( $cf_album_track_ids[0], 'large' );
+		}
+	}
+
+	$cf_album_track_count = count( $cf_album_track_ids );
+	if ( $cf_album_track_count > 0 ) {
+		$cf_featured_meta['tracks'] = sprintf(
+			_n( '%d Track', '%d Tracks', $cf_album_track_count, 'collective-finity' ),
+			$cf_album_track_count
+		);
+	}
+
+	$cf_album_seconds = 0;
+	$cf_genre_names   = array();
+	foreach ( $cf_album_track_ids as $cf_album_tid ) {
+		$cf_t_audio   = get_post_meta( $cf_album_tid, 'track_audio_url', true );
+		$cf_t_preview = get_post_meta( $cf_album_tid, 'track_preview_url', true );
+		$cf_t_play    = ! empty( $cf_t_preview ) ? $cf_t_preview : $cf_t_audio;
+		$cf_album_seconds += $cf_audio_duration_seconds( $cf_t_play );
+		$cf_t_genres = wp_get_post_terms( $cf_album_tid, 'music_genre', array( 'fields' => 'names' ) );
+		if ( ! is_wp_error( $cf_t_genres ) && ! empty( $cf_t_genres ) ) {
+			foreach ( $cf_t_genres as $cf_gname ) {
+				$cf_genre_names[ $cf_gname ] = true;
+			}
+		}
+	}
+	if ( $cf_album_seconds > 0 ) {
+		$cf_featured_meta['duration'] = sprintf(
+			/* translators: %d: album duration in minutes */
+			__( '%d min', 'collective-finity' ),
+			max( 1, (int) round( $cf_album_seconds / 60 ) )
+		);
+	}
+	if ( ! empty( $cf_genre_names ) ) {
+		$cf_featured_meta['genre'] = implode( ' • ', array_slice( array_keys( $cf_genre_names ), 0, 2 ) );
+	}
+
+	$cf_featured_meta['year'] = get_the_date( 'Y', $cf_featured_album_id );
+
+	if ( ! empty( $cf_album_track_ids ) ) {
+		$cf_tid = (int) $cf_album_track_ids[0];
 		$cf_featured_listen_url = get_permalink( $cf_tid );
 		$cf_audio               = get_post_meta( $cf_tid, 'track_audio_url', true );
 		$cf_preview             = get_post_meta( $cf_tid, 'track_preview_url', true );
@@ -151,6 +212,10 @@ if ( empty( $cf_featured_cover ) ) {
 	$cf_featured_cover = collective_finity_default_art_url();
 }
 
+$cf_social_links = function_exists( 'collective_finity_get_footer_social_links' )
+	? collective_finity_get_footer_social_links()
+	: array();
+
 $cf_latest_albums = new WP_Query(
 	array(
 		'post_type'      => 'albums',
@@ -165,7 +230,7 @@ $cf_latest_albums = new WP_Query(
 $cf_featured_tracks = new WP_Query(
 	array(
 		'post_type'      => 'tracks',
-		'posts_per_page' => 8,
+		'posts_per_page' => 4,
 		'post_status'    => 'publish',
 		'orderby'        => 'date',
 		'order'          => 'DESC',
@@ -269,14 +334,14 @@ $cf_render_album_card = static function ( $album_id ) {
 };
 
 /**
- * Render a library-style track card.
+ * Render a compact featured-track list row.
  *
  * @param int $track_id Track post ID.
  */
-$cf_render_track_card = static function ( $track_id ) {
+$cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time, $cf_audio_duration_seconds ) {
 	$cover_image = get_post_meta( $track_id, 'track_cover_url', true );
 	if ( ! $cover_image ) {
-		$cover_image = get_the_post_thumbnail_url( $track_id, 'medium' );
+		$cover_image = get_the_post_thumbnail_url( $track_id, 'thumbnail' );
 	}
 	if ( ! $cover_image ) {
 		$cover_image = collective_finity_default_art_url();
@@ -291,47 +356,34 @@ $cf_render_track_card = static function ( $track_id ) {
 	}
 	$artist_names = ! empty( $artists ) ? wp_list_pluck( $artists, 'name' ) : array();
 	$artist_name  = ! empty( $artist_names ) ? implode( ', ', $artist_names ) : 'Collective Finity';
-	$genres       = wp_get_post_terms( $track_id, 'music_genre', array( 'fields' => 'names' ) );
-	$genre_name   = ! empty( $genres ) && ! is_wp_error( $genres ) ? $genres[0] : '';
 	$title        = get_the_title( $track_id );
 	$permalink    = get_permalink( $track_id );
+	$seconds      = $cf_audio_duration_seconds( $audio_url );
+	$duration     = $seconds > 0 ? $cf_format_track_time( $seconds ) : '—:—';
 	?>
-	<div class="cf-card">
-		<a href="<?php echo esc_url( $permalink ); ?>" class="cf-card-primary">
-			<div class="cf-cover">
-				<img src="<?php echo esc_url( $cover_image ); ?>" alt="<?php echo esc_attr( $title ); ?>" loading="lazy">
-				<button type="button" class="cf-interaction-btn cf-like-btn cf-heart-btn" data-track-id="<?php echo esc_attr( (string) $track_id ); ?>" title="<?php esc_attr_e( 'Like', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Like', 'collective-finity' ); ?>" onclick="event.preventDefault();">
-					<span class="dashicons dashicons-heart"></span>
-				</button>
-				<button type="button" class="cf-play-btn" aria-label="<?php echo esc_attr( sprintf( __( 'Play %s', 'collective-finity' ), $title ) ); ?>" onclick="event.preventDefault(); event.stopPropagation(); if (window.playTrack) { window.playTrack('<?php echo esc_js( $audio_url ); ?>', '<?php echo esc_js( $title ); ?>', '<?php echo esc_js( $artist_name ); ?>', '<?php echo esc_js( $cover_image ); ?>'); }">
-					<span class="dashicons dashicons-controls-play"></span>
-				</button>
-			</div>
-			<div class="cf-card-title"><?php echo esc_html( $title ); ?></div>
+	<div class="cf-home-track-row">
+		<button
+			type="button"
+			class="cf-home-track-row__play"
+			aria-label="<?php echo esc_attr( sprintf( __( 'Play %s', 'collective-finity' ), $title ) ); ?>"
+			onclick="if (window.playTrack) { window.playTrack('<?php echo esc_js( $audio_url ); ?>', '<?php echo esc_js( $title ); ?>', '<?php echo esc_js( $artist_name ); ?>', '<?php echo esc_js( $cover_image ); ?>'); }"
+		>
+			<span class="dashicons dashicons-controls-play" aria-hidden="true"></span>
+		</button>
+		<a class="cf-home-track-row__thumb" href="<?php echo esc_url( $permalink ); ?>">
+			<img src="<?php echo esc_url( $cover_image ); ?>" alt="" width="44" height="44" loading="lazy">
 		</a>
-		<div class="cf-card-sub">
-			<?php
-			if ( ! empty( $artists ) ) {
-				$cf_artist_link_parts = array();
-				foreach ( $artists as $cf_artist_term ) {
-					$cf_term_url = get_term_link( $cf_artist_term );
-					if ( ! is_wp_error( $cf_term_url ) ) {
-						$cf_artist_link_parts[] = sprintf(
-							'<a class="cf-artist-link" href="%1$s">%2$s</a>',
-							esc_url( $cf_term_url ),
-							esc_html( $cf_artist_term->name )
-						);
-					} else {
-						$cf_artist_link_parts[] = esc_html( $cf_artist_term->name );
-					}
-				}
-				echo implode( ', ', $cf_artist_link_parts ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- pieces escaped above.
-			} else {
-				echo esc_html( $artist_name );
-			}
-			?>
-		</div>
-		<?php if ( $genre_name ) : ?><span class="cf-card-chip"><?php echo esc_html( $genre_name ); ?></span><?php endif; ?>
+		<a class="cf-home-track-row__info" href="<?php echo esc_url( $permalink ); ?>">
+			<span class="cf-home-track-row__title"><?php echo esc_html( $title ); ?></span>
+			<span class="cf-home-track-row__artist"><?php echo esc_html( $artist_name ); ?></span>
+		</a>
+		<span class="cf-home-track-row__duration"><?php echo esc_html( $duration ); ?></span>
+		<button type="button" class="cf-home-track-row__icon cf-interaction-btn cf-like-btn cf-heart-btn" data-track-id="<?php echo esc_attr( (string) $track_id ); ?>" title="<?php esc_attr_e( 'Like', 'collective-finity' ); ?>" aria-label="<?php esc_attr_e( 'Like', 'collective-finity' ); ?>">
+			<span class="dashicons dashicons-heart" aria-hidden="true"></span>
+		</button>
+		<a class="cf-home-track-row__icon cf-home-track-row__more" href="<?php echo esc_url( $permalink ); ?>" aria-label="<?php echo esc_attr( sprintf( __( 'Open %s', 'collective-finity' ), $title ) ); ?>">
+			<span class="dashicons dashicons-ellipsis" aria-hidden="true"></span>
+		</a>
 	</div>
 	<?php
 };
@@ -342,7 +394,6 @@ $cf_render_track_card = static function ( $track_id ) {
 	<!-- 1. HERO -->
 	<section class="cf-home-hero" aria-labelledby="cf-home-hero-heading" style="--cf-home-hero-image: url('<?php echo esc_url( $cf_hero_image_url ); ?>');">
 		<div class="cf-home-hero__border" aria-hidden="true"></div>
-		<div class="cf-home-hero__center-glow" aria-hidden="true"></div>
 		<div class="cf-home-hero__media" aria-hidden="true"></div>
 		<div class="cf-home-hero__shade" aria-hidden="true"></div>
 		<div class="cf-home-hero__copy">
@@ -378,37 +429,72 @@ $cf_render_track_card = static function ( $track_id ) {
 
 	<!-- 2. FEATURED RELEASE -->
 	<section class="cf-home-section cf-home-featured-release" aria-labelledby="cf-home-featured-release-heading" data-cf-home-reveal>
-		<div class="cf-home-featured-release__grid">
-			<div class="cf-home-featured-release__art">
-				<img
-					src="<?php echo esc_url( $cf_featured_cover ); ?>"
-					alt="<?php echo esc_attr( $cf_featured_album_title ); ?>"
-					width="640"
-					height="640"
-					loading="lazy"
-					decoding="async"
-				>
-			</div>
-			<div class="cf-home-featured-release__content">
-				<p class="cf-home-eyebrow">FEATURED RELEASE</p>
-				<h2 id="cf-home-featured-release-heading" class="cf-home-featured-release__title">Land Of Light</h2>
-				<p class="cf-home-prose">A cinematic journey through hope, discovery, and imagination, blending orchestral emotion with modern AI-assisted composition.</p>
-				<div class="cf-home-featured-release__actions">
-					<?php if ( ! empty( $cf_featured_listen_meta['audio'] ) ) : ?>
-						<button
-							type="button"
-							class="cf-home-btn cf-home-btn--primary"
-							data-cf-home-listen
-							data-audio="<?php echo esc_url( $cf_featured_listen_meta['audio'] ); ?>"
-							data-title="<?php echo esc_attr( $cf_featured_listen_meta['title'] ); ?>"
-							data-artist="<?php echo esc_attr( $cf_featured_listen_meta['artist'] ); ?>"
-							data-cover="<?php echo esc_url( $cf_featured_listen_meta['cover'] ); ?>"
-						>Listen Now</button>
-					<?php else : ?>
-						<a class="cf-home-btn cf-home-btn--primary" href="<?php echo esc_url( $cf_featured_listen_url ? $cf_featured_listen_url : $cf_featured_album_url ); ?>">Listen Now</a>
-					<?php endif; ?>
-					<a class="cf-home-btn cf-home-btn--ghost" href="<?php echo esc_url( $cf_featured_album_url ); ?>">View Album</a>
+		<div class="cf-home-featured-release__panel">
+			<div class="cf-home-featured-release__grid">
+				<div class="cf-home-featured-release__art">
+					<img
+						src="<?php echo esc_url( $cf_featured_cover ); ?>"
+						alt="<?php echo esc_attr( $cf_featured_album_title ); ?>"
+						width="640"
+						height="640"
+						loading="lazy"
+						decoding="async"
+					>
 				</div>
+				<div class="cf-home-featured-release__content">
+					<p class="cf-home-eyebrow">FEATURED RELEASE</p>
+					<h2 id="cf-home-featured-release-heading" class="cf-home-featured-release__title">Land Of Light</h2>
+					<p class="cf-home-featured-release__artist"><?php echo esc_html( collective_finity_brand_name() ); ?></p>
+					<p class="cf-home-prose">A cinematic journey through hope, discovery, and imagination, blending orchestral emotion with modern AI-assisted composition.</p>
+					<div class="cf-home-featured-release__actions">
+						<?php if ( ! empty( $cf_featured_listen_meta['audio'] ) ) : ?>
+							<button
+								type="button"
+								class="cf-home-btn cf-home-btn--primary"
+								data-cf-home-listen
+								data-audio="<?php echo esc_url( $cf_featured_listen_meta['audio'] ); ?>"
+								data-title="<?php echo esc_attr( $cf_featured_listen_meta['title'] ); ?>"
+								data-artist="<?php echo esc_attr( $cf_featured_listen_meta['artist'] ); ?>"
+								data-cover="<?php echo esc_url( $cf_featured_listen_meta['cover'] ); ?>"
+							>Listen Now</button>
+						<?php else : ?>
+							<a class="cf-home-btn cf-home-btn--primary" href="<?php echo esc_url( $cf_featured_listen_url ? $cf_featured_listen_url : $cf_featured_album_url ); ?>">Listen Now</a>
+						<?php endif; ?>
+						<a class="cf-home-btn cf-home-btn--ghost" href="<?php echo esc_url( $cf_featured_album_url ); ?>">View Album</a>
+					</div>
+				</div>
+				<ul class="cf-home-featured-release__meta" aria-label="<?php esc_attr_e( 'Album details', 'collective-finity' ); ?>">
+					<li>
+						<span class="cf-home-featured-release__meta-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.2"/></svg>
+						</span>
+						<span><?php echo esc_html( $cf_featured_meta['type'] ); ?></span>
+					</li>
+					<li>
+						<span class="cf-home-featured-release__meta-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+						</span>
+						<span><?php echo esc_html( $cf_featured_meta['tracks'] ); ?></span>
+					</li>
+					<li>
+						<span class="cf-home-featured-release__meta-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+						</span>
+						<span><?php echo esc_html( $cf_featured_meta['duration'] ); ?></span>
+					</li>
+					<li>
+						<span class="cf-home-featured-release__meta-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18"/><path d="M12 3a14 14 0 0 0 0 18"/></svg>
+						</span>
+						<span><?php echo esc_html( $cf_featured_meta['genre'] ); ?></span>
+					</li>
+					<li>
+						<span class="cf-home-featured-release__meta-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="M3.5 10h17"/></svg>
+						</span>
+						<span><?php echo esc_html( $cf_featured_meta['year'] ); ?></span>
+					</li>
+				</ul>
 			</div>
 		</div>
 	</section>
@@ -441,16 +527,19 @@ $cf_render_track_card = static function ( $track_id ) {
 	<!-- 4. FEATURED TRACKS -->
 	<section class="cf-home-section cf-home-featured-tracks" aria-labelledby="cf-home-featured-tracks-heading" data-cf-home-reveal>
 		<div class="cf-home-section-head">
-			<h2 id="cf-home-featured-tracks-heading" class="cf-home-section-title">Featured Tracks</h2>
+			<div class="cf-home-section-head__row">
+				<h2 id="cf-home-featured-tracks-heading" class="cf-home-section-title">Featured Tracks</h2>
+				<a class="cf-home-section-link" href="<?php echo esc_url( $cf_tracks_url ); ?>">View All</a>
+			</div>
 			<p class="cf-home-section-desc">A curated selection of cinematic tracks crafted to inspire every journey.</p>
 		</div>
 
 		<?php if ( $cf_featured_tracks->have_posts() ) : ?>
-			<div class="cf-home-card-grid cf-home-card-grid--tracks">
+			<div class="cf-home-track-list">
 				<?php
 				while ( $cf_featured_tracks->have_posts() ) :
 					$cf_featured_tracks->the_post();
-					$cf_render_track_card( get_the_ID() );
+					$cf_render_track_row( get_the_ID() );
 				endwhile;
 				wp_reset_postdata();
 				?>
@@ -519,14 +608,68 @@ $cf_render_track_card = static function ( $track_id ) {
 		</div>
 	</section>
 
+	<!-- 9. VISION + NEWSLETTER / SOCIAL -->
+	<section class="cf-home-section cf-home-vision-panel" aria-labelledby="cf-home-vision-heading" data-cf-home-reveal>
+		<div class="cf-home-vision-panel__inner">
+			<div class="cf-home-vision">
+				<p class="cf-home-eyebrow cf-home-vision__label">OUR VISION</p>
+				<h2 id="cf-home-vision-heading" class="cf-home-vision__title">The Future Isn't Automated. It's Collaborative.</h2>
+				<p class="cf-home-vision__body">Artificial intelligence doesn't replace creativity. It expands what's possible.</p>
+			</div>
+
+			<div class="cf-home-vision-panel__divider" aria-hidden="true"></div>
+
+			<div class="cf-home-inspire">
+				<div class="cf-home-inspire__intro">
+					<span class="cf-home-inspire__mail-icon" aria-hidden="true"><?php echo collective_finity_icon( 'mail', 20 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+					<div class="cf-home-inspire__copy">
+						<h3 class="cf-home-inspire__title">Stay Inspired</h3>
+						<p class="cf-home-inspire__desc">Receive new music, articles, and creative insights.</p>
+					</div>
+				</div>
+
+				<div class="cf-home-inspire__form-wrap">
+					<?php
+					$cf_newsletter_html = shortcode_exists( 'contact-form-7' )
+						? trim( (string) do_shortcode( '[contact-form-7 id="a1d896d" title="Subscription Form"]' ) )
+						: '';
+					$cf_newsletter_ok = $cf_newsletter_html && false === strpos( $cf_newsletter_html, '[contact-form-7' );
+					if ( $cf_newsletter_ok ) :
+						echo $cf_newsletter_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					else :
+						?>
+						<form class="cf-home-inspire__form" action="#" method="post">
+							<label class="screen-reader-text" for="cf-home-newsletter-email"><?php esc_html_e( 'Email address', 'collective-finity' ); ?></label>
+							<input type="email" id="cf-home-newsletter-email" name="email" placeholder="<?php esc_attr_e( 'Enter your email', 'collective-finity' ); ?>" required autocomplete="email">
+							<button type="submit" class="cf-home-btn cf-home-btn--primary">Subscribe</button>
+						</form>
+					<?php endif; ?>
+				</div>
+
+				<?php if ( ! empty( $cf_social_links ) ) : ?>
+					<div class="cf-home-inspire__social">
+						<span class="cf-home-inspire__social-label">Follow Us</span>
+						<div class="cf-home-inspire__social-links" aria-label="<?php esc_attr_e( 'Social media', 'collective-finity' ); ?>">
+							<?php foreach ( $cf_social_links as $cf_social ) : ?>
+								<a href="<?php echo esc_url( $cf_social['url'] ); ?>" class="cf-home-inspire__social-link" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr( $cf_social['label'] ); ?>">
+									<?php echo collective_finity_footer_social_icon( $cf_social['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+								</a>
+							<?php endforeach; ?>
+						</div>
+					</div>
+				<?php endif; ?>
+			</div>
+		</div>
+	</section>
+
 </main>
 
 <style>
 	.cf-home.cf-home-redesign {
-		padding: 2.5rem 5px 2rem;
+		padding: 1.75rem 5px 1.5rem;
 		display: flex;
 		flex-direction: column;
-		gap: clamp(72px, 9vw, 104px);
+		gap: clamp(36px, 4.5vw, 52px);
 		max-width: 100%;
 		min-width: 0;
 		box-sizing: border-box;
@@ -659,7 +802,7 @@ $cf_render_track_card = static function ( $track_id ) {
 	.cf-home-hero {
 		position: relative;
 		overflow: hidden;
-		min-height: clamp(460px, 58vw, 580px);
+		min-height: clamp(420px, 52vw, 540px);
 		border-radius: 18px;
 		border: 1px solid rgba(255, 255, 255, 0.06);
 		background: #0B0B0B;
@@ -696,23 +839,13 @@ $cf_render_track_card = static function ( $track_id ) {
 		to { --cf-home-border-angle: 360deg; }
 	}
 
-	.cf-home-hero__center-glow {
-		position: absolute;
-		inset: 14% 24%;
-		z-index: 1;
-		border-radius: 50%;
-		background: radial-gradient(circle, rgba(255, 183, 0, 0.18) 0%, rgba(255, 183, 0, 0.06) 42%, transparent 70%);
-		pointer-events: none;
-		filter: blur(10px);
-	}
-
 	.cf-home-hero__media {
 		position: absolute;
 		inset: 0;
 		z-index: 0;
 		background-image: var(--cf-home-hero-image);
 		background-size: cover;
-		background-position: center;
+		background-position: center right;
 		background-repeat: no-repeat;
 	}
 
@@ -721,8 +854,8 @@ $cf_render_track_card = static function ( $track_id ) {
 		inset: 0;
 		z-index: 1;
 		background:
-			linear-gradient(180deg, rgba(8, 8, 8, 0.55) 0%, rgba(8, 8, 8, 0.72) 45%, rgba(8, 8, 8, 0.88) 100%),
-			linear-gradient(90deg, rgba(8, 8, 8, 0.5) 0%, rgba(8, 8, 8, 0.28) 100%);
+			linear-gradient(90deg, rgba(8, 8, 8, 0.92) 0%, rgba(8, 8, 8, 0.78) 38%, rgba(8, 8, 8, 0.28) 64%, rgba(8, 8, 8, 0.08) 100%),
+			linear-gradient(180deg, rgba(8, 8, 8, 0.12) 0%, transparent 30%, rgba(8, 8, 8, 0.35) 100%);
 		pointer-events: none;
 	}
 
@@ -731,12 +864,11 @@ $cf_render_track_card = static function ( $track_id ) {
 		z-index: 3;
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		text-align: center;
+		align-items: flex-start;
+		text-align: left;
 		gap: 16px;
-		max-width: 720px;
-		margin: 0 auto;
-		padding: clamp(52px, 7vw, 84px) clamp(24px, 4.5vw, 48px) clamp(56px, 7vw, 88px);
+		max-width: 560px;
+		padding: clamp(48px, 6.5vw, 76px) clamp(24px, 4.5vw, 56px) clamp(52px, 6.5vw, 80px);
 	}
 
 	.cf-home-hero__title {
@@ -750,14 +882,14 @@ $cf_render_track_card = static function ( $track_id ) {
 	}
 
 	.cf-home-hero__lead {
-		max-width: 36em;
+		max-width: 34em;
 		color: #D0D0D0;
 	}
 
 	.cf-home-hero__actions {
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: center;
+		justify-content: flex-start;
 		gap: 12px;
 		margin-top: 8px;
 	}
@@ -765,9 +897,10 @@ $cf_render_track_card = static function ( $track_id ) {
 	/* ---- Hero search (spacing polish only) ---- */
 	.cf-home-redesign .cf-hero-search {
 		position: relative;
-		width: min(100%, 520px);
+		width: min(100%, 480px);
 		z-index: 5;
 		margin: 6px 0 2px;
+		align-self: stretch;
 	}
 
 	.cf-home-redesign .cf-hero-search-field {
@@ -906,21 +1039,30 @@ $cf_render_track_card = static function ( $track_id ) {
 	}
 
 	/* ---- Featured Release ---- */
+	.cf-home-featured-release__panel {
+		border: 1px solid rgba(255, 255, 255, 0.07);
+		border-radius: 16px;
+		background: rgba(18, 18, 18, 0.96);
+		padding: clamp(18px, 2.5vw, 28px);
+		box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.85);
+	}
+
 	.cf-home-featured-release__grid {
 		display: grid;
-		gap: 36px;
+		gap: 28px;
 		align-items: center;
 	}
 
 	.cf-home-featured-release__art {
 		position: relative;
-		border-radius: 16px;
+		border-radius: 14px;
 		overflow: hidden;
 		border: 1px solid rgba(255, 255, 255, 0.08);
 		box-shadow: 0 28px 56px -28px rgba(0, 0, 0, 0.85);
 		aspect-ratio: 1;
-		max-width: min(100%, 520px);
+		max-width: min(100%, 320px);
 		background: #0c0c0c;
+		justify-self: start;
 	}
 
 	.cf-home-featured-release__art img {
@@ -938,12 +1080,19 @@ $cf_render_track_card = static function ( $track_id ) {
 	.cf-home-featured-release__content {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: 12px;
 		max-width: 420px;
 	}
 
 	.cf-home-featured-release__title {
-		font-size: clamp(28px, 3.5vw, 36px);
+		font-size: clamp(26px, 3.2vw, 34px);
+	}
+
+	.cf-home-featured-release__artist {
+		margin: 0;
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--cf-accent, #FFB700);
 	}
 
 	.cf-home-featured-release__actions {
@@ -953,14 +1102,53 @@ $cf_render_track_card = static function ( $track_id ) {
 		margin-top: 6px;
 	}
 
+	.cf-home-featured-release__meta {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+		justify-self: start;
+	}
+
+	.cf-home-featured-release__meta li {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		font-size: 13.5px;
+		color: #A8A8A8;
+		line-height: 1.3;
+	}
+
+	.cf-home-featured-release__meta-icon {
+		display: inline-flex;
+		width: 18px;
+		height: 18px;
+		flex-shrink: 0;
+		color: #7A7A7A;
+	}
+
+	.cf-home-featured-release__meta-icon svg {
+		width: 100%;
+		height: 100%;
+	}
+
 	@media (min-width: 900px) {
 		.cf-home-featured-release__grid {
-			grid-template-columns: minmax(280px, 1.05fr) minmax(0, 1fr);
-			gap: 56px;
+			grid-template-columns: minmax(220px, 300px) minmax(0, 1.2fr) minmax(160px, 200px);
+			gap: 36px;
+			align-items: center;
 		}
 
 		.cf-home-featured-release__art {
 			max-width: none;
+			width: 100%;
+		}
+
+		.cf-home-featured-release__meta {
+			justify-self: end;
+			padding-left: 8px;
 		}
 	}
 
@@ -968,8 +1156,8 @@ $cf_render_track_card = static function ( $track_id ) {
 	.cf-home-card-grid {
 		display: grid;
 		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: 20px;
-		margin-top: 28px;
+		gap: 18px;
+		margin-top: 20px;
 	}
 
 	.cf-home-redesign .cf-card {
@@ -1139,6 +1327,152 @@ $cf_render_track_card = static function ( $track_id ) {
 		color: #a8a8a8;
 	}
 
+	/* ---- Featured Tracks (compact list) ---- */
+	.cf-home-track-list {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-rows: auto auto;
+		grid-auto-flow: column;
+		gap: 12px 20px;
+		margin-top: 22px;
+	}
+
+	.cf-home-track-row {
+		display: grid;
+		grid-template-columns: 36px 44px minmax(0, 1fr) auto auto auto;
+		align-items: center;
+		gap: 12px;
+		padding: 10px 12px;
+		border-radius: 12px;
+		border: 1px solid rgba(255, 255, 255, 0.06);
+		background: rgba(20, 20, 20, 0.92);
+		transition: border-color 0.22s ease, background 0.22s ease, transform 0.22s ease;
+	}
+
+	.cf-home-track-row:hover {
+		border-color: rgba(255, 183, 0, 0.28);
+		background: rgba(24, 24, 24, 0.98);
+		transform: translateY(-1px);
+	}
+
+	.cf-home-track-row__play {
+		width: 34px;
+		height: 34px;
+		border-radius: 50%;
+		border: 1px solid rgba(255, 255, 255, 0.18);
+		background: rgba(255, 255, 255, 0.04);
+		color: #fff;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		padding: 0;
+		transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+	}
+
+	.cf-home-track-row__play:hover,
+	.cf-home-track-row__play:focus-visible {
+		background: var(--cf-accent, #FFB700);
+		border-color: var(--cf-accent, #FFB700);
+		color: #0D0D0D;
+		outline: none;
+	}
+
+	.cf-home-track-row__play .dashicons {
+		font-size: 16px;
+		width: 16px;
+		height: 16px;
+		margin-left: 1px;
+	}
+
+	.cf-home-track-row__thumb {
+		width: 44px;
+		height: 44px;
+		border-radius: 8px;
+		overflow: hidden;
+		flex-shrink: 0;
+		background: #0c0c0c;
+	}
+
+	.cf-home-track-row__thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+	}
+
+	.cf-home-track-row__info {
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		text-decoration: none;
+		color: inherit;
+	}
+
+	.cf-home-track-row__title {
+		font-size: 13.5px;
+		font-weight: 600;
+		color: #fff;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		transition: color 0.2s ease;
+	}
+
+	.cf-home-track-row__artist {
+		font-size: 12px;
+		color: #7A7A7A;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.cf-home-track-row:hover .cf-home-track-row__title {
+		color: var(--cf-accent, #FFB700);
+	}
+
+	.cf-home-track-row__duration {
+		font-family: var(--cf-mono, 'Space Mono', monospace);
+		font-size: 11.5px;
+		color: #8A8A8A;
+		white-space: nowrap;
+	}
+
+	.cf-home-track-row__icon {
+		width: 30px;
+		height: 30px;
+		border: none;
+		background: transparent;
+		color: #8A8A8A;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		padding: 0;
+		text-decoration: none;
+		border-radius: 8px;
+		transition: color 0.2s ease, background 0.2s ease;
+	}
+
+	.cf-home-track-row__icon:hover,
+	.cf-home-track-row__icon:focus-visible {
+		color: var(--cf-accent, #FFB700);
+		background: rgba(255, 183, 0, 0.08);
+		outline: none;
+	}
+
+	.cf-home-track-row__icon .dashicons {
+		font-size: 16px;
+		width: 16px;
+		height: 16px;
+	}
+
+	.cf-home-track-row__icon.cf-heart-btn.active,
+	.cf-home-track-row__icon.cf-heart-btn.active .dashicons {
+		color: var(--cf-accent, #FFB700);
+	}
+
 	/* ---- More Than Music ---- */
 	.cf-home-more-than-music__grid {
 		display: grid;
@@ -1208,8 +1542,8 @@ $cf_render_track_card = static function ( $track_id ) {
 	.cf-home-article-grid {
 		display: grid;
 		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: 20px;
-		margin-top: 28px;
+		gap: 18px;
+		margin-top: 20px;
 	}
 
 	.cf-home-redesign .cf-bh-card {
@@ -1295,7 +1629,214 @@ $cf_render_track_card = static function ( $track_id ) {
 	}
 
 	.cf-home-future {
-		min-height: clamp(260px, 34vw, 340px);
+		min-height: clamp(240px, 30vw, 300px);
+	}
+
+	/* ---- Vision + Newsletter / Social ---- */
+	.cf-home-vision-panel__inner {
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		border-radius: 16px;
+		background:
+			radial-gradient(ellipse 70% 55% at 50% 0%, rgba(255, 183, 0, 0.06) 0%, transparent 60%),
+			rgba(14, 14, 14, 0.98);
+		padding: clamp(28px, 4vw, 40px) clamp(20px, 3.5vw, 36px);
+	}
+
+	.cf-home-vision {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: 12px;
+		max-width: 640px;
+		margin: 0 auto;
+	}
+
+	.cf-home-vision__label {
+		margin-bottom: 0;
+	}
+
+	.cf-home-vision__title {
+		margin: 0;
+		font-size: clamp(22px, 3vw, 30px);
+		font-weight: 700;
+		color: #fff;
+		line-height: 1.25;
+		letter-spacing: -0.01em;
+	}
+
+	.cf-home-vision__body {
+		margin: 0;
+		font-size: 14.5px;
+		line-height: 1.7;
+		color: #A8A8A8;
+		max-width: 34em;
+	}
+
+	.cf-home-vision-panel__divider {
+		height: 1px;
+		margin: 28px 0;
+		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+	}
+
+	.cf-home-inspire {
+		display: grid;
+		gap: 22px;
+		align-items: center;
+	}
+
+	.cf-home-inspire__intro {
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+	}
+
+	.cf-home-inspire__mail-icon {
+		display: inline-flex;
+		color: var(--cf-accent, #FFB700);
+		margin-top: 2px;
+		flex-shrink: 0;
+	}
+
+	.cf-home-inspire__title {
+		margin: 0 0 4px;
+		font-size: 16px;
+		font-weight: 700;
+		color: var(--cf-accent, #FFB700);
+	}
+
+	.cf-home-inspire__desc {
+		margin: 0;
+		font-size: 13.5px;
+		line-height: 1.55;
+		color: #A8A8A8;
+	}
+
+	.cf-home-inspire__form-wrap {
+		min-width: 0;
+	}
+
+	.cf-home-inspire__form,
+	.cf-home-inspire__form-wrap .wpcf7-form {
+		display: flex;
+		align-items: stretch;
+		gap: 0;
+		max-width: 420px;
+	}
+
+	.cf-home-inspire__form input[type="email"],
+	.cf-home-inspire__form-wrap .wpcf7-form input[type="email"],
+	.cf-home-inspire__form-wrap .wpcf7-form input[type="text"] {
+		flex: 1;
+		min-width: 0;
+		padding: 12px 14px;
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-right: none;
+		border-radius: 10px 0 0 10px;
+		background: rgba(255, 255, 255, 0.04);
+		color: #fff;
+		font-size: 13.5px;
+		font-family: inherit;
+		outline: none;
+	}
+
+	.cf-home-inspire__form input[type="email"]:focus,
+	.cf-home-inspire__form-wrap .wpcf7-form input[type="email"]:focus,
+	.cf-home-inspire__form-wrap .wpcf7-form input[type="text"]:focus {
+		border-color: rgba(255, 183, 0, 0.45);
+	}
+
+	.cf-home-inspire__form button,
+	.cf-home-inspire__form-wrap .wpcf7-form input[type="submit"],
+	.cf-home-inspire__form-wrap .wpcf7-form button {
+		border: none;
+		border-radius: 0 10px 10px 0;
+		padding: 12px 18px;
+		background: var(--cf-accent, #FFB700);
+		color: #0D0D0D;
+		font-weight: 700;
+		font-size: 13.5px;
+		cursor: pointer;
+		white-space: nowrap;
+		font-family: inherit;
+	}
+
+	.cf-home-inspire__form-wrap .wpcf7-form p {
+		margin: 0;
+		display: flex;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.cf-home-inspire__form-wrap .wpcf7-form .wpcf7-form-control-wrap {
+		flex: 1;
+		min-width: 0;
+		display: block;
+	}
+
+	.cf-home-inspire__form-wrap .wpcf7-form .wpcf7-spinner,
+	.cf-home-inspire__form-wrap .wpcf7-form .wpcf7-response-output {
+		display: none;
+	}
+
+	.cf-home-inspire__social {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		align-items: flex-start;
+	}
+
+	.cf-home-inspire__social-label {
+		font-family: var(--cf-mono, 'Space Mono', monospace);
+		font-size: 11px;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: #8A8A8A;
+	}
+
+	.cf-home-inspire__social-links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.cf-home-inspire__social-link {
+		width: 34px;
+		height: 34px;
+		border-radius: 8px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(255, 255, 255, 0.04);
+		color: #CFCFCF;
+		transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+	}
+
+	.cf-home-inspire__social-link:hover,
+	.cf-home-inspire__social-link:focus-visible {
+		background: rgba(255, 183, 0, 0.12);
+		color: var(--cf-accent, #FFB700);
+		transform: translateY(-1px);
+		outline: none;
+	}
+
+	.cf-home-inspire__social-link svg {
+		width: 15px;
+		height: 15px;
+		fill: currentColor;
+	}
+
+	@media (min-width: 900px) {
+		.cf-home-inspire {
+			grid-template-columns: minmax(200px, 1.05fr) minmax(240px, 1.2fr) auto;
+			gap: 28px;
+			align-items: center;
+		}
+
+		.cf-home-inspire__social {
+			align-items: flex-end;
+			justify-self: end;
+		}
 	}
 
 	/* ---- Reveal ---- */
@@ -1361,8 +1902,8 @@ $cf_render_track_card = static function ( $track_id ) {
 
 	@media (max-width: 767px) {
 		.cf-home.cf-home-redesign {
-			gap: 56px;
-			padding: 1.5rem 5px 1.5rem;
+			gap: 32px;
+			padding: 1.25rem 5px 1.25rem;
 		}
 
 		.cf-home-hero {
@@ -1374,15 +1915,40 @@ $cf_render_track_card = static function ( $track_id ) {
 		}
 
 		.cf-home-hero__copy {
-			padding: clamp(40px, 8vw, 56px) clamp(18px, 5vw, 28px) clamp(44px, 8vw, 60px);
+			padding: clamp(36px, 8vw, 52px) clamp(18px, 5vw, 28px) clamp(40px, 8vw, 56px);
 			gap: 14px;
+			max-width: none;
+		}
+
+		.cf-home-hero__media {
+			background-position: center;
+		}
+
+		.cf-home-hero__shade {
+			background:
+				linear-gradient(180deg, rgba(8, 8, 8, 0.72) 0%, rgba(8, 8, 8, 0.82) 45%, rgba(8, 8, 8, 0.9) 100%),
+				linear-gradient(90deg, rgba(8, 8, 8, 0.55), rgba(8, 8, 8, 0.25));
 		}
 
 		.cf-home-card-grid,
 		.cf-home-article-grid {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 			gap: 14px;
-			margin-top: 20px;
+			margin-top: 18px;
+		}
+
+		.cf-home-track-list {
+			grid-template-columns: 1fr;
+			grid-template-rows: none;
+			grid-auto-flow: row;
+			gap: 10px;
+			margin-top: 18px;
+		}
+
+		.cf-home-track-row {
+			grid-template-columns: 32px 40px minmax(0, 1fr) auto auto auto;
+			gap: 8px;
+			padding: 8px 10px;
 		}
 
 		.cf-home-redesign .cf-play-btn {
@@ -1402,6 +1968,11 @@ $cf_render_track_card = static function ( $track_id ) {
 
 		.cf-home-more-than-music__visual {
 			min-height: 160px;
+		}
+
+		.cf-home-inspire__form,
+		.cf-home-inspire__form-wrap .wpcf7-form {
+			max-width: none;
 		}
 	}
 
@@ -1440,7 +2011,7 @@ $cf_render_track_card = static function ( $track_id ) {
 		}
 	}
 
-	body.cf-glow-disabled .cf-home-hero__center-glow {
+	body.cf-glow-disabled .cf-home-hero__border {
 		display: none !important;
 	}
 </style>

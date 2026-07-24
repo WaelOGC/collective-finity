@@ -99,13 +99,12 @@ This file tracks every feature, fix, and pending item implemented in the collect
 - Album grid, cards, and "All genres" pill behavior unchanged
 
 ### Homepage Rebuild (`front-page.php`)
-- Section order locked to redesign brief: Hero → Featured Release → Latest Releases → Featured Tracks → More Than Music → Latest Articles → Join the Collective → The Future Begins
-- Hero uses `the-spark-of-creation.webp` with About-style animated border/glow; label/heading/description copy locked; existing live search kept (spacing polish only); Explore Music + Join Community CTAs; no stats strip / top nav
-- Featured Release: premium two-column showcase for **Land Of Light** (large artwork + Listen Now / View Album); Listen Now plays first album track via mini player when available
-- Latest Releases / Featured Tracks reuse Music Library `cf-card` album & track markup; Latest Articles reuses `collective_finity_render_blog_card()` (blog card CSS now also enqueued on front page)
-- More Than Music: two-column copy + minimal abstract visual; Learn More → `/about/`
-- Join the Collective / The Future Begins: full-bleed-within-container background banners (`join-the-collective.webp`, `the-future-begins.webp` with `.webp.jpg` fallback); Future section has no CTA
-- Design system: black/gray/white + soft gold only; readable prose width (~60–75ch); subtle card hovers; IntersectionObserver fade-up reveals; content stays inside main column between sidebars
+- Section order locked to redesign brief: Hero → Featured Release → Latest Releases → Featured Tracks → More Than Music → Latest Articles → Join the Collective → The Future Begins → Vision/Newsletter panel
+- Hero uses `the-spark-of-creation.webp` with left-aligned copy, right-visible background, subtle left readability overlay (About-style border); Explore Music + Join Community; existing live search kept
+- Featured Release: three-column premium panel (artwork + copy/CTAs + metadata icons for type/tracks/duration/genre/year); Listen Now plays first album track when available
+- Featured Tracks: compact two-column horizontal list rows (play, thumb, title/artist, duration, like, more) — not large cards
+- Closing Vision panel: “The Future Isn't Automated…” plus Stay Inspired newsletter + Follow Us socials (reuses footer social links / CF7 subscription form when available)
+- Design system: black/gray/white + soft gold only; tighter section spacing (~36–52px); readable prose width; subtle hovers; IntersectionObserver fade-up reveals; content stays inside main column between sidebars
 
 ### About Page Rebuild (`page-about.php`)
 - Section order matches design mockup: Hero → Why Collective Finity Exists → Meet the Founder → Our Foundation → Roadmap → FAQ + Join the Journey (side-by-side)
@@ -127,7 +126,6 @@ This file tracks every feature, fix, and pending item implemented in the collect
 
 ## Known Pending Items
 - Decision needed: number of reviews shown on the FAQ page (currently 4/6/8 candidates) — homepage reviews carousel removed in homepage rebuild
-- Homepage visual QA against `HomePage.png` reference mockup once the image is available in the editor
 
 ## Future Features (Planned, Not Yet Built)
 - **Share tracking backend (cf-auth plugin)**: `cf_track_share` AJAX endpoint + `window.CF_Auth.trackShare(itemId, itemType, platform)` helper — theme front-end already wired (phase 1); plugin implementation is the next phase
