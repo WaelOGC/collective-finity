@@ -129,24 +129,34 @@ $cf_audio_duration_seconds = static function ( $audio_url ) {
 };
 
 /**
- * Resolve display duration for a track (meta first, then attachment metadata).
+ * Resolve duration in seconds for a track (meta first, then attachment metadata).
  *
  * @param int $track_id Track post ID.
- * @return string
+ * @return int
  */
-$cf_resolve_track_duration = static function ( $track_id ) use ( $cf_format_track_time, $cf_audio_duration_seconds ) {
+$cf_resolve_track_duration_seconds = static function ( $track_id ) use ( $cf_audio_duration_seconds ) {
 	$meta_duration = get_post_meta( $track_id, 'track_duration', true );
-	if ( is_string( $meta_duration ) && preg_match( '/^\d{1,2}:\d{2}$/', trim( $meta_duration ) ) ) {
-		return trim( $meta_duration );
+	if ( is_string( $meta_duration ) && preg_match( '/^(\d{1,2}):(\d{2})$/', trim( $meta_duration ), $m ) ) {
+		return ( (int) $m[1] * 60 ) + (int) $m[2];
 	}
 	if ( is_numeric( $meta_duration ) && (int) $meta_duration > 0 ) {
-		return $cf_format_track_time( (int) $meta_duration );
+		return (int) $meta_duration;
 	}
 
 	$track_audio   = get_post_meta( $track_id, 'track_audio_url', true );
 	$track_preview = get_post_meta( $track_id, 'track_preview_url', true );
 	$audio_url     = ! empty( $track_preview ) ? $track_preview : $track_audio;
-	$seconds       = $cf_audio_duration_seconds( $audio_url );
+	return $cf_audio_duration_seconds( $audio_url );
+};
+
+/**
+ * Resolve display duration for a track (meta first, then attachment metadata).
+ *
+ * @param int $track_id Track post ID.
+ * @return string
+ */
+$cf_resolve_track_duration = static function ( $track_id ) use ( $cf_format_track_time, $cf_resolve_track_duration_seconds ) {
+	$seconds = $cf_resolve_track_duration_seconds( $track_id );
 	return $seconds > 0 ? $cf_format_track_time( $seconds ) : '—:—';
 };
 
@@ -343,7 +353,7 @@ $cf_render_track_list_row = static function ( $track_id ) use ( $cf_track_type_l
  *
  * @param int $album_id Album post ID.
  */
-$cf_render_album_list_row = static function ( $album_id ) {
+$cf_render_album_list_row = static function ( $album_id ) use ( $cf_resolve_track_duration_seconds ) {
 	$link  = get_permalink( $album_id );
 	$cover = get_the_post_thumbnail_url( $album_id, 'thumbnail' );
 	if ( empty( $cover ) ) {
@@ -364,11 +374,25 @@ $cf_render_album_list_row = static function ( $album_id ) {
 			),
 		)
 	);
+	$track_ids    = is_array( $count_q->posts ) ? $count_q->posts : array();
 	$count        = (int) $count_q->found_posts;
 	$title        = get_the_title( $album_id );
 	$release_date = get_the_date( get_option( 'date_format' ), $album_id );
 	$genres       = wp_get_post_terms( $album_id, 'music_genre', array( 'fields' => 'names' ) );
 	$genre_name   = ( ! is_wp_error( $genres ) && ! empty( $genres ) ) ? $genres[0] : '';
+
+	$total_seconds = 0;
+	foreach ( $track_ids as $cf_album_track_id ) {
+		$total_seconds += $cf_resolve_track_duration_seconds( (int) $cf_album_track_id );
+	}
+	$duration_label = '';
+	if ( $total_seconds > 0 ) {
+		$duration_label = sprintf(
+			/* translators: %d: album duration in minutes */
+			__( '%d min', 'collective-finity' ),
+			max( 1, (int) round( $total_seconds / 60 ) )
+		);
+	}
 	?>
 	<a class="cf-library-list-row cf-library-list-row--album" href="<?php echo esc_url( $link ); ?>" data-cf-search-title="<?php echo esc_attr( mb_strtolower( $title ) ); ?>">
 		<span class="cf-library-list-row__thumb">
@@ -379,7 +403,7 @@ $cf_render_album_list_row = static function ( $album_id ) {
 			<span class="cf-card-chip cf-card-chip--type"><?php esc_html_e( 'Album', 'collective-finity' ); ?></span>
 		</span>
 		<span class="cf-library-list-row__artist"><?php echo esc_html( sprintf( _n( '%d track', '%d tracks', $count, 'collective-finity' ), $count ) ); ?></span>
-		<span class="cf-library-list-row__duration">&mdash;</span>
+		<span class="cf-library-list-row__duration"><?php echo $duration_label ? esc_html( $duration_label ) : '&mdash;'; ?></span>
 		<span class="cf-library-list-row__genre"><?php echo $genre_name ? esc_html( $genre_name ) : '&mdash;'; ?></span>
 		<span class="cf-library-list-row__date"><?php echo esc_html( $release_date ); ?></span>
 	</a>
@@ -919,7 +943,7 @@ $cf_library_tabs[] = array(
 	.cf-library-hero {
 		position: relative;
 		text-align: left;
-		padding: clamp(48px, 7vw, 80px) clamp(20px, 4vw, 40px) clamp(56px, 8vw, 88px);
+		padding: clamp(48px, 7vw, 80px) clamp(20px, 4vw, 40px) clamp(28px, 4vw, 40px);
 		border-radius: 18px;
 		background: #0B0B0B;
 		border: 1px solid rgba(30, 30, 30, 0.9);
@@ -927,7 +951,7 @@ $cf_library_tabs[] = array(
 		min-width: 0;
 		max-width: 100%;
 		width: 100%;
-		margin: 0 auto 32px;
+		margin: 0 auto 20px;
 		box-sizing: border-box;
 	}
 	@property --cf-library-hero-border-angle {
