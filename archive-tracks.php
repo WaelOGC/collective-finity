@@ -642,10 +642,51 @@ $cf_library_tabs[] = array(
 				<?php
 				$cf_is_albums_view = ( 'albums' === $cf_tracks_view );
 
+				$cf_allowed_per_page = array( 10, 25, 50, 100 );
+				$cf_per_page         = isset( $_GET['per_page'] ) ? absint( wp_unslash( $_GET['per_page'] ) ) : 10; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				if ( ! in_array( $cf_per_page, $cf_allowed_per_page, true ) ) {
+					$cf_per_page = 10;
+				}
+
+				$cf_paged = absint( get_query_var( 'paged' ) );
+				if ( $cf_paged < 1 ) {
+					$cf_paged = isset( $_GET['paged'] ) ? absint( wp_unslash( $_GET['paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				}
+				$cf_paged = max( 1, $cf_paged );
+
+				$cf_view_base_urls = array(
+					'all'     => $cf_url_all,
+					'albums'  => $cf_url_albums,
+					'singles' => $cf_url_singles,
+					'popular' => $cf_url_popular,
+				);
+				$cf_list_base_url = isset( $cf_view_base_urls[ $cf_tracks_view ] )
+					? $cf_view_base_urls[ $cf_tracks_view ]
+					: $cf_url_all;
+
+				/**
+				 * Build a paginated library URL preserving the current tab.
+				 *
+				 * @param int $page     Page number.
+				 * @param int $per_page Results per page.
+				 * @return string
+				 */
+				$cf_library_list_url = static function ( $page, $per_page ) use ( $cf_list_base_url ) {
+					$args = array();
+					if ( (int) $per_page !== 10 ) {
+						$args['per_page'] = (int) $per_page;
+					}
+					if ( (int) $page > 1 ) {
+						$args['paged'] = (int) $page;
+					}
+					return $args ? add_query_arg( $args, $cf_list_base_url ) : $cf_list_base_url;
+				};
+
 				if ( $cf_is_albums_view ) {
 					$cf_list_args = array(
 						'post_type'      => 'albums',
-						'posts_per_page' => -1,
+						'posts_per_page' => $cf_per_page,
+						'paged'          => $cf_paged,
 						'post_status'    => 'publish',
 						'orderby'        => 'date',
 						'order'          => 'DESC',
@@ -653,7 +694,8 @@ $cf_library_tabs[] = array(
 				} elseif ( 'singles' === $cf_tracks_view ) {
 					$cf_list_args = array(
 						'post_type'      => 'tracks',
-						'posts_per_page' => -1,
+						'posts_per_page' => $cf_per_page,
+						'paged'          => $cf_paged,
 						'post_status'    => 'publish',
 						'orderby'        => 'date',
 						'order'          => 'DESC',
@@ -673,7 +715,8 @@ $cf_library_tabs[] = array(
 				} else {
 					$cf_list_args = array(
 						'post_type'      => 'tracks',
-						'posts_per_page' => -1,
+						'posts_per_page' => $cf_per_page,
+						'paged'          => $cf_paged,
 						'post_status'    => 'publish',
 						'orderby'        => 'date',
 						'order'          => 'DESC',
@@ -702,6 +745,10 @@ $cf_library_tabs[] = array(
 					$ad_enabled   = ! empty( $ad_zones['archive_native']['enabled'] ) && ! $cf_is_albums_view;
 					$ad_frequency = max( 2, absint( $ad_zones['archive_native']['frequency'] ?? 8 ) );
 					$card_index   = 0;
+					$cf_max_pages = max( 1, (int) $cf_list_q->max_num_pages );
+					$cf_total     = (int) $cf_list_q->found_posts;
+					$cf_from      = ( ( $cf_paged - 1 ) * $cf_per_page ) + 1;
+					$cf_to        = min( $cf_total, $cf_paged * $cf_per_page );
 					?>
 					<div class="cf-library-results" data-cf-library-results>
 						<div class="cf-card-grid" data-cf-view="grid">
@@ -756,6 +803,83 @@ $cf_library_tabs[] = array(
 							?>
 						</div>
 					</div>
+
+					<nav class="cf-library-pager" aria-label="<?php esc_attr_e( 'Library pagination', 'collective-finity' ); ?>">
+						<div class="cf-library-pager__meta">
+							<span class="cf-library-pager__count">
+								<?php
+								printf(
+									/* translators: 1: first result index, 2: last result index, 3: total results */
+									esc_html__( 'Showing %1$s to %2$s of %3$s', 'collective-finity' ),
+									esc_html( (string) $cf_from ),
+									esc_html( (string) $cf_to ),
+									esc_html( (string) $cf_total )
+								);
+								?>
+							</span>
+							<div class="cf-library-per-page" role="group" aria-label="<?php esc_attr_e( 'Results per page', 'collective-finity' ); ?>">
+								<span class="cf-library-per-page__label"><?php esc_html_e( 'Per page', 'collective-finity' ); ?></span>
+								<?php foreach ( $cf_allowed_per_page as $cf_size ) : ?>
+									<a
+										href="<?php echo esc_url( $cf_library_list_url( 1, $cf_size ) ); ?>"
+										class="cf-library-per-page__btn<?php echo ( (int) $cf_size === (int) $cf_per_page ) ? ' active' : ''; ?>"
+										<?php echo ( (int) $cf_size === (int) $cf_per_page ) ? ' aria-current="true"' : ''; ?>
+									><?php echo esc_html( (string) $cf_size ); ?></a>
+								<?php endforeach; ?>
+							</div>
+						</div>
+
+						<?php if ( $cf_max_pages > 1 ) : ?>
+						<div class="cf-library-pager__pages">
+							<?php if ( $cf_paged > 1 ) : ?>
+								<a class="cf-library-pager__btn" href="<?php echo esc_url( $cf_library_list_url( $cf_paged - 1, $cf_per_page ) ); ?>" aria-label="<?php esc_attr_e( 'Previous page', 'collective-finity' ); ?>">
+									<span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span>
+								</a>
+							<?php else : ?>
+								<span class="cf-library-pager__btn is-disabled" aria-hidden="true">
+									<span class="dashicons dashicons-arrow-left-alt2"></span>
+								</span>
+							<?php endif; ?>
+
+							<?php
+							$cf_window = 2;
+							$cf_start  = max( 1, $cf_paged - $cf_window );
+							$cf_end    = min( $cf_max_pages, $cf_paged + $cf_window );
+							if ( $cf_start > 1 ) :
+								?>
+								<a class="cf-library-pager__btn" href="<?php echo esc_url( $cf_library_list_url( 1, $cf_per_page ) ); ?>">1</a>
+								<?php if ( $cf_start > 2 ) : ?>
+									<span class="cf-library-pager__ellipsis" aria-hidden="true">&hellip;</span>
+								<?php endif; ?>
+							<?php endif; ?>
+
+							<?php for ( $cf_i = $cf_start; $cf_i <= $cf_end; $cf_i++ ) : ?>
+								<a
+									class="cf-library-pager__btn<?php echo ( $cf_i === $cf_paged ) ? ' active' : ''; ?>"
+									href="<?php echo esc_url( $cf_library_list_url( $cf_i, $cf_per_page ) ); ?>"
+									<?php echo ( $cf_i === $cf_paged ) ? ' aria-current="page"' : ''; ?>
+								><?php echo esc_html( (string) $cf_i ); ?></a>
+							<?php endfor; ?>
+
+							<?php if ( $cf_end < $cf_max_pages ) : ?>
+								<?php if ( $cf_end < $cf_max_pages - 1 ) : ?>
+									<span class="cf-library-pager__ellipsis" aria-hidden="true">&hellip;</span>
+								<?php endif; ?>
+								<a class="cf-library-pager__btn" href="<?php echo esc_url( $cf_library_list_url( $cf_max_pages, $cf_per_page ) ); ?>"><?php echo esc_html( (string) $cf_max_pages ); ?></a>
+							<?php endif; ?>
+
+							<?php if ( $cf_paged < $cf_max_pages ) : ?>
+								<a class="cf-library-pager__btn" href="<?php echo esc_url( $cf_library_list_url( $cf_paged + 1, $cf_per_page ) ); ?>" aria-label="<?php esc_attr_e( 'Next page', 'collective-finity' ); ?>">
+									<span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
+								</a>
+							<?php else : ?>
+								<span class="cf-library-pager__btn is-disabled" aria-hidden="true">
+									<span class="dashicons dashicons-arrow-right-alt2"></span>
+								</span>
+							<?php endif; ?>
+						</div>
+						<?php endif; ?>
+					</nav>
 				<?php else : ?>
 					<div class="tracks-empty-state">
 						<span>🎶</span>
@@ -783,14 +907,18 @@ $cf_library_tabs[] = array(
 
 <style>
 	.cf-library-page {
-		padding: 48px 5px 5px;
+		padding: 48px 5px 0;
 		box-sizing: border-box;
 		max-width: 100%;
 		min-width: 0;
 	}
+	/* Neutralize stacked bottom padding from style.css `.site-main { padding-bottom: 5px }` so content hugs the footer. */
+	.cf-library-page > .site-main {
+		padding-bottom: 0;
+	}
 	.cf-library-hero {
 		position: relative;
-		text-align: center;
+		text-align: left;
 		padding: clamp(48px, 7vw, 80px) clamp(20px, 4vw, 40px) clamp(56px, 8vw, 88px);
 		border-radius: 18px;
 		background: #0B0B0B;
@@ -870,8 +998,9 @@ $cf_library_tabs[] = array(
 		z-index: 1;
 		display: flex;
 		flex-direction: column;
-		align-items: center;
+		align-items: flex-start;
 		gap: 14px;
+		width: 100%;
 	}
 	.cf-library-hero__badge {
 		display: inline-block;
@@ -953,17 +1082,16 @@ $cf_library_tabs[] = array(
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		justify-content: center;
+		justify-content: space-between;
 		gap: 14px 18px;
 		width: 100%;
-		max-width: 920px;
 		margin-top: 10px;
 	}
 	.cf-library-tabs {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 10px;
-		justify-content: center;
+		justify-content: flex-start;
 	}
 	.cf-library-tab {
 		display: inline-flex;
@@ -1043,6 +1171,7 @@ $cf_library_tabs[] = array(
 	.cf-library-ad { margin: 0 0 28px; }
 
 	.cf-carousel-section { margin-bottom: 40px; }
+	.cf-carousel-section:last-child { margin-bottom: 0; }
 
 	.cf-carousel {
 		--cf-visible: 6;
@@ -1199,14 +1328,14 @@ $cf_library_tabs[] = array(
 	.cf-library-list {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: 14px;
 	}
 	.cf-library-list__head {
 		display: grid;
 		grid-template-columns: 40px 48px minmax(0, 2.2fr) minmax(0, 1.2fr) 64px minmax(0, 1fr) minmax(0, 0.9fr) 40px;
 		gap: 12px;
 		align-items: center;
-		padding: 0 14px 8px 14px;
+		padding: 0 18px 8px 18px;
 		font-size: 10px;
 		font-weight: 600;
 		letter-spacing: 0.08em;
@@ -1223,7 +1352,7 @@ $cf_library_tabs[] = array(
 		grid-template-columns: 40px 48px minmax(0, 2.2fr) minmax(0, 1.2fr) 64px minmax(0, 1fr) minmax(0, 0.9fr) 40px;
 		gap: 12px;
 		align-items: center;
-		padding: 10px 14px;
+		padding: 16px 18px;
 		text-decoration: none;
 		color: inherit;
 		background: var(--cf-bg-card, #141414);
@@ -1233,7 +1362,7 @@ $cf_library_tabs[] = array(
 	}
 	.cf-library-list-row--album {
 		grid-template-columns: 48px minmax(0, 2.2fr) minmax(0, 1.2fr) 64px minmax(0, 1fr) minmax(0, 0.9fr);
-		padding-left: 14px;
+		padding: 16px 18px;
 	}
 	.cf-library-list-row:is(:hover, :focus-within) {
 		border-color: color-mix(in srgb, var(--cf-accent, var(--primary-color, #FFB700)) 55%, transparent);
@@ -1333,6 +1462,106 @@ $cf_library_tabs[] = array(
 	.tracks-empty-state h2 { color: #fff; margin: 0 0 10px; font-size: 24px; }
 	.tracks-empty-state p { color: #888; margin: 0; line-height: 1.7; }
 
+	/* Pagination + per-page */
+	.cf-library-pager {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		margin-top: 28px;
+	}
+	.cf-library-pager__meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 14px 20px;
+	}
+	.cf-library-pager__count {
+		font-size: 13px;
+		color: rgba(255, 255, 255, 0.85);
+	}
+	.cf-library-per-page {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.cf-library-per-page__label {
+		font-size: 12px;
+		color: rgba(255, 255, 255, 0.85);
+		margin-right: 4px;
+	}
+	.cf-library-per-page__btn,
+	.cf-library-pager__btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 36px;
+		height: 36px;
+		padding: 0 12px;
+		border-radius: 999px;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		background: rgba(255, 255, 255, 0.02);
+		color: rgba(255, 255, 255, 0.9);
+		font-size: 13px;
+		font-weight: 600;
+		text-decoration: none;
+		box-sizing: border-box;
+		transition: background var(--cf-transition-speed, 0.2s) ease, color var(--cf-transition-speed, 0.2s) ease, border-color var(--cf-transition-speed, 0.2s) ease;
+	}
+	.cf-library-per-page__btn:hover,
+	.cf-library-pager__btn:hover {
+		border-color: rgba(255, 183, 0, 0.45);
+		color: #fff;
+	}
+	.cf-library-per-page__btn.active,
+	.cf-library-pager__btn.active {
+		background: var(--cf-accent, var(--primary-color, #FFB700));
+		color: #000;
+		border-color: var(--cf-accent, var(--primary-color, #FFB700));
+		font-weight: 700;
+	}
+	.cf-library-pager__btn.is-disabled {
+		opacity: 0.35;
+		pointer-events: none;
+	}
+	.cf-library-pager__btn .dashicons {
+		font-size: 16px;
+		width: 16px;
+		height: 16px;
+	}
+	.cf-library-pager__pages {
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px;
+	}
+	.cf-library-pager__ellipsis {
+		color: rgba(255, 255, 255, 0.55);
+		padding: 0 4px;
+		font-size: 13px;
+	}
+
+	/* About-matching gold footer divider (tracks archive) */
+	.cf-app-content:has(> .cf-library-page) + .cf-site-footer,
+	body.post-type-archive-tracks .cf-site-footer {
+		position: relative;
+		margin-top: 12px;
+		border-top-color: rgba(255, 183, 0, 0.1);
+		box-shadow: 0 -28px 48px -36px rgba(255, 183, 0, 0.07);
+	}
+	.cf-app-content:has(> .cf-library-page) + .cf-site-footer::before,
+	body.post-type-archive-tracks .cf-site-footer::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 8%;
+		right: 8%;
+		height: 1px;
+		background: linear-gradient(90deg, transparent, rgba(255, 183, 0, 0.22), transparent);
+		pointer-events: none;
+	}
+
 	@media (max-width: 1023px) {
 		.cf-carousel { --cf-visible: 4; --cf-gap: 14px; }
 		.cf-library-list__col--genre,
@@ -1354,7 +1583,11 @@ $cf_library_tabs[] = array(
 		.cf-card-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
 		.cf-play-btn { opacity: 1; transform: none; width: 32px; height: 32px; }
 		.cf-heart-btn.cf-interaction-btn { opacity: 1; }
-		.cf-library-hero__controls { flex-direction: column; }
+		.cf-library-hero__controls {
+			flex-direction: column;
+			align-items: flex-start;
+			justify-content: flex-start;
+		}
 		.cf-library-list__col--artist,
 		.cf-library-list__col--duration,
 		.cf-library-list-row__artist,
