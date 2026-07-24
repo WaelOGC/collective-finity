@@ -212,10 +212,6 @@ if ( empty( $cf_featured_cover ) ) {
 	$cf_featured_cover = collective_finity_default_art_url();
 }
 
-$cf_social_links = function_exists( 'collective_finity_get_footer_social_links' )
-	? collective_finity_get_footer_social_links()
-	: array();
-
 $cf_latest_albums = new WP_Query(
 	array(
 		'post_type'      => 'albums',
@@ -560,9 +556,29 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 				</div>
 			</div>
 			<div class="cf-home-more-than-music__visual" aria-hidden="true">
-				<span class="cf-home-more-than-music__orb"></span>
-				<span class="cf-home-more-than-music__ring"></span>
-				<span class="cf-home-more-than-music__wave"></span>
+				<svg class="cf-home-more-than-music__svg" viewBox="0 0 320 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<defs>
+						<radialGradient id="cfMtmGlow" cx="50%" cy="48%" r="48%">
+							<stop offset="0%" stop-color="#FFB700" stop-opacity="0.28"/>
+							<stop offset="55%" stop-color="#FFB700" stop-opacity="0.06"/>
+							<stop offset="100%" stop-color="#FFB700" stop-opacity="0"/>
+						</radialGradient>
+					</defs>
+					<ellipse class="cf-home-more-than-music__glow" cx="160" cy="138" rx="118" ry="98" fill="url(#cfMtmGlow)"/>
+					<path class="cf-home-more-than-music__curve cf-home-more-than-music__curve--a" d="M42 168c38-46 78-70 118-70s80 24 118 70" stroke="#FFB700" stroke-width="1.2" stroke-opacity="0.35"/>
+					<path class="cf-home-more-than-music__curve cf-home-more-than-music__curve--b" d="M58 188c34-36 70-54 102-54s68 18 102 54" stroke="#FFB700" stroke-width="1" stroke-opacity="0.22"/>
+					<path class="cf-home-more-than-music__curve cf-home-more-than-music__curve--c" d="M74 206c28-26 56-40 86-40s58 14 86 40" stroke="#FFB700" stroke-width="0.9" stroke-opacity="0.16"/>
+					<circle class="cf-home-more-than-music__node cf-home-more-than-music__node--core" cx="160" cy="118" r="5.5" fill="#FFB700" fill-opacity="0.55"/>
+					<circle class="cf-home-more-than-music__node" cx="112" cy="96" r="2.4" fill="#FFB700" fill-opacity="0.45"/>
+					<circle class="cf-home-more-than-music__node" cx="208" cy="92" r="2.2" fill="#FFB700" fill-opacity="0.4"/>
+					<circle class="cf-home-more-than-music__node" cx="96" cy="148" r="2" fill="#FFB700" fill-opacity="0.35"/>
+					<circle class="cf-home-more-than-music__node" cx="224" cy="146" r="2.1" fill="#FFB700" fill-opacity="0.35"/>
+					<circle class="cf-home-more-than-music__node" cx="140" cy="168" r="1.8" fill="#FFB700" fill-opacity="0.3"/>
+					<circle class="cf-home-more-than-music__node" cx="182" cy="164" r="1.7" fill="#FFB700" fill-opacity="0.3"/>
+					<path class="cf-home-more-than-music__link" d="M160 118L112 96M160 118L208 92M160 118L96 148M160 118L224 146M160 118L140 168M160 118L182 164" stroke="#FFB700" stroke-width="0.8" stroke-opacity="0.18"/>
+					<circle class="cf-home-more-than-music__ring-anim" cx="160" cy="118" r="34" stroke="#FFB700" stroke-width="1" stroke-opacity="0.22"/>
+					<circle class="cf-home-more-than-music__ring-anim cf-home-more-than-music__ring-anim--slow" cx="160" cy="118" r="58" stroke="#FFB700" stroke-width="0.8" stroke-opacity="0.14" stroke-dasharray="3 7"/>
+				</svg>
 			</div>
 		</div>
 	</section>
@@ -645,19 +661,6 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 						</form>
 					<?php endif; ?>
 				</div>
-
-				<?php if ( ! empty( $cf_social_links ) ) : ?>
-					<div class="cf-home-inspire__social">
-						<span class="cf-home-inspire__social-label">Follow Us</span>
-						<div class="cf-home-inspire__social-links" aria-label="<?php esc_attr_e( 'Social media', 'collective-finity' ); ?>">
-							<?php foreach ( $cf_social_links as $cf_social ) : ?>
-								<a href="<?php echo esc_url( $cf_social['url'] ); ?>" class="cf-home-inspire__social-link" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr( $cf_social['label'] ); ?>">
-									<?php echo collective_finity_footer_social_icon( $cf_social['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-								</a>
-							<?php endforeach; ?>
-						</div>
-					</div>
-				<?php endif; ?>
 			</div>
 		</div>
 	</section>
@@ -1043,13 +1046,13 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		border: 1px solid rgba(255, 255, 255, 0.07);
 		border-radius: 16px;
 		background: rgba(18, 18, 18, 0.96);
-		padding: clamp(18px, 2.5vw, 28px);
+		padding: clamp(16px, 2.2vw, 24px);
 		box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.85);
 	}
 
 	.cf-home-featured-release__grid {
 		display: grid;
-		gap: 28px;
+		gap: 20px;
 		align-items: center;
 	}
 
@@ -1060,7 +1063,7 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		border: 1px solid rgba(255, 255, 255, 0.08);
 		box-shadow: 0 28px 56px -28px rgba(0, 0, 0, 0.85);
 		aspect-ratio: 1;
-		max-width: min(100%, 320px);
+		max-width: min(100%, 280px);
 		background: #0c0c0c;
 		justify-self: start;
 	}
@@ -1080,12 +1083,12 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 	.cf-home-featured-release__content {
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
-		max-width: 420px;
+		gap: 10px;
+		min-width: 0;
 	}
 
 	.cf-home-featured-release__title {
-		font-size: clamp(26px, 3.2vw, 34px);
+		font-size: clamp(24px, 3vw, 32px);
 	}
 
 	.cf-home-featured-release__artist {
@@ -1095,38 +1098,45 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		color: var(--cf-accent, #FFB700);
 	}
 
+	.cf-home-featured-release__content .cf-home-prose {
+		max-width: 34em;
+	}
+
 	.cf-home-featured-release__actions {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 12px;
-		margin-top: 6px;
+		margin-top: 4px;
 	}
 
 	.cf-home-featured-release__meta {
 		list-style: none;
 		margin: 0;
-		padding: 0;
+		padding: 16px 18px;
 		display: flex;
 		flex-direction: column;
-		gap: 14px;
-		justify-self: start;
+		gap: 12px;
+		border-radius: 12px;
+		border: 1px solid rgba(255, 255, 255, 0.06);
+		background: rgba(255, 255, 255, 0.025);
+		box-shadow: inset 0 0 0 1px rgba(255, 183, 0, 0.04);
 	}
 
 	.cf-home-featured-release__meta li {
 		display: flex;
 		align-items: center;
-		gap: 12px;
-		font-size: 13.5px;
-		color: #A8A8A8;
+		gap: 11px;
+		font-size: 13px;
+		color: #B0B0B0;
 		line-height: 1.3;
 	}
 
 	.cf-home-featured-release__meta-icon {
 		display: inline-flex;
-		width: 18px;
-		height: 18px;
+		width: 17px;
+		height: 17px;
 		flex-shrink: 0;
-		color: #7A7A7A;
+		color: rgba(255, 183, 0, 0.55);
 	}
 
 	.cf-home-featured-release__meta-icon svg {
@@ -1136,8 +1146,8 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 
 	@media (min-width: 900px) {
 		.cf-home-featured-release__grid {
-			grid-template-columns: minmax(220px, 300px) minmax(0, 1.2fr) minmax(160px, 200px);
-			gap: 36px;
+			grid-template-columns: minmax(200px, 260px) minmax(0, 1fr) minmax(168px, 200px);
+			gap: 22px 24px;
 			align-items: center;
 		}
 
@@ -1147,8 +1157,9 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		}
 
 		.cf-home-featured-release__meta {
-			justify-self: end;
-			padding-left: 8px;
+			justify-self: stretch;
+			align-self: center;
+			height: fit-content;
 		}
 	}
 
@@ -1476,7 +1487,7 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 	/* ---- More Than Music ---- */
 	.cf-home-more-than-music__grid {
 		display: grid;
-		gap: 40px;
+		gap: 36px;
 		align-items: center;
 	}
 
@@ -1492,49 +1503,83 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 
 	.cf-home-more-than-music__visual {
 		position: relative;
-		min-height: 220px;
+		min-height: 240px;
 		border-radius: 16px;
 		border: 1px solid rgba(255, 255, 255, 0.06);
 		background:
-			radial-gradient(ellipse 60% 50% at 50% 45%, rgba(255, 183, 0, 0.08) 0%, transparent 70%),
-			linear-gradient(160deg, #121212 0%, #0a0a0a 100%);
+			radial-gradient(ellipse 58% 48% at 50% 46%, rgba(255, 183, 0, 0.07) 0%, transparent 72%),
+			linear-gradient(165deg, #121212 0%, #0a0a0a 100%);
 		overflow: hidden;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
-	.cf-home-more-than-music__orb {
-		position: absolute;
-		left: 50%;
-		top: 46%;
-		width: 88px;
-		height: 88px;
-		transform: translate(-50%, -50%);
-		border-radius: 50%;
-		background: radial-gradient(circle at 35% 30%, rgba(255, 208, 96, 0.35), rgba(255, 183, 0, 0.08) 55%, transparent 70%);
-		box-shadow: 0 0 48px rgba(255, 183, 0, 0.12);
+	.cf-home-more-than-music__svg {
+		width: min(100%, 300px);
+		height: auto;
+		display: block;
 	}
 
-	.cf-home-more-than-music__ring {
-		position: absolute;
-		left: 50%;
-		top: 46%;
-		width: 160px;
-		height: 160px;
-		transform: translate(-50%, -50%);
-		border-radius: 50%;
-		border: 1px solid rgba(255, 183, 0, 0.18);
+	.cf-home-more-than-music__glow {
+		transform-origin: 160px 138px;
+		animation: cfMtmGlowPulse 7s ease-in-out infinite;
 	}
 
-	.cf-home-more-than-music__wave {
-		position: absolute;
-		inset: 18% 10% 22%;
-		opacity: 0.35;
-		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='180' viewBox='0 0 420 180' fill='none'%3E%3Cpath d='M0 90c28-18 56 18 84 0s56-18 84 0 56 18 84 0 56-18 84 0 56 18 84 0' stroke='%23FFB700' stroke-width='1.2'/%3E%3Cpath d='M0 112c28-14 56 14 84 0s56-14 84 0 56 14 84 0 56-14 84 0 56 14 84 0' stroke='%23FFB700' stroke-width='1' opacity='0.55'/%3E%3C/svg%3E") center / contain no-repeat;
+	.cf-home-more-than-music__curve--a {
+		animation: cfMtmCurveDrift 9s ease-in-out infinite;
+	}
+
+	.cf-home-more-than-music__curve--b {
+		animation: cfMtmCurveDrift 11s ease-in-out infinite reverse;
+	}
+
+	.cf-home-more-than-music__curve--c {
+		animation: cfMtmCurveDrift 13s ease-in-out infinite;
+	}
+
+	.cf-home-more-than-music__node {
+		animation: cfMtmNodePulse 5.5s ease-in-out infinite;
+	}
+
+	.cf-home-more-than-music__node--core {
+		animation-duration: 4.5s;
+	}
+
+	.cf-home-more-than-music__ring-anim {
+		transform-origin: 160px 118px;
+		animation: cfMtmRingBreathe 8s ease-in-out infinite;
+	}
+
+	.cf-home-more-than-music__ring-anim--slow {
+		animation-duration: 12s;
+		animation-direction: reverse;
+	}
+
+	@keyframes cfMtmGlowPulse {
+		0%, 100% { opacity: 0.7; transform: scale(0.96); }
+		50% { opacity: 1; transform: scale(1.04); }
+	}
+
+	@keyframes cfMtmCurveDrift {
+		0%, 100% { opacity: 0.85; transform: translateY(0); }
+		50% { opacity: 1; transform: translateY(-3px); }
+	}
+
+	@keyframes cfMtmNodePulse {
+		0%, 100% { opacity: 0.55; }
+		50% { opacity: 1; }
+	}
+
+	@keyframes cfMtmRingBreathe {
+		0%, 100% { opacity: 0.55; transform: scale(0.97); }
+		50% { opacity: 0.9; transform: scale(1.03); }
 	}
 
 	@media (min-width: 900px) {
 		.cf-home-more-than-music__grid {
-			grid-template-columns: minmax(0, 1.25fr) minmax(200px, 0.75fr);
-			gap: 52px;
+			grid-template-columns: minmax(0, 1.25fr) minmax(220px, 0.75fr);
+			gap: 44px;
 		}
 	}
 
@@ -1632,14 +1677,14 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		min-height: clamp(240px, 30vw, 300px);
 	}
 
-	/* ---- Vision + Newsletter / Social ---- */
+	/* ---- Vision + Newsletter ---- */
 	.cf-home-vision-panel__inner {
 		border: 1px solid rgba(255, 255, 255, 0.08);
 		border-radius: 16px;
 		background:
 			radial-gradient(ellipse 70% 55% at 50% 0%, rgba(255, 183, 0, 0.06) 0%, transparent 60%),
 			rgba(14, 14, 14, 0.98);
-		padding: clamp(28px, 4vw, 40px) clamp(20px, 3.5vw, 36px);
+		padding: clamp(22px, 3vw, 32px) clamp(20px, 3.5vw, 36px);
 	}
 
 	.cf-home-vision {
@@ -1675,13 +1720,13 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 
 	.cf-home-vision-panel__divider {
 		height: 1px;
-		margin: 28px 0;
+		margin: 20px 0;
 		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
 	}
 
 	.cf-home-inspire {
 		display: grid;
-		gap: 22px;
+		gap: 16px;
 		align-items: center;
 	}
 
@@ -1689,6 +1734,7 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		display: flex;
 		align-items: flex-start;
 		gap: 12px;
+		min-width: 0;
 	}
 
 	.cf-home-inspire__mail-icon {
@@ -1714,21 +1760,26 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 
 	.cf-home-inspire__form-wrap {
 		min-width: 0;
+		width: 100%;
 	}
 
 	.cf-home-inspire__form,
 	.cf-home-inspire__form-wrap .wpcf7-form {
 		display: flex;
 		align-items: stretch;
+		flex-direction: row;
 		gap: 0;
-		max-width: 420px;
+		width: 100%;
+		max-width: 480px;
+		margin-left: auto;
 	}
 
 	.cf-home-inspire__form input[type="email"],
 	.cf-home-inspire__form-wrap .wpcf7-form input[type="email"],
 	.cf-home-inspire__form-wrap .wpcf7-form input[type="text"] {
-		flex: 1;
+		flex: 1 1 auto;
 		min-width: 0;
+		width: 100%;
 		padding: 12px 14px;
 		border: 1px solid rgba(255, 255, 255, 0.12);
 		border-right: none;
@@ -1738,6 +1789,7 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		font-size: 13.5px;
 		font-family: inherit;
 		outline: none;
+		box-sizing: border-box;
 	}
 
 	.cf-home-inspire__form input[type="email"]:focus,
@@ -1749,9 +1801,10 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 	.cf-home-inspire__form button,
 	.cf-home-inspire__form-wrap .wpcf7-form input[type="submit"],
 	.cf-home-inspire__form-wrap .wpcf7-form button {
+		flex: 0 0 auto;
 		border: none;
 		border-radius: 0 10px 10px 0;
-		padding: 12px 18px;
+		padding: 12px 20px;
 		background: var(--cf-accent, #FFB700);
 		color: #0D0D0D;
 		font-weight: 700;
@@ -1759,13 +1812,25 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		cursor: pointer;
 		white-space: nowrap;
 		font-family: inherit;
+		margin: 0;
+		box-shadow: none;
+		transform: none;
 	}
 
-	.cf-home-inspire__form-wrap .wpcf7-form p {
+	.cf-home-inspire__form button:hover,
+	.cf-home-inspire__form-wrap .wpcf7-form input[type="submit"]:hover,
+	.cf-home-inspire__form-wrap .wpcf7-form button:hover {
+		background: #ffc633;
+		transform: none;
+		box-shadow: none;
+	}
+
+	.cf-home-inspire__form-wrap .wpcf7-form > p {
 		margin: 0;
 		display: flex;
 		flex: 1;
 		min-width: 0;
+		width: 100%;
 	}
 
 	.cf-home-inspire__form-wrap .wpcf7-form .wpcf7-form-control-wrap {
@@ -1779,63 +1844,11 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		display: none;
 	}
 
-	.cf-home-inspire__social {
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-		align-items: flex-start;
-	}
-
-	.cf-home-inspire__social-label {
-		font-family: var(--cf-mono, 'Space Mono', monospace);
-		font-size: 11px;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		color: #8A8A8A;
-	}
-
-	.cf-home-inspire__social-links {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-	}
-
-	.cf-home-inspire__social-link {
-		width: 34px;
-		height: 34px;
-		border-radius: 8px;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		background: rgba(255, 255, 255, 0.04);
-		color: #CFCFCF;
-		transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
-	}
-
-	.cf-home-inspire__social-link:hover,
-	.cf-home-inspire__social-link:focus-visible {
-		background: rgba(255, 183, 0, 0.12);
-		color: var(--cf-accent, #FFB700);
-		transform: translateY(-1px);
-		outline: none;
-	}
-
-	.cf-home-inspire__social-link svg {
-		width: 15px;
-		height: 15px;
-		fill: currentColor;
-	}
-
 	@media (min-width: 900px) {
 		.cf-home-inspire {
-			grid-template-columns: minmax(200px, 1.05fr) minmax(240px, 1.2fr) auto;
+			grid-template-columns: minmax(220px, 0.9fr) minmax(280px, 1.1fr);
 			gap: 28px;
 			align-items: center;
-		}
-
-		.cf-home-inspire__social {
-			align-items: flex-end;
-			justify-self: end;
 		}
 	}
 
@@ -1967,12 +1980,13 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		}
 
 		.cf-home-more-than-music__visual {
-			min-height: 160px;
+			min-height: 180px;
 		}
 
 		.cf-home-inspire__form,
 		.cf-home-inspire__form-wrap .wpcf7-form {
 			max-width: none;
+			margin-left: 0;
 		}
 	}
 
@@ -1994,7 +2008,13 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		[data-cf-home-reveal].is-visible .cf-home-featured-release__art,
 		[data-cf-home-reveal].is-visible .cf-home-featured-release__content > *,
 		[data-cf-home-reveal].is-visible .cf-home-more-than-music__copy > *,
-		[data-cf-home-reveal].is-visible .cf-home-banner__content > * {
+		[data-cf-home-reveal].is-visible .cf-home-banner__content > *,
+		.cf-home-more-than-music__glow,
+		.cf-home-more-than-music__curve--a,
+		.cf-home-more-than-music__curve--b,
+		.cf-home-more-than-music__curve--c,
+		.cf-home-more-than-music__node,
+		.cf-home-more-than-music__ring-anim {
 			animation: none !important;
 			transition: none !important;
 		}

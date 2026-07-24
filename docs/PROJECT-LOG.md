@@ -103,7 +103,8 @@ This file tracks every feature, fix, and pending item implemented in the collect
 - Hero uses `the-spark-of-creation.webp` with left-aligned copy, right-visible background, subtle left readability overlay (About-style border); Explore Music + Join Community; existing live search kept
 - Featured Release: three-column premium panel (artwork + copy/CTAs + metadata icons for type/tracks/duration/genre/year); Listen Now plays first album track when available
 - Featured Tracks: compact two-column horizontal list rows (play, thumb, title/artist, duration, like, more) — not large cards
-- Closing Vision panel: “The Future Isn't Automated…” plus Stay Inspired newsletter + Follow Us socials (reuses footer social links / CF7 subscription form when available)
+- Closing Vision panel: “The Future Isn't Automated…” plus Stay Inspired newsletter (horizontal email + Subscribe; social icons removed — footer remains the single social source)
+- Polish: Featured Release tighter 3-column composition with connected meta panel; More Than Music refined SVG constellation with subtle motion; newsletter row compacted
 - Design system: black/gray/white + soft gold only; tighter section spacing (~36–52px); readable prose width; subtle hovers; IntersectionObserver fade-up reveals; content stays inside main column between sidebars
 
 ### About Page Rebuild (`page-about.php`)
