@@ -376,7 +376,7 @@ function collective_finity_user_liked_post( $post_id, $user_id = 0 ) {
  * Enqueue shared blog card styles on Blog Hub, single posts, and artist pages.
  */
 function collective_finity_enqueue_blog_card_styles() {
-    if ( ! is_singular( 'post' ) && ! is_page_template( 'template-blog-hub.php' ) && ! is_tax( 'track_artist' ) ) {
+    if ( ! is_singular( 'post' ) && ! is_page_template( 'template-blog-hub.php' ) && ! is_tax( 'track_artist' ) && ! is_front_page() ) {
         return;
     }
 

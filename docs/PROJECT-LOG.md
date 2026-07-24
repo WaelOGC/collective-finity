@@ -98,6 +98,15 @@ This file tracks every feature, fix, and pending item implemented in the collect
 - Filter pills limited to `music_genre` terms assigned to at least one published album (`object_ids` from albums CPT); track-only / empty genres excluded
 - Album grid, cards, and "All genres" pill behavior unchanged
 
+### Homepage Rebuild (`front-page.php`)
+- Section order locked to redesign brief: Hero → Featured Release → Latest Releases → Featured Tracks → More Than Music → Latest Articles → Join the Collective → The Future Begins
+- Hero uses `the-spark-of-creation.webp` with About-style animated border/glow; label/heading/description copy locked; existing live search kept (spacing polish only); Explore Music + Join Community CTAs; no stats strip / top nav
+- Featured Release: premium two-column showcase for **Land Of Light** (large artwork + Listen Now / View Album); Listen Now plays first album track via mini player when available
+- Latest Releases / Featured Tracks reuse Music Library `cf-card` album & track markup; Latest Articles reuses `collective_finity_render_blog_card()` (blog card CSS now also enqueued on front page)
+- More Than Music: two-column copy + minimal abstract visual; Learn More → `/about/`
+- Join the Collective / The Future Begins: full-bleed-within-container background banners (`join-the-collective.webp`, `the-future-begins.webp` with `.webp.jpg` fallback); Future section has no CTA
+- Design system: black/gray/white + soft gold only; readable prose width (~60–75ch); subtle card hovers; IntersectionObserver fade-up reveals; content stays inside main column between sidebars
+
 ### About Page Rebuild (`page-about.php`)
 - Section order matches design mockup: Hero → Why Collective Finity Exists → Meet the Founder → Our Foundation → Roadmap → FAQ + Join the Journey (side-by-side)
 - Hero is full-bleed background (`about-collective-finity-ai-music-vision.webp`) with animated conic border/glow, accent highlight on “Human Creativity.”, Explore Music + Join Community CTAs
@@ -117,7 +126,8 @@ This file tracks every feature, fix, and pending item implemented in the collect
 - **Plugin phase pending**: `cf_track_share` AJAX + `window.CF_Auth.trackShare` helper in cf-auth — theme calls are guarded (`typeof` check) and no-op until then
 
 ## Known Pending Items
-- Decision needed: number of reviews shown on the FAQ page (currently 4/6/8 candidates) and on the homepage carousel (3/6/9 candidates) — no final call made yet
+- Decision needed: number of reviews shown on the FAQ page (currently 4/6/8 candidates) — homepage reviews carousel removed in homepage rebuild
+- Homepage visual QA against `HomePage.png` reference mockup once the image is available in the editor
 
 ## Future Features (Planned, Not Yet Built)
 - **Share tracking backend (cf-auth plugin)**: `cf_track_share` AJAX endpoint + `window.CF_Auth.trackShare(itemId, itemType, platform)` helper — theme front-end already wired (phase 1); plugin implementation is the next phase
