@@ -23,6 +23,9 @@ if ( 'all' === $cf_tracks_view ) {
 } elseif ( 'albums' === $cf_tracks_view ) {
 	$cf_header_title = __( 'Albums', 'collective-finity' );
 	$cf_header_copy  = __( 'Browse every published album in the library.', 'collective-finity' );
+} elseif ( 'singles' === $cf_tracks_view ) {
+	$cf_header_title = __( 'Singles', 'collective-finity' );
+	$cf_header_copy  = __( 'Browse every standalone single in the library.', 'collective-finity' );
 } elseif ( 'popular' === $cf_tracks_view ) {
 	$cf_header_title = __( 'Popular Tracks', 'collective-finity' );
 	$cf_header_copy  = __( 'Tracks that have reached the popular view threshold.', 'collective-finity' );
@@ -44,6 +47,9 @@ $cf_url_all = function_exists( 'collective_finity_get_tracks_all_url' )
 $cf_url_albums = function_exists( 'collective_finity_get_tracks_albums_url' )
 	? collective_finity_get_tracks_albums_url()
 	: $cf_tracks_base_url . 'albums/';
+$cf_url_singles = function_exists( 'collective_finity_get_tracks_singles_url' )
+	? collective_finity_get_tracks_singles_url()
+	: $cf_tracks_base_url . 'singles/';
 $cf_url_popular = function_exists( 'collective_finity_get_tracks_popular_url' )
 	? collective_finity_get_tracks_popular_url()
 	: $cf_tracks_base_url . 'popular/';
@@ -436,6 +442,13 @@ $cf_library_tabs = array(
 		'active' => ( 'albums' === $cf_tracks_view ),
 		'type'   => 'view',
 	),
+	array(
+		'id'     => 'singles',
+		'label'  => __( 'Singles', 'collective-finity' ),
+		'url'    => $cf_url_singles,
+		'active' => ( 'singles' === $cf_tracks_view ),
+		'type'   => 'view',
+	),
 );
 
 if ( $cf_show_artists_tab ) {
@@ -637,6 +650,26 @@ $cf_library_tabs[] = array(
 						'orderby'        => 'date',
 						'order'          => 'DESC',
 					);
+				} elseif ( 'singles' === $cf_tracks_view ) {
+					$cf_list_args = array(
+						'post_type'      => 'tracks',
+						'posts_per_page' => -1,
+						'post_status'    => 'publish',
+						'orderby'        => 'date',
+						'order'          => 'DESC',
+						'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+							'relation' => 'OR',
+							array(
+								'key'     => 'track_release_type',
+								'value'   => 'single',
+								'compare' => '=',
+							),
+							array(
+								'key'     => 'track_release_type',
+								'compare' => 'NOT EXISTS',
+							),
+						),
+					);
 				} else {
 					$cf_list_args = array(
 						'post_type'      => 'tracks',
@@ -689,7 +722,19 @@ $cf_library_tabs[] = array(
 							?>
 						</div>
 						<div class="cf-library-list" data-cf-view="list" hidden>
+							<?php if ( $cf_is_albums_view ) : ?>
+							<div class="cf-library-list__head cf-library-list__head--album" aria-hidden="true">
+								<span class="cf-library-list__col cf-library-list__col--thumb"></span>
+								<span class="cf-library-list__col cf-library-list__col--track"><?php esc_html_e( 'Album', 'collective-finity' ); ?></span>
+								<span class="cf-library-list__col cf-library-list__col--artist"><?php esc_html_e( 'Tracks', 'collective-finity' ); ?></span>
+								<span class="cf-library-list__col cf-library-list__col--duration"><span class="dashicons dashicons-clock"></span></span>
+								<span class="cf-library-list__col cf-library-list__col--genre"><?php esc_html_e( 'Genre', 'collective-finity' ); ?></span>
+								<span class="cf-library-list__col cf-library-list__col--date"><?php esc_html_e( 'Released', 'collective-finity' ); ?></span>
+							</div>
+							<?php else : ?>
 							<div class="cf-library-list__head" aria-hidden="true">
+								<span class="cf-library-list__col cf-library-list__col--play"></span>
+								<span class="cf-library-list__col cf-library-list__col--thumb"></span>
 								<span class="cf-library-list__col cf-library-list__col--track"><?php esc_html_e( 'Track', 'collective-finity' ); ?></span>
 								<span class="cf-library-list__col cf-library-list__col--artist"><?php esc_html_e( 'Artist', 'collective-finity' ); ?></span>
 								<span class="cf-library-list__col cf-library-list__col--duration"><span class="dashicons dashicons-clock"></span></span>
@@ -697,6 +742,7 @@ $cf_library_tabs[] = array(
 								<span class="cf-library-list__col cf-library-list__col--date"><?php esc_html_e( 'Released', 'collective-finity' ); ?></span>
 								<span class="cf-library-list__col cf-library-list__col--actions"></span>
 							</div>
+							<?php endif; ?>
 							<?php
 							while ( $cf_list_q->have_posts() ) :
 								$cf_list_q->the_post();
@@ -719,6 +765,9 @@ $cf_library_tabs[] = array(
 						<?php elseif ( $cf_is_albums_view ) : ?>
 							<h2><?php esc_html_e( 'No Albums Yet', 'collective-finity' ); ?></h2>
 							<p><?php esc_html_e( 'New albums are on their way. Stay tuned!', 'collective-finity' ); ?></p>
+						<?php elseif ( 'singles' === $cf_tracks_view ) : ?>
+							<h2><?php esc_html_e( 'No Singles Yet', 'collective-finity' ); ?></h2>
+							<p><?php esc_html_e( 'New singles are on their way. Stay tuned!', 'collective-finity' ); ?></p>
 						<?php else : ?>
 							<h2><?php esc_html_e( 'No Tracks Yet', 'collective-finity' ); ?></h2>
 							<p><?php esc_html_e( 'New music is on its way. Stay tuned!', 'collective-finity' ); ?></p>
@@ -849,7 +898,7 @@ $cf_library_tabs[] = array(
 		max-width: 520px;
 		font-size: 14px;
 		line-height: 1.7;
-		color: #B3B3B3;
+		color: rgba(255, 255, 255, 0.85);
 	}
 
 	.cf-library-search {
@@ -862,7 +911,7 @@ $cf_library_tabs[] = array(
 		left: 16px;
 		top: 50%;
 		transform: translateY(-50%);
-		color: #7A7A7A;
+		color: rgba(255, 255, 255, 0.85);
 		font-size: 16px;
 		width: 16px;
 		height: 16px;
@@ -893,7 +942,7 @@ $cf_library_tabs[] = array(
 		transform: translateY(-50%);
 		font-family: var(--cf-mono, 'Space Mono', monospace);
 		font-size: 11px;
-		color: #7A7A7A;
+		color: rgba(255, 255, 255, 0.85);
 		border: 1px solid rgba(255, 255, 255, 0.12);
 		border-radius: 6px;
 		padding: 2px 6px;
@@ -923,7 +972,7 @@ $cf_library_tabs[] = array(
 		border-radius: 999px;
 		border: 1px solid rgba(255, 255, 255, 0.1);
 		background: rgba(255, 255, 255, 0.02);
-		color: rgba(255, 255, 255, 0.7);
+		color: rgba(255, 255, 255, 0.9);
 		font-size: 13px;
 		font-weight: 600;
 		text-decoration: none;
@@ -1154,15 +1203,18 @@ $cf_library_tabs[] = array(
 	}
 	.cf-library-list__head {
 		display: grid;
-		grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.2fr) 64px minmax(0, 1fr) minmax(0, 0.9fr) 40px;
+		grid-template-columns: 40px 48px minmax(0, 2.2fr) minmax(0, 1.2fr) 64px minmax(0, 1fr) minmax(0, 0.9fr) 40px;
 		gap: 12px;
 		align-items: center;
-		padding: 0 14px 8px 56px;
+		padding: 0 14px 8px 14px;
 		font-size: 10px;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		color: #7A7A7A;
+		color: rgba(255, 255, 255, 0.85);
+	}
+	.cf-library-list__head--album {
+		grid-template-columns: 48px minmax(0, 2.2fr) minmax(0, 1.2fr) 64px minmax(0, 1fr) minmax(0, 0.9fr);
 	}
 	.cf-library-list__col--duration { text-align: center; }
 	.cf-library-list__col--duration .dashicons { font-size: 14px; width: 14px; height: 14px; }
@@ -1244,7 +1296,7 @@ $cf_library_tabs[] = array(
 	.cf-library-list-row__genre,
 	.cf-library-list-row__date {
 		font-size: 12px;
-		color: #7A7A7A;
+		color: rgba(255, 255, 255, 0.85);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -1283,12 +1335,15 @@ $cf_library_tabs[] = array(
 
 	@media (max-width: 1023px) {
 		.cf-carousel { --cf-visible: 4; --cf-gap: 14px; }
-		.cf-library-list__head,
+		.cf-library-list__col--genre,
+		.cf-library-list__col--date,
 		.cf-library-list-row__genre,
 		.cf-library-list-row__date { display: none; }
+		.cf-library-list__head,
 		.cf-library-list-row {
 			grid-template-columns: 40px 48px minmax(0, 1.6fr) minmax(0, 1fr) 56px 36px;
 		}
+		.cf-library-list__head--album,
 		.cf-library-list-row--album {
 			grid-template-columns: 48px minmax(0, 1.6fr) minmax(0, 1fr) 56px;
 		}
@@ -1300,12 +1355,16 @@ $cf_library_tabs[] = array(
 		.cf-play-btn { opacity: 1; transform: none; width: 32px; height: 32px; }
 		.cf-heart-btn.cf-interaction-btn { opacity: 1; }
 		.cf-library-hero__controls { flex-direction: column; }
+		.cf-library-list__col--artist,
+		.cf-library-list__col--duration,
+		.cf-library-list-row__artist,
+		.cf-library-list-row__duration { display: none; }
+		.cf-library-list__head,
 		.cf-library-list-row {
 			grid-template-columns: 36px 40px minmax(0, 1fr) 36px;
 			gap: 8px;
 		}
-		.cf-library-list-row__artist,
-		.cf-library-list-row__duration { display: none; }
+		.cf-library-list__head--album,
 		.cf-library-list-row--album {
 			grid-template-columns: 40px minmax(0, 1fr);
 		}

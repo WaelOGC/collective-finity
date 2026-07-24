@@ -210,7 +210,7 @@ function collective_finity_popular_min_views() {
  * @return array<int, string>
  */
 function collective_finity_get_tracks_archive_view_whitelist() {
-    return array( 'all', 'albums', 'popular', 'playlists' );
+    return array( 'all', 'albums', 'singles', 'popular', 'playlists' );
 }
 
 /**
@@ -272,6 +272,15 @@ function collective_finity_get_tracks_albums_url() {
 }
 
 /**
+ * URL for the Singles Music Library tab.
+ *
+ * @return string
+ */
+function collective_finity_get_tracks_singles_url() {
+    return collective_finity_get_tracks_view_url( 'singles' );
+}
+
+/**
  * URL for the Popular tracks archive ("Show all" on Popular).
  *
  * @return string
@@ -317,11 +326,11 @@ add_filter( 'query_vars', 'collective_finity_tracks_view_query_vars' );
  * Flush rewrite rules once after adding tracks view endpoints.
  */
 function collective_finity_maybe_flush_tracks_view_rewrites() {
-    if ( '2' === get_option( 'cf_tracks_view_rewrite_v1' ) ) {
+    if ( '3' === get_option( 'cf_tracks_view_rewrite_v1' ) ) {
         return;
     }
     flush_rewrite_rules( false );
-    update_option( 'cf_tracks_view_rewrite_v1', '2' );
+    update_option( 'cf_tracks_view_rewrite_v1', '3' );
 }
 add_action( 'init', 'collective_finity_maybe_flush_tracks_view_rewrites', 99 );
 
