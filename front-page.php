@@ -461,35 +461,35 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 					</div>
 				</div>
 				<ul class="cf-home-featured-release__meta" aria-label="<?php esc_attr_e( 'Album details', 'collective-finity' ); ?>">
-					<li>
+					<li class="cf-home-featured-release__meta-item cf-home-featured-release__meta-item--type">
 						<span class="cf-home-featured-release__meta-icon" aria-hidden="true">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.2"/></svg>
 						</span>
 						<span><?php echo esc_html( $cf_featured_meta['type'] ); ?></span>
 					</li>
-					<li>
-						<span class="cf-home-featured-release__meta-icon" aria-hidden="true">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-						</span>
-						<span><?php echo esc_html( $cf_featured_meta['tracks'] ); ?></span>
-					</li>
-					<li>
+					<li class="cf-home-featured-release__meta-item cf-home-featured-release__meta-item--duration">
 						<span class="cf-home-featured-release__meta-icon" aria-hidden="true">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
 						</span>
 						<span><?php echo esc_html( $cf_featured_meta['duration'] ); ?></span>
 					</li>
-					<li>
-						<span class="cf-home-featured-release__meta-icon" aria-hidden="true">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18"/><path d="M12 3a14 14 0 0 0 0 18"/></svg>
-						</span>
-						<span><?php echo esc_html( $cf_featured_meta['genre'] ); ?></span>
-					</li>
-					<li class="cf-home-featured-release__meta-item--year">
+					<li class="cf-home-featured-release__meta-item cf-home-featured-release__meta-item--year">
 						<span class="cf-home-featured-release__meta-icon" aria-hidden="true">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="M3.5 10h17"/></svg>
 						</span>
 						<span><?php echo esc_html( $cf_featured_meta['year'] ); ?></span>
+					</li>
+					<li class="cf-home-featured-release__meta-item cf-home-featured-release__meta-item--tracks">
+						<span class="cf-home-featured-release__meta-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+						</span>
+						<span><?php echo esc_html( $cf_featured_meta['tracks'] ); ?></span>
+					</li>
+					<li class="cf-home-featured-release__meta-item cf-home-featured-release__meta-item--genre">
+						<span class="cf-home-featured-release__meta-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18"/><path d="M12 3a14 14 0 0 0 0 18"/></svg>
+						</span>
+						<span><?php echo esc_html( $cf_featured_meta['genre'] ); ?></span>
 					</li>
 				</ul>
 			</div>
@@ -632,21 +632,11 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 				</div>
 
 				<div class="cf-home-inspire__form-wrap">
-					<?php
-					$cf_newsletter_html = shortcode_exists( 'contact-form-7' )
-						? trim( (string) do_shortcode( '[contact-form-7 id="a1d896d" title="Subscription Form"]' ) )
-						: '';
-					$cf_newsletter_ok = $cf_newsletter_html && false === strpos( $cf_newsletter_html, '[contact-form-7' );
-					if ( $cf_newsletter_ok ) :
-						echo $cf_newsletter_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					else :
-						?>
-						<form class="cf-home-inspire__form" action="#" method="post">
-							<label class="screen-reader-text" for="cf-home-newsletter-email"><?php esc_html_e( 'Email address', 'collective-finity' ); ?></label>
-							<input type="email" id="cf-home-newsletter-email" name="email" placeholder="<?php esc_attr_e( 'Enter your email', 'collective-finity' ); ?>" required autocomplete="email">
-							<button type="submit" class="cf-home-btn cf-home-btn--primary">Subscribe</button>
-						</form>
-					<?php endif; ?>
+					<form class="cf-home-inspire__form" action="#" method="post">
+						<label class="screen-reader-text" for="cf-home-newsletter-email"><?php esc_html_e( 'Email address', 'collective-finity' ); ?></label>
+						<input type="email" id="cf-home-newsletter-email" name="email" placeholder="<?php esc_attr_e( 'Enter your email', 'collective-finity' ); ?>" required autocomplete="email">
+						<button type="submit">Subscribe</button>
+					</form>
 				</div>
 			</div>
 		</div>
@@ -1099,10 +1089,10 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 	.cf-home-featured-release__meta {
 		list-style: none;
 		margin: 0;
-		padding: 14px 16px;
+		padding: 12px 14px;
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 10px 16px;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 10px 14px;
 		border-radius: 12px;
 		border: 1px solid rgba(255, 255, 255, 0.06);
 		background: rgba(255, 255, 255, 0.025);
@@ -1110,7 +1100,7 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		min-width: 0;
 	}
 
-	.cf-home-featured-release__meta li {
+	.cf-home-featured-release__meta-item {
 		display: flex;
 		align-items: center;
 		gap: 8px;
@@ -1120,18 +1110,16 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		min-width: 0;
 	}
 
-	.cf-home-featured-release__meta li > span:last-child {
+	.cf-home-featured-release__meta-item > span:last-child {
 		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
-	.cf-home-featured-release__meta-item--year {
-		grid-column: 1 / -1;
-		border-top: 1px solid rgba(255, 255, 255, 0.06);
-		margin-top: 2px;
-		padding-top: 10px;
+	.cf-home-featured-release__meta-item--tracks,
+	.cf-home-featured-release__meta-item--genre {
+		grid-column: span 1;
 	}
 
 	.cf-home-featured-release__meta-icon {
@@ -1149,8 +1137,8 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 
 	@media (min-width: 900px) {
 		.cf-home-featured-release__grid {
-			grid-template-columns: minmax(200px, 260px) minmax(0, 1fr) minmax(210px, 250px);
-			gap: 18px 20px;
+			grid-template-columns: minmax(200px, 260px) minmax(0, 1fr) minmax(260px, 320px);
+			gap: 16px 18px;
 			align-items: center;
 		}
 
@@ -1163,6 +1151,16 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 			justify-self: stretch;
 			align-self: center;
 			height: fit-content;
+		}
+	}
+
+	@media (max-width: 899px) {
+		.cf-home-featured-release__meta {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.cf-home-featured-release__meta-item--year {
+			grid-column: 1 / -1;
 		}
 	}
 
@@ -1721,8 +1719,7 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		width: 100%;
 	}
 
-	.cf-home-inspire__form,
-	.cf-home-inspire__form-wrap .wpcf7-form {
+	.cf-home-inspire__form {
 		display: flex;
 		align-items: stretch;
 		flex-direction: row;
@@ -1733,9 +1730,7 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		margin-left: auto;
 	}
 
-	.cf-home-inspire__form input[type="email"],
-	.cf-home-inspire__form-wrap .wpcf7-form input[type="email"],
-	.cf-home-inspire__form-wrap .wpcf7-form input[type="text"] {
+	.cf-home-inspire__form input[type="email"] {
 		flex: 1 1 auto;
 		min-width: 0;
 		width: 100%;
@@ -1752,15 +1747,11 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		box-sizing: border-box;
 	}
 
-	.cf-home-inspire__form input[type="email"]:focus,
-	.cf-home-inspire__form-wrap .wpcf7-form input[type="email"]:focus,
-	.cf-home-inspire__form-wrap .wpcf7-form input[type="text"]:focus {
+	.cf-home-inspire__form input[type="email"]:focus {
 		border-color: rgba(255, 183, 0, 0.45);
 	}
 
-	.cf-home-inspire__form button,
-	.cf-home-inspire__form-wrap .wpcf7-form input[type="submit"],
-	.cf-home-inspire__form-wrap .wpcf7-form button {
+	.cf-home-inspire__form button {
 		flex: 0 0 auto;
 		border: none;
 		border-radius: 0 10px 10px 0;
@@ -1778,37 +1769,10 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 		transform: none;
 	}
 
-	.cf-home-inspire__form button:hover,
-	.cf-home-inspire__form-wrap .wpcf7-form input[type="submit"]:hover,
-	.cf-home-inspire__form-wrap .wpcf7-form button:hover {
+	.cf-home-inspire__form button:hover {
 		background: #ffc633;
 		transform: none;
 		box-shadow: none;
-	}
-
-	.cf-home-inspire__form-wrap .wpcf7-form > p {
-		margin: 0;
-		display: flex;
-		flex: 1 1 auto;
-		min-width: 0;
-		width: auto;
-		align-items: stretch;
-	}
-
-	.cf-home-inspire__form-wrap .wpcf7-form > p:has(input[type="submit"]),
-	.cf-home-inspire__form-wrap .wpcf7-form > p:has(button) {
-		flex: 0 0 auto;
-	}
-
-	.cf-home-inspire__form-wrap .wpcf7-form .wpcf7-form-control-wrap {
-		flex: 1;
-		min-width: 0;
-		display: block;
-	}
-
-	.cf-home-inspire__form-wrap .wpcf7-form .wpcf7-spinner,
-	.cf-home-inspire__form-wrap .wpcf7-form .wpcf7-response-output {
-		display: none;
 	}
 
 	@media (min-width: 900px) {
@@ -1971,8 +1935,7 @@ $cf_render_track_row = static function ( $track_id ) use ( $cf_format_track_time
 			min-height: 180px;
 		}
 
-		.cf-home-inspire__form,
-		.cf-home-inspire__form-wrap .wpcf7-form {
+		.cf-home-inspire__form {
 			max-width: none;
 			margin-left: 0;
 		}
