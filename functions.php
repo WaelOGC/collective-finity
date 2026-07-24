@@ -205,7 +205,16 @@ function collective_finity_popular_min_views() {
 }
 
 /**
- * Current tracks-archive sub-view: '', 'all', or 'popular'.
+ * Allowed Music Library sub-view slugs (extend when adding tabs).
+ *
+ * @return array<int, string>
+ */
+function collective_finity_get_tracks_archive_view_whitelist() {
+    return array( 'all', 'albums', 'popular', 'playlists' );
+}
+
+/**
+ * Current tracks-archive sub-view: '' or a whitelisted slug.
  *
  * @return string
  */
@@ -214,7 +223,34 @@ function collective_finity_get_tracks_archive_view() {
     if ( ! is_string( $view ) || '' === $view ) {
         $view = isset( $_GET['view'] ) ? sanitize_key( wp_unslash( $_GET['view'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     }
-    return in_array( $view, array( 'all', 'popular' ), true ) ? $view : '';
+    return in_array( $view, collective_finity_get_tracks_archive_view_whitelist(), true ) ? $view : '';
+}
+
+/**
+ * Base archive URL for tracks Music Library.
+ *
+ * @return string
+ */
+function collective_finity_get_tracks_archive_base_url() {
+    $base = get_post_type_archive_link( 'tracks' );
+    if ( ! $base ) {
+        $base = home_url( '/tracks/' );
+    }
+    return trailingslashit( $base );
+}
+
+/**
+ * URL for a Music Library sub-view pretty path.
+ *
+ * @param string $view Whitelisted view slug.
+ * @return string
+ */
+function collective_finity_get_tracks_view_url( $view ) {
+    $view = sanitize_key( (string) $view );
+    if ( ! in_array( $view, collective_finity_get_tracks_archive_view_whitelist(), true ) ) {
+        return collective_finity_get_tracks_archive_base_url();
+    }
+    return collective_finity_get_tracks_archive_base_url() . $view . '/';
 }
 
 /**
@@ -223,11 +259,16 @@ function collective_finity_get_tracks_archive_view() {
  * @return string
  */
 function collective_finity_get_tracks_all_url() {
-    $base = get_post_type_archive_link( 'tracks' );
-    if ( ! $base ) {
-        $base = home_url( '/tracks/' );
-    }
-    return trailingslashit( $base ) . 'all/';
+    return collective_finity_get_tracks_view_url( 'all' );
+}
+
+/**
+ * URL for the Albums Music Library tab.
+ *
+ * @return string
+ */
+function collective_finity_get_tracks_albums_url() {
+    return collective_finity_get_tracks_view_url( 'albums' );
 }
 
 /**
@@ -236,19 +277,29 @@ function collective_finity_get_tracks_all_url() {
  * @return string
  */
 function collective_finity_get_tracks_popular_url() {
-    $base = get_post_type_archive_link( 'tracks' );
-    if ( ! $base ) {
-        $base = home_url( '/tracks/' );
-    }
-    return trailingslashit( $base ) . 'popular/';
+    return collective_finity_get_tracks_view_url( 'popular' );
+}
+
+/**
+ * URL for the Playlists coming-soon Music Library tab.
+ *
+ * @return string
+ */
+function collective_finity_get_tracks_playlists_url() {
+    return collective_finity_get_tracks_view_url( 'playlists' );
 }
 
 /**
  * Pretty URL rewrites for Music Library sub-views.
  */
 function collective_finity_register_tracks_view_rewrites() {
-    add_rewrite_rule( '^tracks/all/?$', 'index.php?post_type=tracks&cf_tracks_view=all', 'top' );
-    add_rewrite_rule( '^tracks/popular/?$', 'index.php?post_type=tracks&cf_tracks_view=popular', 'top' );
+    foreach ( collective_finity_get_tracks_archive_view_whitelist() as $view ) {
+        add_rewrite_rule(
+            '^tracks/' . preg_quote( $view, '/' ) . '/?$',
+            'index.php?post_type=tracks&cf_tracks_view=' . $view,
+            'top'
+        );
+    }
 }
 add_action( 'init', 'collective_finity_register_tracks_view_rewrites', 20 );
 
@@ -266,11 +317,11 @@ add_filter( 'query_vars', 'collective_finity_tracks_view_query_vars' );
  * Flush rewrite rules once after adding tracks view endpoints.
  */
 function collective_finity_maybe_flush_tracks_view_rewrites() {
-    if ( '1' === get_option( 'cf_tracks_view_rewrite_v1' ) ) {
+    if ( '2' === get_option( 'cf_tracks_view_rewrite_v1' ) ) {
         return;
     }
     flush_rewrite_rules( false );
-    update_option( 'cf_tracks_view_rewrite_v1', '1' );
+    update_option( 'cf_tracks_view_rewrite_v1', '2' );
 }
 add_action( 'init', 'collective_finity_maybe_flush_tracks_view_rewrites', 99 );
 
@@ -287,8 +338,12 @@ function collective_finity_tracks_view_document_title( $parts ) {
     $view = collective_finity_get_tracks_archive_view();
     if ( 'all' === $view ) {
         $parts['title'] = __( 'All Tracks', 'collective-finity' );
+    } elseif ( 'albums' === $view ) {
+        $parts['title'] = __( 'Albums', 'collective-finity' );
     } elseif ( 'popular' === $view ) {
         $parts['title'] = __( 'Popular Tracks', 'collective-finity' );
+    } elseif ( 'playlists' === $view ) {
+        $parts['title'] = __( 'Playlists', 'collective-finity' );
     }
     return $parts;
 }

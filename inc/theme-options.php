@@ -52,6 +52,8 @@ function collective_finity_default_theme_options() {
         'show_global_player' => 1,
         'default_volume'     => 72,
         'popular_min_views'  => 50,
+        'library_show_artists_tab'   => 1,
+        'library_show_playlists_tab' => 1,
         'footer_copyright'   => '',
         'footer_tagline'     => 'Experience Music Beyond Imagination',
         'footer_description' => 'Welcome to Collective Finity — a cinematic world where emotional sound, visual stories and creativity connect in one immersive universe.',
@@ -405,6 +407,8 @@ function collective_finity_sanitize_theme_options( $input ) {
         $output['show_global_player'] = empty( $input['show_global_player'] ) ? 0 : 1;
         $output['default_volume']     = min( 100, max( 0, absint( $input['default_volume'] ?? $defaults['default_volume'] ) ) );
         $output['popular_min_views']  = max( 0, absint( $input['popular_min_views'] ?? $defaults['popular_min_views'] ) );
+        $output['library_show_artists_tab']   = empty( $input['library_show_artists_tab'] ) ? 0 : 1;
+        $output['library_show_playlists_tab'] = empty( $input['library_show_playlists_tab'] ) ? 0 : 1;
     }
 
     if ( 'footer' === $submitted_tab ) {
@@ -1019,6 +1023,14 @@ function collective_finity_render_theme_options_player_tab( $options ) {
                 <input type="number" min="0" step="1" id="cf_popular_min_views" name="<?php echo esc_attr( $option_key ); ?>[popular_min_views]" value="<?php echo esc_attr( (string) ( $options['popular_min_views'] ?? 50 ) ); ?>" class="small-text">
                 <p class="description"><?php esc_html_e( 'Tracks need at least this many views to appear in the Popular carousel and Popular archive. Default: 50.', 'collective-finity' ); ?></p>
             </td>
+        </tr>
+        <tr>
+            <th scope="row"><?php esc_html_e( 'Artists Tab', 'collective-finity' ); ?></th>
+            <td><label><input type="checkbox" name="<?php echo esc_attr( $option_key ); ?>[library_show_artists_tab]" value="1" <?php checked( $options['library_show_artists_tab'], 1 ); ?>> <?php esc_html_e( 'Show Artists tab on the Music Library page', 'collective-finity' ); ?></label></td>
+        </tr>
+        <tr>
+            <th scope="row"><?php esc_html_e( 'Playlists Tab', 'collective-finity' ); ?></th>
+            <td><label><input type="checkbox" name="<?php echo esc_attr( $option_key ); ?>[library_show_playlists_tab]" value="1" <?php checked( $options['library_show_playlists_tab'], 1 ); ?>> <?php esc_html_e( 'Show Playlists tab on the Music Library page', 'collective-finity' ); ?></label></td>
         </tr>
     </table>
     <?php
