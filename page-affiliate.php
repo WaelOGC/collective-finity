@@ -277,15 +277,18 @@ $cf_novax_image_url = $cf_novax_rel ? $cf_theme_uri . $cf_novax_rel : '';
 }
 .cf-affiliate-hero__badge {
 	display: inline-block;
-	padding: 7px 16px;
-	border-radius: 999px;
-	background: var(--cf-accent-dim);
-	border: var(--cf-card-border-width) solid color-mix(in srgb, var(--cf-accent) 35%, transparent);
+	margin: 0;
+	padding: 0;
+	border: none;
+	background: none;
+	border-radius: 0;
+	box-shadow: none;
 	color: var(--cf-accent);
 	font-family: var(--cf-mono);
 	font-size: 11px;
-	letter-spacing: 0.1em;
+	letter-spacing: 0.12em;
 	text-transform: uppercase;
+	line-height: 1.2;
 }
 .cf-affiliate-hero__title,
 .cf-affiliate-section__title,
@@ -321,6 +324,43 @@ $cf_novax_image_url = $cf_novax_rel ? $cf_theme_uri . $cf_novax_rel : '';
 }
 .cf-affiliate-actions--center {
 	justify-content: center;
+}
+/* Match front-page / about button borders — avoid muddy #333 + inline-block fringe */
+.cf-affiliate-page .cf-btn-primary-lg,
+.cf-affiliate-page .cf-btn-ghost-lg {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	line-height: 1.2;
+	outline: none;
+	-webkit-appearance: none;
+	appearance: none;
+	vertical-align: middle;
+	background-clip: padding-box;
+}
+.cf-affiliate-page .cf-btn-primary-lg {
+	border: none;
+	box-shadow: 0 8px 20px -10px rgba(255, 183, 0, 0.45);
+	color: #0D0D0D;
+}
+.cf-affiliate-page .cf-btn-primary-lg:hover,
+.cf-affiliate-page .cf-btn-primary-lg:focus-visible {
+	color: #0D0D0D;
+	box-shadow: 0 14px 28px -10px rgba(255, 183, 0, 0.5);
+}
+.cf-affiliate-page .cf-btn-ghost-lg {
+	border: 1px solid rgba(255, 255, 255, 0.45);
+	background: transparent;
+	box-shadow: none;
+	color: #fff;
+}
+.cf-affiliate-page .cf-btn-ghost-lg:hover,
+.cf-affiliate-page .cf-btn-ghost-lg:focus-visible {
+	background: rgba(255, 255, 255, 0.06);
+	border-color: rgba(255, 255, 255, 0.8);
+	color: #fff;
+	box-shadow: none;
 }
 .cf-affiliate-section__title {
 	font-size: clamp(1.35rem, 3vw, 1.75rem);
