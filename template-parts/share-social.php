@@ -52,7 +52,7 @@ $encoded_title = rawurlencode( $share_title );
     window.__cfShareTrackBound = true;
     document.addEventListener('click', function (e) {
         var btn = e.target.closest && e.target.closest('.cf-share-panel .cf-share-btn');
-        if (!btn) {
+        if (!btn || btn.classList.contains('cf-share-copy-btn')) {
             return;
         }
         var panel = btn.closest('.cf-share-panel');

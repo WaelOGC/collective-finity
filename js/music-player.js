@@ -1261,6 +1261,12 @@ jQuery(document).ready(function($) {
         }
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(url).then(function() {
+                var $panel = $btn.closest('.cf-share-panel');
+                var itemId = $panel.length ? $panel.data('item-id') : null;
+                var itemType = $panel.length ? $panel.data('item-type') : null;
+                if (itemId && itemType && window.CF_Auth && typeof window.CF_Auth.trackShare === 'function') {
+                    window.CF_Auth.trackShare(itemId, itemType, 'copy');
+                }
                 $btn.addClass('is-copied');
                 setTimeout(function() { $btn.removeClass('is-copied'); }, 2000);
             });

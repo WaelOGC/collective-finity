@@ -801,14 +801,17 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
             var url = btn.getAttribute('data-url');
             var title = btn.getAttribute('data-title') || document.title;
             var trackId = btn.getAttribute('data-track-id');
-            var platform = navigator.share ? 'native' : 'copy';
-            if (trackId && window.CF_Auth && typeof window.CF_Auth.trackShare === 'function') {
-                window.CF_Auth.trackShare(trackId, 'track', platform);
-            }
             if (navigator.share) {
-                navigator.share({ title: title, url: url }).catch(function () {});
+                navigator.share({ title: title, url: url }).then(function () {
+                    if (trackId && window.CF_Auth && typeof window.CF_Auth.trackShare === 'function') {
+                        window.CF_Auth.trackShare(trackId, 'track', 'native');
+                    }
+                }).catch(function () {});
             } else if (navigator.clipboard) {
                 navigator.clipboard.writeText(url).then(function () {
+                    if (trackId && window.CF_Auth && typeof window.CF_Auth.trackShare === 'function') {
+                        window.CF_Auth.trackShare(trackId, 'track', 'copy');
+                    }
                     var label = btn.querySelector('span');
                     if (label) {
                         var prev = label.textContent;
