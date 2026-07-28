@@ -1030,6 +1030,16 @@ function collective_finity_scripts() {
     $layout_css_ver  = file_exists( $layout_css_path ) ? filemtime( $layout_css_path ) : $theme_version;
     wp_enqueue_style( 'cf-content-layout', get_template_directory_uri() . '/assets/css/cf-content-layout.css', array( 'cf-shell' ), $layout_css_ver );
 
+    if ( is_post_type_archive( 'albums' ) ) {
+        $albums_css_path = get_template_directory() . '/assets/css/cf-albums-archive.css';
+        $albums_js_path  = get_template_directory() . '/assets/js/cf-albums-archive.js';
+        $albums_css_ver  = file_exists( $albums_css_path ) ? filemtime( $albums_css_path ) : $theme_version;
+        $albums_js_ver   = file_exists( $albums_js_path ) ? filemtime( $albums_js_path ) : $theme_version;
+
+        wp_enqueue_style( 'cf-albums-archive', get_template_directory_uri() . '/assets/css/cf-albums-archive.css', array( 'cf-content-layout' ), $albums_css_ver );
+        wp_enqueue_script( 'cf-albums-archive', get_template_directory_uri() . '/assets/js/cf-albums-archive.js', array(), $albums_js_ver, true );
+    }
+
     wp_enqueue_style( 'dashicons' );
 
     // Move jQuery (+ jquery-migrate) to the footer on the public frontend only.
