@@ -936,14 +936,17 @@ while ( have_posts() ) :
                 var url = btn.getAttribute('data-url');
                 var title = btn.getAttribute('data-title') || document.title;
                 var postId = btn.getAttribute('data-post-id');
-                var platform = navigator.share ? 'native' : 'copy';
-                if (postId && window.CF_Auth && typeof window.CF_Auth.trackShare === 'function') {
-                    window.CF_Auth.trackShare(postId, 'post', platform);
-                }
                 if (navigator.share) {
-                    navigator.share({ title: title, url: url }).catch(function () {});
+                    navigator.share({ title: title, url: url }).then(function () {
+                        if (postId && window.CF_Auth && typeof window.CF_Auth.trackShare === 'function') {
+                            window.CF_Auth.trackShare(postId, 'post', 'native');
+                        }
+                    }).catch(function () {});
                 } else if (navigator.clipboard) {
                     navigator.clipboard.writeText(url).then(function () {
+                        if (postId && window.CF_Auth && typeof window.CF_Auth.trackShare === 'function') {
+                            window.CF_Auth.trackShare(postId, 'post', 'copy');
+                        }
                         var label = btn.querySelector('span');
                         if (label) {
                             var prev = label.textContent;
