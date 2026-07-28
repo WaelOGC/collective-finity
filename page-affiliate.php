@@ -52,8 +52,6 @@ $cf_novax_image_url = $cf_novax_rel ? $cf_theme_uri . $cf_novax_rel : '';
 				<div class="cf-affiliate-hero__media" aria-hidden="true"></div>
 				<div class="cf-affiliate-hero__shade" aria-hidden="true"></div>
 			<?php endif; ?>
-			<div class="cf-affiliate-hero__border" aria-hidden="true"></div>
-			<div class="cf-affiliate-hero__center-glow" aria-hidden="true"></div>
 			<div class="cf-affiliate-hero__content">
 				<span class="cf-affiliate-hero__badge">Xfinity Rewards</span>
 				<h1 id="cf-affiliate-hero-heading" class="cf-affiliate-hero__title">
@@ -174,23 +172,23 @@ $cf_novax_image_url = $cf_novax_rel ? $cf_theme_uri . $cf_novax_rel : '';
 		<!-- Section 7: FAQ -->
 		<section class="cf-affiliate-section" aria-labelledby="cf-affiliate-faq-heading">
 			<h2 id="cf-affiliate-faq-heading" class="cf-affiliate-section__title">Frequently Asked Questions</h2>
-			<div class="cf-affiliate-grid cf-affiliate-grid--2">
-				<div class="cf-affiliate-card cf-affiliate-card--faq">
-					<h3>How do I earn Xfinity?</h3>
+			<div class="cf-affiliate-faq-list">
+				<details class="cf-affiliate-faq-item">
+					<summary>How do I earn Xfinity?</summary>
 					<p>You earn Xfinity automatically while listening to music, and by inviting friends who join and confirm their accounts through your referral link.</p>
-				</div>
-				<div class="cf-affiliate-card cf-affiliate-card--faq">
-					<h3>Where is my referral link?</h3>
+				</details>
+				<details class="cf-affiliate-faq-item">
+					<summary>Where is my referral link?</summary>
 					<p>Your personal referral link, along with your live balance and referral history, is always available in your account's Rewards tab.</p>
-				</div>
-				<div class="cf-affiliate-card cf-affiliate-card--faq">
-					<h3>Does my Xfinity expire?</h3>
+				</details>
+				<details class="cf-affiliate-faq-item">
+					<summary>Does my Xfinity expire?</summary>
 					<p>No. Your Xfinity remains safely stored in your account for as long as your account stays active.</p>
-				</div>
-				<div class="cf-affiliate-card cf-affiliate-card--faq">
-					<h3>Will more rewards be added?</h3>
+				</details>
+				<details class="cf-affiliate-faq-item">
+					<summary>Will more rewards be added?</summary>
 					<p>Yes. The rewards ecosystem, including NovaXfinity, will keep expanding as Collective Finity grows.</p>
-				</div>
+				</details>
 			</div>
 		</section>
 
@@ -220,7 +218,7 @@ $cf_novax_image_url = $cf_novax_rel ? $cf_theme_uri . $cf_novax_rel : '';
 }
 .cf-affiliate-page .cf-affiliate {
 	display: grid;
-	gap: 56px;
+	gap: 64px;
 }
 .cf-affiliate-hero {
 	position: relative;
@@ -231,51 +229,19 @@ $cf_novax_image_url = $cf_novax_rel ? $cf_theme_uri . $cf_novax_rel : '';
 	padding: clamp(48px, 7vw, 80px) clamp(20px, 4vw, 40px) clamp(56px, 8vw, 88px);
 	border-radius: 16px;
 	background: var(--cf-bg-dark);
-	border: var(--cf-card-border-width) solid var(--cf-border);
+	border: 1px solid rgba(255, 255, 255, 0.07);
 	overflow: hidden;
 	min-width: 0;
 	max-width: 100%;
 	width: 100%;
 	margin: 0 auto;
 	box-sizing: border-box;
-	box-shadow: var(--cf-card-shadow);
+	box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.85);
 }
 .cf-affiliate-hero--has-image {
 	text-align: left;
 	justify-items: stretch;
 	min-height: clamp(420px, 52vw, 540px);
-}
-@property --cf-affiliate-hero-border-angle {
-	syntax: '<angle>';
-	initial-value: 0deg;
-	inherits: false;
-}
-.cf-affiliate-hero__border {
-	position: absolute;
-	inset: 0;
-	border-radius: inherit;
-	padding: 1.5px;
-	pointer-events: none;
-	z-index: 2;
-	background: conic-gradient(
-		from var(--cf-affiliate-hero-border-angle),
-		transparent 0%,
-		transparent 72%,
-		var(--cf-accent-dim) 80%,
-		var(--cf-accent) 90%,
-		var(--cf-accent-hover) 93%,
-		var(--cf-accent-dim) 96%,
-		transparent 100%
-	);
-	-webkit-mask:
-		linear-gradient(#fff 0 0) content-box,
-		linear-gradient(#fff 0 0);
-	-webkit-mask-composite: xor;
-	mask-composite: exclude;
-	animation: cfAffiliateBorderTravel 5.5s linear infinite;
-}
-@keyframes cfAffiliateBorderTravel {
-	to { --cf-affiliate-hero-border-angle: 360deg; }
 }
 .cf-affiliate-hero__media {
 	position: absolute;
@@ -294,30 +260,6 @@ $cf_novax_image_url = $cf_novax_rel ? $cf_theme_uri . $cf_novax_rel : '';
 		linear-gradient(90deg, color-mix(in srgb, var(--cf-bg-darkest) 92%, transparent) 0%, color-mix(in srgb, var(--cf-bg-darkest) 78%, transparent) 38%, color-mix(in srgb, var(--cf-bg-darkest) 28%, transparent) 64%, color-mix(in srgb, var(--cf-bg-darkest) 8%, transparent) 100%),
 		linear-gradient(180deg, color-mix(in srgb, var(--cf-bg-darkest) 12%, transparent) 0%, transparent 30%, color-mix(in srgb, var(--cf-bg-darkest) 35%, transparent) 100%);
 	pointer-events: none;
-}
-.cf-affiliate-hero__center-glow {
-	position: absolute;
-	left: 50%;
-	top: 46%;
-	width: min(70%, 520px);
-	aspect-ratio: 1;
-	transform: translate(-50%, -50%);
-	pointer-events: none;
-	z-index: 0;
-	border-radius: 50%;
-	background: radial-gradient(circle, var(--cf-accent-dim) 0%, transparent 70%);
-	animation: cfAffiliateCenterGlow 8.2s ease-in-out infinite;
-	will-change: transform, opacity;
-}
-@keyframes cfAffiliateCenterGlow {
-	0%, 100% {
-		opacity: 0.35;
-		transform: translate(-50%, -50%) scale(0.82);
-	}
-	50% {
-		opacity: 0.7;
-		transform: translate(-50%, -50%) scale(1.08);
-	}
 }
 .cf-affiliate-hero__content {
 	position: relative;
@@ -410,19 +352,19 @@ $cf_novax_image_url = $cf_novax_rel ? $cf_theme_uri . $cf_novax_rel : '';
 .cf-affiliate-grid--3 {
 	grid-template-columns: repeat(3, 1fr);
 }
-.cf-affiliate-grid--2 {
-	grid-template-columns: repeat(2, 1fr);
-}
 .cf-affiliate-card {
 	background: var(--cf-bg-card);
 	border: var(--cf-card-border-width) solid var(--cf-border);
 	border-radius: var(--cf-card-radius);
 	box-shadow: var(--cf-card-shadow);
-	padding: 20px;
+	padding: 26px 22px;
 	text-align: center;
+	transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
-.cf-affiliate-card--faq {
-	text-align: left;
+.cf-affiliate-card:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 18px 36px -10px rgba(255, 183, 0, 0.25);
+	border-color: rgba(255, 183, 0, 0.4);
 }
 .cf-affiliate-step__num {
 	display: inline-flex;
@@ -439,8 +381,8 @@ $cf_novax_image_url = $cf_novax_rel ? $cf_theme_uri . $cf_novax_rel : '';
 	margin-bottom: 12px;
 }
 .cf-affiliate-card h3 {
-	color: var(--cf-text);
-	margin: 0 0 8px;
+	color: var(--cf-accent);
+	margin: 0 0 10px;
 	font-size: 1.05rem;
 	font-family: var(--cf-mono);
 }
@@ -509,18 +451,64 @@ $cf_novax_image_url = $cf_novax_rel ? $cf_theme_uri . $cf_novax_rel : '';
 	text-transform: uppercase;
 	font-family: var(--cf-mono);
 }
+.cf-affiliate-faq-list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	max-width: 760px;
+	margin: 0 auto;
+}
+.cf-affiliate-faq-item {
+	background: var(--cf-bg-card);
+	border: var(--cf-card-border-width) solid var(--cf-border);
+	border-radius: var(--cf-card-radius);
+}
+.cf-affiliate-faq-item summary {
+	list-style: none;
+	cursor: pointer;
+	padding: 18px 20px;
+	color: var(--cf-text);
+	font-family: var(--cf-mono);
+	font-size: 0.95rem;
+	font-weight: 700;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+.cf-affiliate-faq-item summary::-webkit-details-marker {
+	display: none;
+}
+.cf-affiliate-faq-item summary::after {
+	content: '+';
+	color: var(--cf-accent);
+	font-size: 1.1rem;
+	margin-left: 12px;
+	flex-shrink: 0;
+}
+.cf-affiliate-faq-item[open] summary::after {
+	content: '\2212';
+}
+.cf-affiliate-faq-item p {
+	color: var(--cf-text-2);
+	font-family: var(--cf-body);
+	font-size: 0.9rem;
+	line-height: 1.7;
+	margin: 0;
+	padding: 0 20px 18px;
+}
 @media (prefers-reduced-motion: reduce) {
 	.cf-affiliate-page {
 		scroll-behavior: auto;
 	}
-	.cf-affiliate-hero__border,
-	.cf-affiliate-hero__center-glow {
-		animation: none;
+	.cf-affiliate-card {
+		transition: none;
+	}
+	.cf-affiliate-card:hover {
+		transform: none;
 	}
 }
 @media (max-width: 782px) {
-	.cf-affiliate-grid--3,
-	.cf-affiliate-grid--2 {
+	.cf-affiliate-grid--3 {
 		grid-template-columns: 1fr;
 	}
 	.cf-affiliate-hero--has-image {
