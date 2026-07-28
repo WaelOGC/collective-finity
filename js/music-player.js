@@ -91,6 +91,9 @@ jQuery(document).ready(function($) {
     }
 
     function updatePlayState() {
+        if (!audio.paused) {
+            $('#cf-player-resume-prompt').remove();
+        }
         if (audio.paused) {
             playBtn.html('<span class="cf-icon cf-icon-play" aria-hidden="true"></span>');
             playBtn.attr('aria-label', 'Play');
@@ -186,7 +189,7 @@ jQuery(document).ready(function($) {
         return null;
     }
 
-    function navigateToTrackPage(track) {
+    function navigateToTrackPage(track, softNav) {
         var permalink = getTrackPermalink(track);
         if (!permalink) {
             return;
@@ -196,6 +199,15 @@ jQuery(document).ready(function($) {
         if (targetPath === currentPath) {
             return;
         }
+
+        if (softNav && window.history && window.history.pushState) {
+            window.history.pushState({ cfTrackId: track.id || null }, '', targetPath);
+            if (track.title) {
+                document.title = track.title + (track.artist ? ' - ' + track.artist : '');
+            }
+            return;
+        }
+
         window.location.href = targetPath;
     }
 
@@ -287,6 +299,31 @@ jQuery(document).ready(function($) {
         } else {
             playBtn.removeAttr('data-track-id');
         }
+
+        if ('mediaSession' in navigator && window.MediaMetadata) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: track.title || '',
+                artist: track.artist || '',
+                artwork: track.art ? [{ src: track.art, sizes: '512x512', type: 'image/png' }] : []
+            });
+        }
+    }
+
+    function showResumePrompt() {
+        if (document.getElementById('cf-player-resume-prompt')) {
+            return;
+        }
+        var $prompt = $('<button>', {
+            id: 'cf-player-resume-prompt',
+            type: 'button',
+            class: 'cf-player-resume-prompt',
+            text: 'Tap to resume playback'
+        }).appendTo('body');
+
+        $prompt.on('click', function () {
+            $prompt.remove();
+            audio.play().then(updatePlayState).catch(function () {});
+        });
     }
 
     function restorePlayerState() {
@@ -364,12 +401,14 @@ jQuery(document).ready(function($) {
                 if (saved.isPlaying === true) {
                     audio.play().then(updatePlayState).catch(function() {
                         showPlayerError('Playback blocked — try again');
+                        showResumePrompt();
                     });
                 }
             });
         } else if (saved.isPlaying === true) {
             audio.play().then(updatePlayState).catch(function() {
                 showPlayerError('Playback blocked — try again');
+                showResumePrompt();
             });
         }
 
@@ -440,7 +479,7 @@ jQuery(document).ready(function($) {
         }
     }
 
-    function playQueueIndex(index) {
+    function playQueueIndex(index, softNav) {
         if (!window.cfPlayerQueue.length) {
             showPlayerError('No tracks in queue');
             return;
@@ -472,12 +511,13 @@ jQuery(document).ready(function($) {
             var prevId = previousTrack && previousTrack.id != null ? String(previousTrack.id) : null;
             var nextId = track.id != null ? String(track.id) : null;
             if (nextId && prevId !== nextId) {
-                navigateToTrackPage(track);
+                navigateToTrackPage(track, softNav);
             }
         }
 
         audio.play().then(updatePlayState).catch(function() {
             showPlayerError('Playback blocked — try again');
+            showResumePrompt();
         });
     }
 
@@ -530,12 +570,12 @@ jQuery(document).ready(function($) {
 
         var next = getNextIndex();
         if (next >= 0 && next < window.cfPlayerQueue.length) {
-            playQueueIndex(next);
+            playQueueIndex(next, true);
             return;
         }
 
         if (window.cfRepeatMode === 'all') {
-            playQueueIndex(0);
+            playQueueIndex(0, true);
         } else {
             updatePlayState();
         }
@@ -554,8 +594,20 @@ jQuery(document).ready(function($) {
 
         var prev = getPrevIndex();
         if (prev >= 0) {
-            playQueueIndex(prev);
+            playQueueIndex(prev, true);
         }
+    }
+
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('play', function () {
+            audio.play().then(updatePlayState).catch(function () {});
+        });
+        navigator.mediaSession.setActionHandler('pause', function () {
+            audio.pause();
+            updatePlayState();
+        });
+        navigator.mediaSession.setActionHandler('previoustrack', playPrevTrack);
+        navigator.mediaSession.setActionHandler('nexttrack', playNextTrack);
     }
 
     function cycleSpeed() {

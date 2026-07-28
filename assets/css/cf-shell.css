@@ -1057,6 +1057,32 @@ html.cf-player-collapsed .cf-player-headline { justify-content: center; }
 .cf-footer-player-like.active { color: var(--cf-accent); }
 .cf-footer-player-like:disabled { opacity: 0.45; cursor: default; }
 
+.cf-player-resume-prompt {
+    position: fixed;
+    left: 50%;
+    bottom: calc(var(--cf-footer-player-h) + 16px);
+    transform: translateX(-50%);
+    z-index: 30;
+    border: none;
+    border-radius: var(--cf-btn-radius);
+    background: var(--cf-accent);
+    color: #0d0d0d;
+    font-family: var(--cf-body);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 12px 22px;
+    cursor: pointer;
+    box-shadow: 0 10px 28px -10px rgba(0, 0, 0, 0.65);
+    white-space: nowrap;
+}
+.cf-player-resume-prompt:hover { background: var(--cf-accent-hover); }
+.cf-player-resume-prompt:active { transform: translateX(-50%) scale(0.97); }
+@media (min-width: 1024px) {
+    .cf-player-resume-prompt {
+        bottom: 28px;
+    }
+}
+
 @media (min-width: 1024px) {
     .cf-footer-player-bar { display: none; }
 }
