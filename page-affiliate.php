@@ -35,70 +35,6 @@ if ( ! file_exists( $cf_theme_dir . $cf_novax_rel ) ) {
 	$cf_novax_rel = '';
 }
 $cf_novax_image_url = $cf_novax_rel ? $cf_theme_uri . $cf_novax_rel : '';
-
-$cf_dashboard = array(
-	'balance'            => '',
-	'referral_link'      => '',
-	'total_referrals'    => 0,
-	'confirmed_referrals'=> 0,
-	'last_activity'      => '',
-	'has_history'        => false,
-	'today_earned'       => 0.0,
-);
-
-if ( is_user_logged_in() && class_exists( 'CF_Xfinity' ) && class_exists( 'CF_Referral' ) ) {
-	global $wpdb;
-
-	$cf_user_id = get_current_user_id();
-	$cf_xfinity = CF_Xfinity::get_instance();
-	$cf_referral = CF_Referral::get_instance();
-
-	$cf_dashboard['balance']       = $cf_xfinity->get_balance( $cf_user_id );
-	$cf_dashboard['referral_link'] = $cf_referral->get_referral_link( $cf_user_id );
-
-	$cf_referrals_table = CF_Referral::referrals_table();
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-	$cf_referral_rows = $wpdb->get_results(
-		$wpdb->prepare(
-			"SELECT status, COUNT(*) AS count FROM {$cf_referrals_table} WHERE referrer_user_id = %d GROUP BY status", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			$cf_user_id
-		),
-		ARRAY_A
-	);
-
-	if ( is_array( $cf_referral_rows ) ) {
-		foreach ( $cf_referral_rows as $cf_referral_row ) {
-			$cf_status = isset( $cf_referral_row['status'] ) ? (string) $cf_referral_row['status'] : '';
-			$cf_count  = isset( $cf_referral_row['count'] ) ? (int) $cf_referral_row['count'] : 0;
-			$cf_dashboard['total_referrals'] += $cf_count;
-			if ( 'confirmed' === $cf_status ) {
-				$cf_dashboard['confirmed_referrals'] = $cf_count;
-			}
-		}
-	}
-
-	$cf_recent_history = $cf_xfinity->get_transaction_history( $cf_user_id, 1 );
-	if ( ! empty( $cf_recent_history ) && is_array( $cf_recent_history ) ) {
-		$cf_latest = reset( $cf_recent_history );
-		if ( is_object( $cf_latest ) ) {
-			$cf_latest = (array) $cf_latest;
-		}
-		if ( is_array( $cf_latest ) && ! empty( $cf_latest['created_at'] ) ) {
-			$cf_dashboard['has_history']   = true;
-			$cf_dashboard['last_activity'] = $cf_latest['created_at'];
-		}
-	}
-
-	$cf_ledger_table = CF_Xfinity::ledger_table();
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-	$cf_today_sum = $wpdb->get_var(
-		$wpdb->prepare(
-			"SELECT COALESCE(SUM(amount), 0) FROM {$cf_ledger_table} WHERE user_id = %d AND DATE(created_at) = CURDATE() AND amount > 0", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			$cf_user_id
-		)
-	);
-	$cf_dashboard['today_earned'] = null !== $cf_today_sum ? (float) $cf_today_sum : 0.0;
-}
 ?>
 
 <main id="primary" class="site-main cf-page-shell cf-affiliate-page">
@@ -119,17 +55,16 @@ if ( is_user_logged_in() && class_exists( 'CF_Xfinity' ) && class_exists( 'CF_Re
 			<div class="cf-affiliate-hero__border" aria-hidden="true"></div>
 			<div class="cf-affiliate-hero__center-glow" aria-hidden="true"></div>
 			<div class="cf-affiliate-hero__content">
-				<span class="cf-affiliate-hero__badge">XFINITY REWARDS</span>
+				<span class="cf-affiliate-hero__badge">Xfinity Rewards</span>
 				<h1 id="cf-affiliate-hero-heading" class="cf-affiliate-hero__title">
-					Listen. Share. <span class="cf-affiliate-hero__title-accent">Earn.</span>
+					Listen. Share. <span class="cf-affiliate-accent">Earn.</span>
 				</h1>
-				<div class="cf-affiliate-hero__lead">
-					<p>Xfinity Rewards is Collective Finity's loyalty program designed to reward every meaningful interaction across the platform.</p>
-					<p>Earn Xfinity by listening to music, inviting friends, and growing with the community. Save your balance for future rewards, exclusive benefits, and upcoming experiences across the Collective Finity ecosystem.</p>
-				</div>
-				<div class="cf-affiliate-hero__actions">
-					<a href="<?php echo esc_url( $cf_tracks_url ); ?>" class="cf-affiliate-cta">Start Listening</a>
-					<a href="#cf-affiliate-ways" class="cf-affiliate-cta cf-affiliate-cta--ghost">Learn More</a>
+				<p class="cf-affiliate-hero__lead">
+					Xfinity Rewards is Collective Finity's loyalty program, built to reward every meaningful interaction across the platform. Every track you listen to and every friend you bring in moves your balance forward, laying the foundation for real rewards as the ecosystem grows.
+				</p>
+				<div class="cf-affiliate-actions">
+					<a href="<?php echo esc_url( $cf_tracks_url ); ?>" class="cf-btn-primary-lg">Start Listening</a>
+					<a href="#cf-affiliate-ways" class="cf-btn-ghost-lg">Learn More</a>
 				</div>
 			</div>
 		</section>
@@ -137,211 +72,135 @@ if ( is_user_logged_in() && class_exists( 'CF_Xfinity' ) && class_exists( 'CF_Re
 		<!-- Section 2: Ways to Earn Xfinity -->
 		<section id="cf-affiliate-ways" class="cf-affiliate-section" aria-labelledby="cf-affiliate-ways-heading">
 			<h2 id="cf-affiliate-ways-heading" class="cf-affiliate-section__title">Ways to Earn Xfinity</h2>
-			<p class="cf-affiliate-section__subtitle">There are multiple ways to grow your Xfinity balance while enjoying everything Collective Finity has to offer.</p>
-			<div class="cf-affiliate-steps">
-				<div class="cf-affiliate-step">
-					<h3>🎵 Listen to Music</h3>
-					<p>Earn Xfinity simply by listening to original music across the platform. Every genuine listening session contributes to your growing balance.</p>
+			<p class="cf-affiliate-section__subtitle">Your Xfinity balance grows through genuine activity on the platform. Here is exactly how each channel works today.</p>
+			<div class="cf-affiliate-grid cf-affiliate-grid--3">
+				<div class="cf-affiliate-card">
+					<h3>Listen to Music</h3>
+					<p>Every genuine listening session on an original track contributes to your balance automatically in the background, so your everyday listening is never wasted.</p>
 				</div>
-				<div class="cf-affiliate-step">
-					<h3>👥 Invite Friends</h3>
-					<p>Share your personal referral link with friends. When someone joins Collective Finity through your invitation, both of you receive Xfinity as a welcome reward.</p>
+				<div class="cf-affiliate-card">
+					<h3>Invite Friends</h3>
+					<p>Share your personal referral link from your account. Once your friend signs up and confirms their account, Xfinity is credited to both of you.</p>
 				</div>
-				<div class="cf-affiliate-step">
-					<h3>🚀 More Ways Coming Soon</h3>
-					<p>As Collective Finity continues to grow, additional opportunities to earn Xfinity will become available through new features and future platform experiences.</p>
+				<div class="cf-affiliate-card">
+					<h3>More Ways Coming Soon</h3>
+					<p>As Collective Finity grows, new features will open new ways to earn, from community activities to platform milestones.</p>
 				</div>
 			</div>
 		</section>
 
 		<!-- Section 3: How Referrals Work -->
 		<section class="cf-affiliate-section" aria-labelledby="cf-affiliate-referrals-heading">
-			<h2 id="cf-affiliate-referrals-heading" class="cf-affiliate-section__title cf-affiliate-section__title--split">
+			<h2 id="cf-affiliate-referrals-heading" class="cf-affiliate-section__title">
 				Simple. <span class="cf-affiliate-accent">Transparent.</span> Rewarding.
 			</h2>
-			<div class="cf-affiliate-steps">
-				<div class="cf-affiliate-step">
-					<span class="cf-affiliate-step__num">1</span>
-					<h3>Share your personal referral link.</h3>
+			<p class="cf-affiliate-section__subtitle">How the referral program works, step by step.</p>
+			<div class="cf-affiliate-grid cf-affiliate-grid--3">
+				<div class="cf-affiliate-card">
+					<span class="cf-affiliate-step__num" aria-hidden="true">1</span>
+					<h3>Share your link</h3>
+					<p>Copy your unique referral link from your account and send it to friends however you like.</p>
 				</div>
-				<div class="cf-affiliate-step">
-					<span class="cf-affiliate-step__num">2</span>
-					<h3>A new user creates an account using your invitation.</h3>
+				<div class="cf-affiliate-card">
+					<span class="cf-affiliate-step__num" aria-hidden="true">2</span>
+					<h3>They create an account</h3>
+					<p>Your friend signs up using your link and confirms their new Collective Finity account.</p>
 				</div>
-				<div class="cf-affiliate-step">
-					<span class="cf-affiliate-step__num">3</span>
-					<h3>Once the account is confirmed, both of you receive Xfinity.</h3>
+				<div class="cf-affiliate-card">
+					<span class="cf-affiliate-step__num" aria-hidden="true">3</span>
+					<h3>Both of you earn</h3>
+					<p>As soon as the account is confirmed, Xfinity is credited automatically to both accounts.</p>
 				</div>
 			</div>
 			<p class="cf-affiliate-section__note">To keep the program fair, duplicate accounts and self-referrals are automatically excluded from rewards.</p>
 		</section>
 
-		<!-- Section 4: Your Rewards Dashboard -->
-		<section class="cf-affiliate-section" aria-labelledby="cf-affiliate-dashboard-heading">
-			<h2 id="cf-affiliate-dashboard-heading" class="cf-affiliate-section__title">Your Rewards Dashboard</h2>
-			<p class="cf-affiliate-section__subtitle">Everything you need is available inside your account. Users can easily monitor their progress from a single dashboard.</p>
-
-			<?php if ( is_user_logged_in() ) : ?>
-				<div class="cf-affiliate-dashboard">
-					<div class="cf-affiliate-tier cf-affiliate-dashboard__card">
-						<span class="cf-affiliate-tier__label">Current Balance</span>
-						<span class="cf-affiliate-tier__amount"><?php echo esc_html( number_format_i18n( (float) $cf_dashboard['balance'], 4 ) ); ?></span>
-						<p>Xfinity</p>
-					</div>
-
-					<div class="cf-affiliate-tier cf-affiliate-dashboard__card cf-affiliate-dashboard__card--referral">
-						<span class="cf-affiliate-tier__label">Referral Link</span>
-						<?php if ( $cf_dashboard['referral_link'] ) : ?>
-							<div class="cf-affiliate-referral-field">
-								<input
-									type="text"
-									id="cf-referral-link-input"
-									class="cf-affiliate-referral-input"
-									value="<?php echo esc_attr( $cf_dashboard['referral_link'] ); ?>"
-									readonly
-									aria-label="<?php esc_attr_e( 'Your referral link', 'collective-finity' ); ?>"
-								>
-								<button type="button" id="cf-referral-link-copy" class="cf-affiliate-referral-copy">
-									<?php esc_html_e( 'Copy', 'collective-finity' ); ?>
-								</button>
-							</div>
-						<?php else : ?>
-							<p><?php esc_html_e( 'Referral link unavailable.', 'collective-finity' ); ?></p>
-						<?php endif; ?>
-					</div>
-
-					<div class="cf-affiliate-tier cf-affiliate-dashboard__card">
-						<span class="cf-affiliate-tier__label">Referral Statistics</span>
-						<div class="cf-affiliate-dashboard__stats">
-							<div class="cf-affiliate-dashboard__stat">
-								<span class="cf-affiliate-tier__amount"><?php echo esc_html( number_format_i18n( $cf_dashboard['total_referrals'] ) ); ?></span>
-								<p>Total Referrals</p>
-							</div>
-							<div class="cf-affiliate-dashboard__stat">
-								<span class="cf-affiliate-tier__amount"><?php echo esc_html( number_format_i18n( $cf_dashboard['confirmed_referrals'] ) ); ?></span>
-								<p>Confirmed</p>
-							</div>
-						</div>
-					</div>
-
-					<div class="cf-affiliate-tier cf-affiliate-dashboard__card">
-						<span class="cf-affiliate-tier__label">Reward History</span>
-						<?php if ( $cf_dashboard['has_history'] ) : ?>
-							<p class="cf-affiliate-dashboard__detail">
-								<?php
-								printf(
-									/* translators: %s: formatted date */
-									esc_html__( 'Last activity: %s', 'collective-finity' ),
-									esc_html( date_i18n( get_option( 'date_format' ), strtotime( $cf_dashboard['last_activity'] ) ) )
-								);
-								?>
-							</p>
-						<?php else : ?>
-							<p class="cf-affiliate-dashboard__detail">No activity yet — start listening or invite a friend.</p>
-						<?php endif; ?>
-					</div>
-
-					<div class="cf-affiliate-tier cf-affiliate-dashboard__card">
-						<span class="cf-affiliate-tier__label">Daily Activity</span>
-						<?php if ( $cf_dashboard['today_earned'] > 0 ) : ?>
-							<span class="cf-affiliate-tier__amount"><?php echo esc_html( number_format_i18n( $cf_dashboard['today_earned'], 4 ) ); ?></span>
-							<p><?php esc_html_e( 'Earned today', 'collective-finity' ); ?></p>
-						<?php else : ?>
-							<p class="cf-affiliate-dashboard__detail">0.0000 — nothing earned yet today</p>
-						<?php endif; ?>
-					</div>
-				</div>
-			<?php else : ?>
-				<div class="cf-affiliate-dashboard-guest">
-					<p>Sign in to see your live Xfinity balance, referral link, and activity</p>
-					<a href="<?php echo esc_url( $cf_register_url ); ?>" class="cf-affiliate-cta">Create Account</a>
-				</div>
-			<?php endif; ?>
-		</section>
-
-		<!-- Section 5: Why Collect Xfinity? -->
+		<!-- Section 4: Why Collect Xfinity? -->
 		<section class="cf-affiliate-section" aria-labelledby="cf-affiliate-why-heading">
 			<h2 id="cf-affiliate-why-heading" class="cf-affiliate-section__title">Why Collect Xfinity?</h2>
-			<p class="cf-affiliate-section__subtitle">Every point you earn becomes part of your future within Collective Finity. Today, Xfinity represents your activity across the platform. Tomorrow, it will unlock even more opportunities.</p>
-			<div class="cf-affiliate-steps">
-				<div class="cf-affiliate-step">
-					<h3>🎁 Future Reward Coupons</h3>
-					<p>Redeem Xfinity for exclusive promotional offers and future partner rewards.</p>
+			<p class="cf-affiliate-section__subtitle">Every point you earn becomes part of your future on Collective Finity. Today it reflects your activity, tomorrow it unlocks more.</p>
+			<div class="cf-affiliate-grid cf-affiliate-grid--3">
+				<div class="cf-affiliate-card">
+					<h3>Future Reward Coupons</h3>
+					<p>Redeem your accumulated Xfinity for promotional offers and future partner rewards as the redemption system rolls out.</p>
 				</div>
-				<div class="cf-affiliate-step">
-					<h3>⭐ Exclusive Benefits</h3>
-					<p>Unlock community perks and member-only experiences as the platform continues to evolve.</p>
+				<div class="cf-affiliate-card">
+					<h3>Exclusive Benefits</h3>
+					<p>Unlock community perks and member-only experiences reserved for active Xfinity holders.</p>
 				</div>
-				<div class="cf-affiliate-step">
-					<h3>🚀 Early Access</h3>
-					<p>Gain priority access to selected features, events, and upcoming releases.</p>
+				<div class="cf-affiliate-card">
+					<h3>Early Access</h3>
+					<p>Get priority access to new features, releases, and events before they open to everyone else.</p>
 				</div>
 			</div>
 		</section>
 
-		<!-- Section 6: Keep Your Xfinity -->
-		<section
-			class="cf-affiliate-banner cf-affiliate-keep"
-			aria-labelledby="cf-affiliate-keep-heading"
-			<?php if ( $cf_keep_image_url ) : ?>
-				style="--cf-affiliate-banner-image: url('<?php echo esc_url( $cf_keep_image_url ); ?>');"
-			<?php endif; ?>
-		>
-			<div class="cf-affiliate-banner__shade" aria-hidden="true"></div>
-			<div class="cf-affiliate-banner__content">
-				<h2 id="cf-affiliate-keep-heading" class="cf-affiliate-banner__title">Keep Your Xfinity</h2>
-				<p class="cf-affiliate-banner__lead">Don't rush to spend it.</p>
-				<p class="cf-affiliate-banner__body">The more you collect today, the more opportunities you'll have tomorrow. Your Xfinity balance will continue growing with you across the Collective Finity ecosystem.</p>
+		<!-- Section 5: Keep Your Xfinity -->
+		<section class="cf-affiliate-section" aria-labelledby="cf-affiliate-keep-heading">
+			<div class="cf-affiliate-split">
+				<div
+					class="cf-affiliate-split__image"
+					aria-hidden="true"
+					<?php if ( $cf_keep_image_url ) : ?>
+						style="background-image: url('<?php echo esc_url( $cf_keep_image_url ); ?>');"
+					<?php endif; ?>
+				></div>
+				<div class="cf-affiliate-split__copy">
+					<h2 id="cf-affiliate-keep-heading" class="cf-affiliate-split__title">Keep Your Xfinity</h2>
+					<p class="cf-affiliate-split__kicker">Don't rush to spend it</p>
+					<p class="cf-affiliate-split__text">The more you collect today, the more opportunities you unlock tomorrow. Your Xfinity balance carries forward with you across every corner of Collective Finity, growing quietly in the background while you simply keep listening, sharing, and showing up. There is no expiry pressure and no reason to rush — patience here pays off as new ways to spend Xfinity are introduced.</p>
+				</div>
 			</div>
 		</section>
 
-		<!-- Section 7: NovaXfinity -->
-		<section
-			class="cf-affiliate-section cf-affiliate-future"
-			aria-labelledby="cf-affiliate-future-heading"
-			<?php if ( $cf_novax_image_url ) : ?>
-				style="--cf-affiliate-future-image: url('<?php echo esc_url( $cf_novax_image_url ); ?>');"
-			<?php endif; ?>
-		>
-			<div class="cf-affiliate-future__shade" aria-hidden="true"></div>
-			<div class="cf-affiliate-future__content">
-				<h2 id="cf-affiliate-future-heading" class="cf-affiliate-section__title">NovaXfinity</h2>
-				<p class="cf-affiliate-future__lead">A new chapter is already being built.</p>
-				<p>NovaXfinity will expand the Collective Finity ecosystem with new creative tools, premium experiences, and exclusive member benefits. Keeping your Xfinity today may unlock even greater value in the future.</p>
-				<span class="cf-affiliate-future__badge">Coming Soon</span>
+		<!-- Section 6: NovaXfinity -->
+		<section class="cf-affiliate-section" aria-labelledby="cf-affiliate-future-heading">
+			<div class="cf-affiliate-split">
+				<div class="cf-affiliate-split__copy">
+					<span class="cf-affiliate-split__badge">Coming Soon</span>
+					<h2 id="cf-affiliate-future-heading" class="cf-affiliate-split__title">NovaXfinity</h2>
+					<p class="cf-affiliate-split__text">A new chapter of the Xfinity ecosystem is already being built behind the scenes. NovaXfinity will expand what your balance can do with new creative tools, premium experiences, and exclusive member benefits designed around real community feedback. Keeping your Xfinity today, rather than spending it the moment it arrives, may unlock even greater value once this next phase goes live.</p>
+				</div>
+				<div
+					class="cf-affiliate-split__image"
+					aria-hidden="true"
+					<?php if ( $cf_novax_image_url ) : ?>
+						style="background-image: url('<?php echo esc_url( $cf_novax_image_url ); ?>');"
+					<?php endif; ?>
+				></div>
 			</div>
 		</section>
 
-		<!-- Section 8: FAQ -->
+		<!-- Section 7: FAQ -->
 		<section class="cf-affiliate-section" aria-labelledby="cf-affiliate-faq-heading">
 			<h2 id="cf-affiliate-faq-heading" class="cf-affiliate-section__title">Frequently Asked Questions</h2>
-			<div class="cf-affiliate-faq">
-				<div class="cf-affiliate-faq__item">
-					<h3>❓ How do I earn Xfinity?</h3>
-					<p>Listen to music and invite friends to Collective Finity.</p>
+			<div class="cf-affiliate-grid cf-affiliate-grid--2">
+				<div class="cf-affiliate-card cf-affiliate-card--faq">
+					<h3>How do I earn Xfinity?</h3>
+					<p>You earn Xfinity automatically while listening to music, and by inviting friends who join and confirm their accounts through your referral link.</p>
 				</div>
-				<div class="cf-affiliate-faq__item">
-					<h3>🔗 Where can I find my referral link?</h3>
-					<p>Inside your Rewards Dashboard.</p>
+				<div class="cf-affiliate-card cf-affiliate-card--faq">
+					<h3>Where is my referral link?</h3>
+					<p>Your personal referral link, along with your live balance and referral history, is always available in your account's Rewards tab.</p>
 				</div>
-				<div class="cf-affiliate-faq__item">
-					<h3>🛡️ Does my Xfinity expire?</h3>
-					<p>Your Xfinity remains safely stored in your account.</p>
+				<div class="cf-affiliate-card cf-affiliate-card--faq">
+					<h3>Does my Xfinity expire?</h3>
+					<p>No. Your Xfinity remains safely stored in your account for as long as your account stays active.</p>
 				</div>
-				<div class="cf-affiliate-faq__item">
-					<h3>🎁 Will more rewards be added?</h3>
-					<p>Yes. The rewards ecosystem will continue expanding alongside Collective Finity.</p>
+				<div class="cf-affiliate-card cf-affiliate-card--faq">
+					<h3>Will more rewards be added?</h3>
+					<p>Yes. The rewards ecosystem, including NovaXfinity, will keep expanding as Collective Finity grows.</p>
 				</div>
 			</div>
 		</section>
 
-		<!-- Final CTA -->
+		<!-- Section 8: Final CTA -->
 		<section class="cf-affiliate-section cf-affiliate-cta-section" aria-labelledby="cf-affiliate-final-heading">
 			<h2 id="cf-affiliate-final-heading" class="cf-affiliate-section__title">Start Building Your Xfinity</h2>
-			<p class="cf-affiliate-section__subtitle">Every song. Every referral. Every step forward brings you closer to future rewards.</p>
-			<div class="cf-affiliate-hero__actions cf-affiliate-cta-section__actions">
-				<a href="<?php echo esc_url( $cf_tracks_url ); ?>" class="cf-affiliate-cta">Start Listening</a>
-				<a href="<?php echo esc_url( $cf_profile_rewards_url ); ?>" class="cf-affiliate-cta cf-affiliate-cta--ghost">
+			<p class="cf-affiliate-section__subtitle">Every song you listen to and every friend you invite brings you one step closer to real future rewards.</p>
+			<div class="cf-affiliate-actions cf-affiliate-actions--center">
+				<a href="<?php echo esc_url( $cf_tracks_url ); ?>" class="cf-btn-primary-lg">Start Listening</a>
+				<a href="<?php echo esc_url( $cf_profile_rewards_url ); ?>" class="cf-btn-ghost-lg">
 					<?php echo is_user_logged_in()
 						? esc_html__( 'Manage Your Referrals', 'collective-finity' )
 						: esc_html__( 'Create Account', 'collective-finity' ); ?>
@@ -370,15 +229,16 @@ if ( is_user_logged_in() && class_exists( 'CF_Xfinity' ) && class_exists( 'CF_Re
 	gap: 16px;
 	justify-items: center;
 	padding: clamp(48px, 7vw, 80px) clamp(20px, 4vw, 40px) clamp(56px, 8vw, 88px);
-	border-radius: 18px;
-	background: #0B0B0B;
-	border: 1px solid rgba(30, 30, 30, 0.9);
+	border-radius: 16px;
+	background: var(--cf-bg-dark);
+	border: var(--cf-card-border-width) solid var(--cf-border);
 	overflow: hidden;
 	min-width: 0;
 	max-width: 100%;
 	width: 100%;
 	margin: 0 auto;
 	box-sizing: border-box;
+	box-shadow: var(--cf-card-shadow);
 }
 .cf-affiliate-hero--has-image {
 	text-align: left;
@@ -401,11 +261,10 @@ if ( is_user_logged_in() && class_exists( 'CF_Xfinity' ) && class_exists( 'CF_Re
 		from var(--cf-affiliate-hero-border-angle),
 		transparent 0%,
 		transparent 72%,
-		rgba(255, 183, 0, 0.05) 80%,
-		rgba(255, 183, 0, 0.35) 86%,
-		var(--cf-accent, #FFB700) 90%,
-		#FFD060 93%,
-		rgba(255, 183, 0, 0.2) 96%,
+		var(--cf-accent-dim) 80%,
+		var(--cf-accent) 90%,
+		var(--cf-accent-hover) 93%,
+		var(--cf-accent-dim) 96%,
 		transparent 100%
 	);
 	-webkit-mask:
@@ -414,7 +273,6 @@ if ( is_user_logged_in() && class_exists( 'CF_Xfinity' ) && class_exists( 'CF_Re
 	-webkit-mask-composite: xor;
 	mask-composite: exclude;
 	animation: cfAffiliateBorderTravel 5.5s linear infinite;
-	filter: drop-shadow(0 0 6px rgba(255, 183, 0, 0.35));
 }
 @keyframes cfAffiliateBorderTravel {
 	to { --cf-affiliate-hero-border-angle: 360deg; }
@@ -433,8 +291,8 @@ if ( is_user_logged_in() && class_exists( 'CF_Xfinity' ) && class_exists( 'CF_Re
 	inset: 0;
 	z-index: 1;
 	background:
-		linear-gradient(90deg, rgba(8, 8, 8, 0.92) 0%, rgba(8, 8, 8, 0.78) 38%, rgba(8, 8, 8, 0.28) 64%, rgba(8, 8, 8, 0.08) 100%),
-		linear-gradient(180deg, rgba(8, 8, 8, 0.12) 0%, transparent 30%, rgba(8, 8, 8, 0.35) 100%);
+		linear-gradient(90deg, color-mix(in srgb, var(--cf-bg-darkest) 92%, transparent) 0%, color-mix(in srgb, var(--cf-bg-darkest) 78%, transparent) 38%, color-mix(in srgb, var(--cf-bg-darkest) 28%, transparent) 64%, color-mix(in srgb, var(--cf-bg-darkest) 8%, transparent) 100%),
+		linear-gradient(180deg, color-mix(in srgb, var(--cf-bg-darkest) 12%, transparent) 0%, transparent 30%, color-mix(in srgb, var(--cf-bg-darkest) 35%, transparent) 100%);
 	pointer-events: none;
 }
 .cf-affiliate-hero__center-glow {
@@ -447,12 +305,7 @@ if ( is_user_logged_in() && class_exists( 'CF_Xfinity' ) && class_exists( 'CF_Re
 	pointer-events: none;
 	z-index: 0;
 	border-radius: 50%;
-	background: radial-gradient(
-		circle,
-		rgba(255, 183, 0, 0.14) 0%,
-		rgba(255, 183, 0, 0.05) 38%,
-		transparent 70%
-	);
+	background: radial-gradient(circle, var(--cf-accent-dim) 0%, transparent 70%);
 	animation: cfAffiliateCenterGlow 8.2s ease-in-out infinite;
 	will-change: transform, opacity;
 }
@@ -484,71 +337,177 @@ if ( is_user_logged_in() && class_exists( 'CF_Xfinity' ) && class_exists( 'CF_Re
 	display: inline-block;
 	padding: 7px 16px;
 	border-radius: 999px;
-	background: rgba(255, 183, 0, 0.08);
-	border: 1px solid rgba(255, 183, 0, 0.35);
-	color: var(--cf-accent, #FFB700);
-	font-family: var(--cf-mono, 'Space Mono', monospace);
+	background: var(--cf-accent-dim);
+	border: var(--cf-card-border-width) solid color-mix(in srgb, var(--cf-accent) 35%, transparent);
+	color: var(--cf-accent);
+	font-family: var(--cf-mono);
 	font-size: 11px;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
 }
-.cf-affiliate-hero__title {
-	color: #fff;
-	font-family: var(--cf-mono, 'Space Mono', monospace);
-	font-size: clamp(28px, 5vw, 40px);
+.cf-affiliate-hero__title,
+.cf-affiliate-section__title,
+.cf-affiliate-split__title {
+	color: var(--cf-text);
+	font-family: var(--cf-mono);
 	font-weight: 700;
 	line-height: 1.15;
 	margin: 0;
 }
-.cf-affiliate-hero__title-accent,
+.cf-affiliate-hero__title {
+	font-size: clamp(28px, 5vw, 40px);
+}
 .cf-affiliate-accent {
-	color: var(--cf-accent, #FFB700);
+	color: var(--cf-accent);
 }
 .cf-affiliate-hero__lead {
-	color: #B3B3B3;
+	color: var(--cf-text-2);
 	max-width: 620px;
 	line-height: 1.7;
 	font-size: 14px;
+	margin: 0;
+	font-family: var(--cf-body);
 }
-.cf-affiliate-hero__lead p {
-	margin: 0 0 12px;
-}
-.cf-affiliate-hero__lead p:last-child {
-	margin-bottom: 0;
-}
-.cf-affiliate-hero__actions {
+.cf-affiliate-actions {
 	display: flex;
 	flex-wrap: wrap;
-	justify-content: center;
 	gap: 12px;
 	margin-top: 8px;
 }
-.cf-affiliate-hero--has-image .cf-affiliate-hero__actions {
+.cf-affiliate-hero--has-image .cf-affiliate-actions {
 	justify-content: flex-start;
 }
-.cf-affiliate-cta {
-	display: inline-block;
-	padding: 12px 28px;
-	border-radius: 999px;
-	background: #fff;
-	color: #111;
+.cf-affiliate-actions--center {
+	justify-content: center;
+}
+.cf-affiliate-section__title {
+	font-size: clamp(1.35rem, 3vw, 1.75rem);
+	margin: 0 0 12px;
+	text-align: center;
+}
+.cf-affiliate-section__subtitle {
+	color: var(--cf-text-2);
+	text-align: center;
+	max-width: 680px;
+	margin: 0 auto 28px;
+	line-height: 1.7;
+	font-size: 0.95rem;
+	font-family: var(--cf-body);
+}
+.cf-affiliate-section__note {
+	color: var(--cf-text-3);
+	font-size: 0.85rem;
+	text-align: center;
+	margin: 20px auto 0;
+	max-width: 640px;
+	line-height: 1.7;
+	font-family: var(--cf-body);
+}
+.cf-affiliate-grid {
+	display: grid;
+	gap: 20px;
+}
+.cf-affiliate-grid--3 {
+	grid-template-columns: repeat(3, 1fr);
+}
+.cf-affiliate-grid--2 {
+	grid-template-columns: repeat(2, 1fr);
+}
+.cf-affiliate-card {
+	background: var(--cf-bg-card);
+	border: var(--cf-card-border-width) solid var(--cf-border);
+	border-radius: var(--cf-card-radius);
+	box-shadow: var(--cf-card-shadow);
+	padding: 20px;
+	text-align: center;
+}
+.cf-affiliate-card--faq {
+	text-align: left;
+}
+.cf-affiliate-step__num {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: var(--cf-bg-card-hover);
+	border: var(--cf-card-border-width) solid var(--cf-border-strong);
+	color: var(--cf-text);
+	font-weight: 700;
+	font-family: var(--cf-mono);
+	margin-bottom: 12px;
+}
+.cf-affiliate-card h3 {
+	color: var(--cf-text);
+	margin: 0 0 8px;
+	font-size: 1.05rem;
+	font-family: var(--cf-mono);
+}
+.cf-affiliate-card p {
+	color: var(--cf-text-2);
+	line-height: 1.7;
+	margin: 0;
+	font-size: 0.92rem;
+	font-family: var(--cf-body);
+}
+.cf-affiliate-split {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 24px;
+	align-items: stretch;
+}
+@media (min-width: 860px) {
+	.cf-affiliate-split {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+.cf-affiliate-split__image {
+	border-radius: 16px;
+	border: var(--cf-card-border-width) solid var(--cf-border);
+	background-color: var(--cf-bg-card);
+	background-size: cover;
+	background-position: center;
+	min-height: 260px;
+}
+.cf-affiliate-split__copy {
+	border-radius: 16px;
+	padding: clamp(24px, 3vw, 36px);
+	background: linear-gradient(160deg, var(--cf-accent-dim), color-mix(in srgb, var(--cf-accent) 2%, transparent));
+	border: var(--cf-card-border-width) solid color-mix(in srgb, var(--cf-accent) 18%, transparent);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 12px;
+}
+.cf-affiliate-split__title {
+	font-size: clamp(22px, 2.6vw, 30px);
+}
+.cf-affiliate-split__kicker {
+	margin: 0;
+	color: var(--cf-accent);
 	font-weight: 600;
-	text-decoration: none;
-	transition: opacity 0.2s ease;
-	border: 1px solid transparent;
+	font-family: var(--cf-body);
 }
-.cf-affiliate-cta:hover {
-	opacity: 0.85;
+.cf-affiliate-split__text {
+	margin: 0;
+	color: var(--cf-text-2);
+	line-height: 1.7;
+	font-size: 15px;
+	font-family: var(--cf-body);
 }
-.cf-affiliate-cta--ghost {
-	background: transparent;
-	color: #fff;
-	border-color: rgba(255, 255, 255, 0.28);
-}
-.cf-affiliate-cta--ghost:hover {
-	opacity: 1;
-	border-color: rgba(255, 183, 0, 0.5);
-	color: var(--cf-accent, #FFB700);
+.cf-affiliate-split__badge {
+	display: inline-block;
+	align-self: flex-start;
+	padding: 6px 14px;
+	border-radius: 999px;
+	background: var(--cf-bg-card-hover);
+	border: var(--cf-card-border-width) solid var(--cf-border);
+	color: var(--cf-text);
+	font-size: 0.75rem;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	font-family: var(--cf-mono);
 }
 @media (prefers-reduced-motion: reduce) {
 	.cf-affiliate-page {
@@ -559,334 +518,20 @@ if ( is_user_logged_in() && class_exists( 'CF_Xfinity' ) && class_exists( 'CF_Re
 		animation: none;
 	}
 }
-.cf-affiliate-section__title {
-	color: #fff;
-	font-family: var(--cf-mono, 'Space Mono', monospace);
-	font-size: 1.5rem;
-	margin: 0 0 12px;
-	text-align: center;
-}
-.cf-affiliate-section__title--split {
-	font-size: clamp(1.35rem, 3vw, 1.75rem);
-}
-.cf-affiliate-section__subtitle {
-	color: #b8b8b8;
-	text-align: center;
-	max-width: 680px;
-	margin: 0 auto 28px;
-	line-height: 1.7;
-	font-size: 0.95rem;
-}
-.cf-affiliate-section__note {
-	color: #999;
-	font-size: 0.85rem;
-	text-align: center;
-	margin: 20px auto 0;
-	max-width: 640px;
-	line-height: 1.7;
-}
-.cf-affiliate-steps,
-.cf-affiliate-tiers,
-.cf-affiliate-faq {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 20px;
-}
-.cf-affiliate-faq {
-	grid-template-columns: repeat(2, 1fr);
-}
-.cf-affiliate-step,
-.cf-affiliate-tier,
-.cf-affiliate-faq__item {
-	background: rgba(255, 255, 255, 0.04);
-	border: 1px solid rgba(255, 255, 255, 0.08);
-	border-radius: 16px;
-	padding: 24px;
-	text-align: center;
-}
-.cf-affiliate-faq__item {
-	text-align: left;
-}
-.cf-affiliate-step__num {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 32px;
-	height: 32px;
-	border-radius: 50%;
-	background: rgba(255, 255, 255, 0.1);
-	color: #fff;
-	font-weight: 700;
-	margin-bottom: 12px;
-}
-.cf-affiliate-step h3,
-.cf-affiliate-faq__item h3 {
-	color: #fff;
-	margin: 0 0 8px;
-	font-size: 1.05rem;
-}
-.cf-affiliate-step p,
-.cf-affiliate-tier p,
-.cf-affiliate-faq__item p {
-	color: #b8b8b8;
-	line-height: 1.7;
-	margin: 0;
-	font-size: 0.92rem;
-}
-.cf-affiliate-tier__amount {
-	display: block;
-	color: #fff;
-	font-size: 1.8rem;
-	font-weight: 700;
-	font-family: var(--cf-mono, 'Space Mono', monospace);
-}
-.cf-affiliate-tier__label {
-	display: block;
-	color: #999;
-	font-size: 0.8rem;
-	text-transform: uppercase;
-	letter-spacing: 0.06em;
-	margin-bottom: 10px;
-}
-.cf-affiliate-dashboard {
-	display: grid;
-	grid-template-columns: repeat(5, 1fr);
-	gap: 20px;
-}
-.cf-affiliate-dashboard__card {
-	text-align: center;
-	min-width: 0;
-}
-.cf-affiliate-dashboard__card--referral {
-	grid-column: span 1;
-}
-.cf-affiliate-dashboard__stats {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 12px;
-}
-.cf-affiliate-dashboard__stat .cf-affiliate-tier__amount {
-	font-size: 1.4rem;
-}
-.cf-affiliate-dashboard__detail {
-	color: #d2d2d2;
-	font-size: 0.9rem;
-	line-height: 1.6;
-	margin-top: 4px;
-}
-.cf-affiliate-referral-field {
-	display: flex;
-	gap: 8px;
-	margin-top: 4px;
-}
-.cf-affiliate-referral-input {
-	flex: 1;
-	min-width: 0;
-	padding: 8px 10px;
-	border-radius: 8px;
-	border: 1px solid rgba(255, 255, 255, 0.12);
-	background: rgba(0, 0, 0, 0.35);
-	color: #e8e8e8;
-	font-size: 0.78rem;
-}
-.cf-affiliate-referral-copy {
-	flex-shrink: 0;
-	padding: 8px 14px;
-	border-radius: 8px;
-	border: 1px solid rgba(255, 183, 0, 0.35);
-	background: rgba(255, 183, 0, 0.1);
-	color: var(--cf-accent, #FFB700);
-	font-size: 0.78rem;
-	font-weight: 600;
-	cursor: pointer;
-	transition: background 0.2s ease;
-}
-.cf-affiliate-referral-copy:hover {
-	background: rgba(255, 183, 0, 0.18);
-}
-.cf-affiliate-dashboard-guest {
-	background: rgba(255, 255, 255, 0.04);
-	border: 1px solid rgba(255, 255, 255, 0.08);
-	border-radius: 16px;
-	padding: 40px 24px;
-	text-align: center;
-	display: grid;
-	gap: 16px;
-	justify-items: center;
-	max-width: 520px;
-	margin: 0 auto;
-}
-.cf-affiliate-dashboard-guest p {
-	color: #b8b8b8;
-	margin: 0;
-	line-height: 1.7;
-}
-.cf-affiliate-banner {
-	position: relative;
-	overflow: hidden;
-	border-radius: 18px;
-	border: 1px solid rgba(255, 255, 255, 0.07);
-	background-color: #0f0f0f;
-	background-image: var(--cf-affiliate-banner-image);
-	background-size: cover;
-	background-position: center;
-	box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.85);
-	min-height: clamp(280px, 36vw, 360px);
-}
-.cf-affiliate-banner__shade {
-	position: absolute;
-	inset: 0;
-	background: linear-gradient(180deg, rgba(8, 8, 8, 0.55) 0%, rgba(8, 8, 8, 0.78) 55%, rgba(8, 8, 8, 0.9) 100%);
-	pointer-events: none;
-}
-.cf-affiliate-banner__content {
-	position: relative;
-	z-index: 1;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 14px;
-	text-align: center;
-	padding: clamp(40px, 6vw, 64px) clamp(24px, 4vw, 48px);
-	max-width: 720px;
-	margin: 0 auto;
-}
-.cf-affiliate-banner__title {
-	margin: 0;
-	color: #fff;
-	font-family: var(--cf-mono, 'Space Mono', monospace);
-	font-size: clamp(24px, 3vw, 32px);
-}
-.cf-affiliate-banner__lead {
-	margin: 0;
-	color: var(--cf-accent, #FFB700);
-	font-size: 1rem;
-	font-weight: 600;
-}
-.cf-affiliate-banner__body {
-	margin: 0;
-	max-width: 36em;
-	color: #D0D0D0;
-	line-height: 1.7;
-}
-.cf-affiliate-future {
-	position: relative;
-	text-align: center;
-	background-color: #0f0f0f;
-	background-image: var(--cf-affiliate-future-image);
-	background-size: cover;
-	background-position: center;
-	border: 1px solid rgba(255, 255, 255, 0.08);
-	border-radius: 20px;
-	padding: 0;
-	overflow: hidden;
-	min-height: clamp(280px, 34vw, 340px);
-}
-.cf-affiliate-future__shade {
-	position: absolute;
-	inset: 0;
-	background: linear-gradient(180deg, rgba(8, 8, 8, 0.5) 0%, rgba(8, 8, 8, 0.82) 100%);
-	pointer-events: none;
-}
-.cf-affiliate-future__content {
-	position: relative;
-	z-index: 1;
-	padding: clamp(40px, 6vw, 56px) clamp(24px, 4vw, 40px);
-}
-.cf-affiliate-future__lead {
-	color: var(--cf-accent, #FFB700);
-	font-weight: 600;
-	margin: 0 0 12px;
-}
-.cf-affiliate-future p {
-	color: #d2d2d2;
-	max-width: 620px;
-	margin: 0 auto 16px;
-	line-height: 1.7;
-}
-.cf-affiliate-future__badge {
-	display: inline-block;
-	padding: 6px 14px;
-	border-radius: 999px;
-	background: rgba(255, 255, 255, 0.08);
-	color: #fff;
-	font-size: 0.75rem;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
-}
-.cf-affiliate-cta-section__actions {
-	justify-content: center;
-}
-@media (max-width: 1200px) {
-	.cf-affiliate-dashboard {
-		grid-template-columns: repeat(3, 1fr);
-	}
-	.cf-affiliate-dashboard__card--referral {
-		grid-column: span 3;
-	}
-}
 @media (max-width: 782px) {
-	.cf-affiliate-steps,
-	.cf-affiliate-tiers,
-	.cf-affiliate-faq,
-	.cf-affiliate-dashboard {
+	.cf-affiliate-grid--3,
+	.cf-affiliate-grid--2 {
 		grid-template-columns: 1fr;
-	}
-	.cf-affiliate-dashboard__card--referral {
-		grid-column: span 1;
 	}
 	.cf-affiliate-hero--has-image {
 		text-align: center;
 	}
 	.cf-affiliate-hero--has-image .cf-affiliate-hero__content,
-	.cf-affiliate-hero--has-image .cf-affiliate-hero__actions {
+	.cf-affiliate-hero--has-image .cf-affiliate-actions {
 		justify-items: center;
 		justify-content: center;
 	}
-	.cf-affiliate-referral-field {
-		flex-direction: column;
-	}
 }
 </style>
-
-<?php if ( is_user_logged_in() && ! empty( $cf_dashboard['referral_link'] ) ) : ?>
-<script>
-(function () {
-	var input = document.getElementById('cf-referral-link-input');
-	var btn = document.getElementById('cf-referral-link-copy');
-	if (!input || !btn) {
-		return;
-	}
-	var defaultLabel = btn.textContent;
-	btn.addEventListener('click', function () {
-		var value = input.value;
-		if (!value) {
-			return;
-		}
-		if (navigator.clipboard && navigator.clipboard.writeText) {
-			navigator.clipboard.writeText(value).then(showCopied).catch(fallbackCopy);
-			return;
-		}
-		fallbackCopy();
-		function fallbackCopy() {
-			input.focus();
-			input.select();
-			input.setSelectionRange(0, value.length);
-			try {
-				document.execCommand('copy');
-				showCopied();
-			} catch (e) {}
-		}
-		function showCopied() {
-			btn.textContent = '<?php echo esc_js( __( 'Copied!', 'collective-finity' ) ); ?>';
-			window.setTimeout(function () {
-				btn.textContent = defaultLabel;
-			}, 2000);
-		}
-	});
-})();
-</script>
-<?php endif; ?>
 
 <?php get_footer(); ?>
