@@ -301,8 +301,15 @@ $cf_exclude_featured_from_grid = $cf_featured_album_id && count( $cf_album_posts
 	<main id="main" class="site-main">
 
 		<section class="cf-albums-hero" aria-labelledby="cf-albums-hero-heading">
-			<div class="cf-albums-hero__wave" aria-hidden="true"></div>
 			<div class="cf-albums-hero__glow" aria-hidden="true"></div>
+			<div class="cf-albums-hero__wave" aria-hidden="true">
+				<svg class="cf-albums-hero__wave-svg" viewBox="0 0 1200 280" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+					<path d="M0 180 C80 120, 160 220, 240 160 C320 100, 400 200, 480 150 C560 100, 640 190, 720 140 C800 90, 880 180, 960 130 C1040 80, 1120 160, 1200 120" fill="none" stroke="rgba(255,183,0,0.22)" stroke-width="1.5"/>
+					<path d="M0 200 C90 150, 170 230, 260 180 C350 130, 430 220, 520 170 C610 120, 690 210, 780 160 C870 110, 950 200, 1040 150 C1130 100, 1170 170, 1200 140" fill="none" stroke="rgba(255,183,0,0.14)" stroke-width="1.25"/>
+					<path d="M0 150 C100 90, 180 190, 280 130 C380 70, 460 170, 560 120 C660 70, 740 160, 840 110 C940 60, 1020 150, 1120 100 C1160 80, 1180 110, 1200 95" fill="none" stroke="rgba(255,183,0,0.1)" stroke-width="1"/>
+					<path d="M0 220 C70 190, 150 250, 230 210 C310 170, 390 240, 470 200 C550 160, 630 230, 710 190 C790 150, 870 220, 950 180 C1030 140, 1110 200, 1200 170" fill="none" stroke="rgba(255,183,0,0.08)" stroke-width="1"/>
+				</svg>
+			</div>
 			<div class="cf-albums-hero__content">
 				<span class="cf-albums-hero__badge"><?php esc_html_e( 'Collective Finity', 'collective-finity' ); ?></span>
 				<h1 id="cf-albums-hero-heading" class="cf-albums-hero__title">
@@ -312,20 +319,35 @@ $cf_exclude_featured_from_grid = $cf_featured_album_id && count( $cf_album_posts
 					<?php esc_html_e( 'Explore our cinematic music collections, each telling a unique story through sound.', 'collective-finity' ); ?>
 				</p>
 
-				<dl class="cf-albums-hero__stats">
-					<div class="cf-albums-hero__stat">
-						<dt class="cf-albums-hero__stat-value"><?php echo esc_html( number_format_i18n( $cf_total_albums ) ); ?></dt>
-						<dd class="cf-albums-hero__stat-label"><?php echo esc_html( _n( 'Album', 'Albums', $cf_total_albums, 'collective-finity' ) ); ?></dd>
-					</div>
-					<div class="cf-albums-hero__stat">
-						<dt class="cf-albums-hero__stat-value"><?php echo esc_html( number_format_i18n( $cf_total_tracks ) ); ?></dt>
-						<dd class="cf-albums-hero__stat-label"><?php echo esc_html( _n( 'Track', 'Tracks', $cf_total_tracks, 'collective-finity' ) ); ?></dd>
-					</div>
-					<div class="cf-albums-hero__stat">
-						<dt class="cf-albums-hero__stat-value"><?php echo esc_html( number_format_i18n( $cf_total_genres ) ); ?></dt>
-						<dd class="cf-albums-hero__stat-label"><?php echo esc_html( _n( 'Genre', 'Genres', $cf_total_genres, 'collective-finity' ) ); ?></dd>
-					</div>
-				</dl>
+				<ul class="cf-albums-hero__stats">
+					<li class="cf-albums-hero__stat">
+						<span class="cf-albums-hero__stat-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="7" rx="1.5"/><rect x="14" y="4" width="7" height="7" rx="1.5"/><rect x="3" y="13" width="7" height="7" rx="1.5"/><rect x="14" y="13" width="7" height="7" rx="1.5"/></svg>
+						</span>
+						<span class="cf-albums-hero__stat-text">
+							<strong><?php echo esc_html( number_format_i18n( $cf_total_albums ) ); ?></strong>
+							<?php echo esc_html( _n( 'Album', 'Albums', $cf_total_albums, 'collective-finity' ) ); ?>
+						</span>
+					</li>
+					<li class="cf-albums-hero__stat">
+						<span class="cf-albums-hero__stat-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+						</span>
+						<span class="cf-albums-hero__stat-text">
+							<strong><?php echo esc_html( number_format_i18n( $cf_total_tracks ) ); ?></strong>
+							<?php echo esc_html( _n( 'Track', 'Tracks', $cf_total_tracks, 'collective-finity' ) ); ?>
+						</span>
+					</li>
+					<li class="cf-albums-hero__stat">
+						<span class="cf-albums-hero__stat-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5"/><path d="M12 12v9"/><path d="M12 12L4 7.5"/></svg>
+						</span>
+						<span class="cf-albums-hero__stat-text">
+							<strong><?php echo esc_html( number_format_i18n( $cf_total_genres ) ); ?></strong>
+							<?php echo esc_html( _n( 'Genre', 'Genres', $cf_total_genres, 'collective-finity' ) ); ?>
+						</span>
+					</li>
+				</ul>
 
 				<div class="cf-albums-search">
 					<span class="dashicons dashicons-search cf-albums-search__icon" aria-hidden="true"></span>
@@ -365,9 +387,11 @@ $cf_exclude_featured_from_grid = $cf_featured_album_id && count( $cf_album_posts
 
 						<div class="cf-albums-featured__main">
 							<?php if ( ! empty( $cf_featured_data['genres'] ) ) : ?>
-								<p class="cf-albums-featured__genres">
-									<?php echo esc_html( strtoupper( implode( ' • ', array_slice( $cf_featured_data['genres'], 0, 2 ) ) ) ); ?>
-								</p>
+								<div class="cf-albums-featured__genres">
+									<?php foreach ( array_slice( $cf_featured_data['genres'], 0, 2 ) as $cf_feat_genre ) : ?>
+										<span class="cf-albums-featured__genre-pill"><?php echo esc_html( $cf_feat_genre ); ?></span>
+									<?php endforeach; ?>
+								</div>
 							<?php endif; ?>
 
 							<h2 id="cf-albums-featured-heading" class="cf-albums-featured__title">
@@ -377,7 +401,9 @@ $cf_exclude_featured_from_grid = $cf_featured_album_id && count( $cf_album_posts
 							<ul class="cf-albums-featured__meta">
 								<?php if ( $cf_featured_data['track_count'] > 0 ) : ?>
 									<li>
-										<span class="dashicons dashicons-playlist-audio" aria-hidden="true"></span>
+										<span class="cf-albums-featured__meta-icon" aria-hidden="true">
+											<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+										</span>
 										<?php
 										echo esc_html(
 											sprintf(
@@ -390,7 +416,9 @@ $cf_exclude_featured_from_grid = $cf_featured_album_id && count( $cf_album_posts
 								<?php endif; ?>
 								<?php if ( $cf_featured_data['duration'] ) : ?>
 									<li>
-										<span class="dashicons dashicons-clock" aria-hidden="true"></span>
+										<span class="cf-albums-featured__meta-icon" aria-hidden="true">
+											<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+										</span>
 										<?php echo esc_html( $cf_featured_data['duration'] ); ?>
 									</li>
 								<?php endif; ?>
@@ -418,31 +446,31 @@ $cf_exclude_featured_from_grid = $cf_featured_album_id && count( $cf_album_posts
 						</div>
 
 						<?php if ( ! empty( $cf_featured_data['track_ids'] ) ) : ?>
-							<ol class="cf-albums-featured__tracks">
-								<?php
-								$cf_feat_preview_tracks = array_slice( $cf_featured_data['track_ids'], 0, 6 );
-								foreach ( $cf_feat_preview_tracks as $cf_feat_track_index => $cf_feat_track_id ) :
-									$cf_feat_track_title = get_the_title( $cf_feat_track_id );
-									$cf_feat_track_secs  = $cf_resolve_track_duration_seconds( $cf_feat_track_id );
-									$cf_feat_track_dur     = $cf_feat_track_secs > 0 ? $cf_format_track_time( $cf_feat_track_secs ) : '';
-									?>
-									<li>
-										<span class="cf-albums-featured__track-num"><?php echo esc_html( (string) ( $cf_feat_track_index + 1 ) ); ?></span>
-										<a class="cf-albums-featured__track-title" href="<?php echo esc_url( get_permalink( $cf_feat_track_id ) ); ?>">
-											<?php echo esc_html( $cf_feat_track_title ); ?>
-										</a>
-										<?php if ( $cf_feat_track_dur ) : ?>
-											<span class="cf-albums-featured__track-dur"><?php echo esc_html( $cf_feat_track_dur ); ?></span>
-										<?php endif; ?>
-									</li>
-								<?php endforeach; ?>
-							</ol>
-							<?php if ( $cf_featured_data['track_count'] > 6 ) : ?>
+							<div class="cf-albums-featured__sidebar">
+								<ol class="cf-albums-featured__tracks">
+									<?php
+									$cf_feat_preview_tracks = array_slice( $cf_featured_data['track_ids'], 0, 6 );
+									foreach ( $cf_feat_preview_tracks as $cf_feat_track_index => $cf_feat_track_id ) :
+										$cf_feat_track_title = get_the_title( $cf_feat_track_id );
+										$cf_feat_track_secs  = $cf_resolve_track_duration_seconds( $cf_feat_track_id );
+										$cf_feat_track_dur   = $cf_feat_track_secs > 0 ? $cf_format_track_time( $cf_feat_track_secs ) : '';
+										?>
+										<li>
+											<span class="cf-albums-featured__track-num"><?php echo esc_html( (string) ( $cf_feat_track_index + 1 ) ); ?></span>
+											<a class="cf-albums-featured__track-title" href="<?php echo esc_url( get_permalink( $cf_feat_track_id ) ); ?>">
+												<?php echo esc_html( $cf_feat_track_title ); ?>
+											</a>
+											<?php if ( $cf_feat_track_dur ) : ?>
+												<span class="cf-albums-featured__track-dur"><?php echo esc_html( $cf_feat_track_dur ); ?></span>
+											<?php endif; ?>
+										</li>
+									<?php endforeach; ?>
+								</ol>
 								<a class="cf-albums-featured__view-all" href="<?php echo esc_url( $cf_featured_data['permalink'] ); ?>">
 									<?php esc_html_e( 'View full album', 'collective-finity' ); ?>
 									<span aria-hidden="true">→</span>
 								</a>
-							<?php endif; ?>
+							</div>
 						<?php endif; ?>
 					</div>
 				</div>
@@ -565,6 +593,13 @@ $cf_exclude_featured_from_grid = $cf_featured_album_id && count( $cf_album_posts
 				</div>
 
 				<div class="cf-albums-list cf-library-list" data-cf-view="list" data-cf-albums-list hidden>
+					<div class="cf-albums-list-header" aria-hidden="true">
+						<span class="cf-albums-list-header__album"><?php esc_html_e( 'Album', 'collective-finity' ); ?></span>
+						<span class="cf-albums-list-header__tracks"><?php esc_html_e( 'Tracks', 'collective-finity' ); ?></span>
+						<span class="cf-albums-list-header__duration"><?php esc_html_e( 'Duration', 'collective-finity' ); ?></span>
+						<span class="cf-albums-list-header__genre"><?php esc_html_e( 'Genre', 'collective-finity' ); ?></span>
+						<span class="cf-albums-list-header__date"><?php esc_html_e( 'Release Date', 'collective-finity' ); ?></span>
+					</div>
 					<?php
 					$cf_albums_query->rewind_posts();
 					while ( $cf_albums_query->have_posts() ) :

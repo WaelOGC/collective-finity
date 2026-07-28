@@ -117,7 +117,7 @@
 		if (!container) {
 			return;
 		}
-		var items = Array.prototype.slice.call(container.children);
+		var items = Array.prototype.slice.call(container.querySelectorAll('[data-cf-sort-date]'));
 		items.sort(function (a, b) {
 			if (mode === 'alpha') {
 				return (a.getAttribute('data-cf-sort-title') || '').localeCompare(
