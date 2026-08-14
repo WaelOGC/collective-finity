@@ -107,6 +107,11 @@ function collective_finity_customize_sanitize_ad_code( $value ) {
 /**
  * Register a theme-option setting + control helper.
  *
+ * Each Customizer setting uses its own scalar sanitize_callback (never the
+ * tab-gated collective_finity_sanitize_theme_options). Persistence still goes
+ * through update_option( 'cf_theme_options' ), so that shared callback must
+ * accept a full array with no _submitted_tab (Customizer save path).
+ *
  * @param WP_Customize_Manager $wp_customize Customizer manager.
  * @param string               $key         Option key.
  * @param array                $setting     Setting args (merged with defaults).

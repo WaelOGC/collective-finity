@@ -88,17 +88,6 @@ function collective_finity_default_theme_options() {
 
 function collective_finity_get_theme_options() {
     $saved    = get_option( collective_finity_theme_options_key(), array() );
-    // TEMP DIAGNOSTIC — remove with inc/theme-options-debug.php.
-    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-        $hook = current_action() ? current_action() : current_filter();
-        if ( in_array( $hook, array( 'init', 'admin_init', 'wp_loaded' ), true ) ) {
-            error_log(
-                '[CF TEMP] get_theme_options during ' . $hook
-                . ' saved_type=' . gettype( $saved )
-                . ' primary=' . ( is_array( $saved ) && isset( $saved['primary_color'] ) ? $saved['primary_color'] : '(none)' )
-            );
-        }
-    }
     if ( ! is_array( $saved ) ) {
         $saved = array();
     }
@@ -341,30 +330,28 @@ function collective_finity_sanitize_theme_options( $input ) {
     $output   = collective_finity_get_theme_options();
 
     if ( ! is_array( $input ) ) {
-        // TEMP DIAGNOSTIC — remove after confirming Theme Options save vs. cache.
-        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-            error_log(
-                '[CF TEMP] sanitize skipped: input is not an array; type=' . gettype( $input )
-                . ' existing_primary=' . ( isset( $output['primary_color'] ) ? $output['primary_color'] : '' )
-            );
-        }
         return $output;
     }
 
     $submitted_tab = isset( $input['_submitted_tab'] ) ? sanitize_key( $input['_submitted_tab'] ) : '';
 
-    // TEMP DIAGNOSTIC — does not change sanitize behavior.
-    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-        error_log(
-            '[CF TEMP] sanitize ENTER tab=' . ( $submitted_tab !== '' ? $submitted_tab : '(empty)' )
-            . ' input_keys=' . implode( ',', array_keys( $input ) )
-            . ' input_primary=' . ( isset( $input['primary_color'] ) ? $input['primary_color'] : '(not posted)' )
-            . ' existing_primary=' . ( isset( $output['primary_color'] ) ? $output['primary_color'] : '' )
-            . ( '' === $submitted_tab ? ' NOTE: empty tab means NO field copies run (Customizer path)' : '' )
-        );
+    /*
+     * The Theme Options admin page posts one tab at a time and must keep
+     * tab-gating so unchecked checkboxes on other tabs are not wiped.
+     *
+     * The Customizer writes the full `cf_theme_options` array via nested
+     * option settings (`cf_theme_options[primary_color]`, etc.) and never
+     * sends `_submitted_tab`. An empty tab therefore means "apply every
+     * option-field tab" rather than "apply nothing".
+     */
+    $field_tabs = array( 'general', 'player', 'footer', 'advanced', 'ads', 'donate' );
+    if ( '' === $submitted_tab ) {
+        $apply = array_fill_keys( $field_tabs, true );
+    } else {
+        $apply = array( $submitted_tab => true );
     }
 
-    if ( 'general' === $submitted_tab ) {
+    if ( ! empty( $apply['general'] ) ) {
         $output['primary_color']      = sanitize_hex_color( $input['primary_color'] ?? $defaults['primary_color'] ) ?: $defaults['primary_color'];
         $output['accent_color']       = sanitize_hex_color( $input['accent_color'] ?? $defaults['accent_color'] ) ?: $defaults['accent_color'];
         $output['text_color']         = sanitize_hex_color( $input['text_color'] ?? $defaults['text_color'] ) ?: $defaults['text_color'];
@@ -432,7 +419,7 @@ function collective_finity_sanitize_theme_options( $input ) {
         $output['enable_back_to_top'] = empty( $input['enable_back_to_top'] ) ? 0 : 1;
     }
 
-    if ( 'player' === $submitted_tab ) {
+    if ( ! empty( $apply['player'] ) ) {
         $output['show_global_player'] = empty( $input['show_global_player'] ) ? 0 : 1;
         $output['default_volume']     = min( 100, max( 0, absint( $input['default_volume'] ?? $defaults['default_volume'] ) ) );
         $output['popular_min_views']  = max( 0, absint( $input['popular_min_views'] ?? $defaults['popular_min_views'] ) );
@@ -440,7 +427,7 @@ function collective_finity_sanitize_theme_options( $input ) {
         $output['library_show_playlists_tab'] = empty( $input['library_show_playlists_tab'] ) ? 0 : 1;
     }
 
-    if ( 'footer' === $submitted_tab ) {
+    if ( ! empty( $apply['footer'] ) ) {
         $output['footer_copyright']   = sanitize_text_field( $input['footer_copyright'] ?? '' );
         $output['footer_tagline']     = sanitize_text_field( $input['footer_tagline'] ?? $defaults['footer_tagline'] );
         $desc                         = sanitize_text_field( $input['footer_description'] ?? '' );
@@ -466,12 +453,12 @@ function collective_finity_sanitize_theme_options( $input ) {
         }
     }
 
-    if ( 'advanced' === $submitted_tab ) {
+    if ( ! empty( $apply['advanced'] ) ) {
         $output['footer_copyright'] = sanitize_text_field( $input['footer_copyright'] ?? '' );
         $output['custom_css']       = wp_strip_all_tags( $input['custom_css'] ?? '' );
     }
 
-    if ( 'ads' === $submitted_tab ) {
+    if ( ! empty( $apply['ads'] ) ) {
         $output['ad_preview_mode'] = empty( $input['ad_preview_mode'] ) ? 0 : 1;
 
         $publisher_id = sanitize_text_field( $input['adsense_publisher_id'] ?? '' );
@@ -500,7 +487,7 @@ function collective_finity_sanitize_theme_options( $input ) {
         }
     }
 
-    if ( 'donate' === $submitted_tab ) {
+    if ( ! empty( $apply['donate'] ) ) {
         $raw_messages = isset( $input['donate_leadscreen_messages'] ) && is_array( $input['donate_leadscreen_messages'] )
             ? $input['donate_leadscreen_messages']
             : array();
@@ -530,34 +517,6 @@ function collective_finity_sanitize_theme_options( $input ) {
     }
     if ( 'sidebar' === $submitted_tab && isset( $input['active_sidebar'] ) ) {
         collective_finity_set_theme_part_template_id( 'sidebar', absint( $input['active_sidebar'] ) );
-    }
-
-    // TEMP DIAGNOSTIC — remove after confirming Theme Options save vs. cache.
-    // Logs only when WP_DEBUG is true. Does not alter sanitize/save behavior.
-    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-        $diagnostic_keys = array(
-            'primary_color',
-            'enable_glow_effects',
-            'footer_copyright',
-            'show_global_player',
-            'custom_css',
-        );
-        $snapshot = array();
-        foreach ( $diagnostic_keys as $key ) {
-            if ( ! array_key_exists( $key, $output ) ) {
-                continue;
-            }
-            $value = $output[ $key ];
-            if ( is_string( $value ) && strlen( $value ) > 80 ) {
-                $value = substr( $value, 0, 80 ) . '…';
-            }
-            $snapshot[ $key ] = $value;
-        }
-        error_log(
-            '[CF TEMP] sanitize EXIT tab=' . ( $submitted_tab !== '' ? $submitted_tab : '(empty)' )
-            . ' values=' . wp_json_encode( $snapshot )
-            . ' primary_changed=' . ( ( $input['primary_color'] ?? null ) !== ( $snapshot['primary_color'] ?? null ) ? 'input_not_copied_to_output' : 'same_or_copied' )
-        );
     }
 
     return $output;

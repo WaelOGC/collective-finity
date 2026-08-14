@@ -32,7 +32,6 @@ require_once get_template_directory() . '/inc/admin-menu.php';
 require_once get_template_directory() . '/inc/cpt-theme-templates.php';
 require_once get_template_directory() . '/inc/ad-manager.php';
 require_once get_template_directory() . '/inc/theme-options.php';
-require_once get_template_directory() . '/inc/theme-options-debug.php'; // TEMP DIAGNOSTIC — remove after save-bug is identified.
 require_once get_template_directory() . '/inc/admin-theme-builder.php';
 require_once get_template_directory() . '/inc/customizer-theme-parts.php';
 require_once get_template_directory() . '/inc/customizer-theme-options.php';
