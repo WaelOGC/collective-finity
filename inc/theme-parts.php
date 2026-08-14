@@ -104,7 +104,18 @@ function collective_finity_get_theme_part_template_id( $part ) {
     if ( ! isset( $parts[ $part ] ) ) {
         return 0;
     }
-    return absint( get_theme_mod( collective_finity_theme_part_mod_key( $part ), 0 ) );
+    $mod_key = collective_finity_theme_part_mod_key( $part );
+    $value   = absint( get_theme_mod( $mod_key, 0 ) );
+
+    // TEMP DIAGNOSTIC — remove with inc/theme-options-debug.php.
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        $hook = current_action() ? current_action() : current_filter();
+        if ( in_array( $hook, array( 'init', 'admin_init', 'wp_loaded' ), true ) ) {
+            error_log( '[CF TEMP] get_theme_mod ' . $mod_key . '=' . $value . ' during ' . $hook );
+        }
+    }
+
+    return $value;
 }
 
 /**
@@ -145,10 +156,22 @@ function collective_finity_set_theme_part_template_id( $part, $template_id ) {
         return false;
     }
 
+    $mod_key = collective_finity_theme_part_mod_key( $part );
+
+    // TEMP DIAGNOSTIC — remove with inc/theme-options-debug.php.
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        error_log(
+            '[CF TEMP] set_theme_part_template_id part=' . $part
+            . ' mod=' . $mod_key
+            . ' id=' . $template_id
+            . ' hook=' . ( current_action() ? current_action() : '' )
+        );
+    }
+
     if ( $template_id > 0 ) {
-        set_theme_mod( collective_finity_theme_part_mod_key( $part ), $template_id );
+        set_theme_mod( $mod_key, $template_id );
     } else {
-        remove_theme_mod( collective_finity_theme_part_mod_key( $part ) );
+        remove_theme_mod( $mod_key );
     }
 
     return true;

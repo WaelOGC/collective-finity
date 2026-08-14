@@ -88,6 +88,17 @@ function collective_finity_default_theme_options() {
 
 function collective_finity_get_theme_options() {
     $saved    = get_option( collective_finity_theme_options_key(), array() );
+    // TEMP DIAGNOSTIC — remove with inc/theme-options-debug.php.
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        $hook = current_action() ? current_action() : current_filter();
+        if ( in_array( $hook, array( 'init', 'admin_init', 'wp_loaded' ), true ) ) {
+            error_log(
+                '[CF TEMP] get_theme_options during ' . $hook
+                . ' saved_type=' . gettype( $saved )
+                . ' primary=' . ( is_array( $saved ) && isset( $saved['primary_color'] ) ? $saved['primary_color'] : '(none)' )
+            );
+        }
+    }
     if ( ! is_array( $saved ) ) {
         $saved = array();
     }
@@ -332,12 +343,26 @@ function collective_finity_sanitize_theme_options( $input ) {
     if ( ! is_array( $input ) ) {
         // TEMP DIAGNOSTIC — remove after confirming Theme Options save vs. cache.
         if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-            error_log( '[CF TEMP] Theme Options sanitize skipped: input is not an array; type=' . gettype( $input ) );
+            error_log(
+                '[CF TEMP] sanitize skipped: input is not an array; type=' . gettype( $input )
+                . ' existing_primary=' . ( isset( $output['primary_color'] ) ? $output['primary_color'] : '' )
+            );
         }
         return $output;
     }
 
     $submitted_tab = isset( $input['_submitted_tab'] ) ? sanitize_key( $input['_submitted_tab'] ) : '';
+
+    // TEMP DIAGNOSTIC — does not change sanitize behavior.
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        error_log(
+            '[CF TEMP] sanitize ENTER tab=' . ( $submitted_tab !== '' ? $submitted_tab : '(empty)' )
+            . ' input_keys=' . implode( ',', array_keys( $input ) )
+            . ' input_primary=' . ( isset( $input['primary_color'] ) ? $input['primary_color'] : '(not posted)' )
+            . ' existing_primary=' . ( isset( $output['primary_color'] ) ? $output['primary_color'] : '' )
+            . ( '' === $submitted_tab ? ' NOTE: empty tab means NO field copies run (Customizer path)' : '' )
+        );
+    }
 
     if ( 'general' === $submitted_tab ) {
         $output['primary_color']      = sanitize_hex_color( $input['primary_color'] ?? $defaults['primary_color'] ) ?: $defaults['primary_color'];
@@ -529,7 +554,9 @@ function collective_finity_sanitize_theme_options( $input ) {
             $snapshot[ $key ] = $value;
         }
         error_log(
-            '[CF TEMP] Theme Options sanitize tab=' . $submitted_tab . ' values=' . wp_json_encode( $snapshot )
+            '[CF TEMP] sanitize EXIT tab=' . ( $submitted_tab !== '' ? $submitted_tab : '(empty)' )
+            . ' values=' . wp_json_encode( $snapshot )
+            . ' primary_changed=' . ( ( $input['primary_color'] ?? null ) !== ( $snapshot['primary_color'] ?? null ) ? 'input_not_copied_to_output' : 'same_or_copied' )
         );
     }
 
