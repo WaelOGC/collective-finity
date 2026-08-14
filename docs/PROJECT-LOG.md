@@ -1,5 +1,8 @@
 # Collective Finity Theme — Documentation Log
 
+## Cache-busting (do not regress)
+Theme CSS/JS `?ver=` query strings now come from `collective_finity_asset_version( $file_path )` in `functions.php`, which uses the asset’s `filemtime()` (falling back to the `style.css` `Version:` header only if the file is missing). **Do not bump `style.css` Version to force cache busting** — changing a CSS/JS file on disk is enough. The `Version:` header is a theme identity string, not a deploy cache-bust.
+
 ## Purpose
 This file tracks every feature, fix, and pending item implemented in the collective-finity theme, so any developer (including future Cursor sessions) can understand the full history without re-reading all code.
 

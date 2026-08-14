@@ -381,13 +381,12 @@ function collective_finity_enqueue_blog_card_styles() {
     }
 
     $path = get_template_directory() . '/assets/css/cf-blog-cards.css';
-    $ver  = file_exists( $path ) ? filemtime( $path ) : wp_get_theme()->get( 'Version' );
 
     wp_enqueue_style(
         'cf-blog-cards',
         get_template_directory_uri() . '/assets/css/cf-blog-cards.css',
         array( 'cf-shell' ),
-        $ver
+        collective_finity_asset_version( $path )
     );
 }
 add_action( 'wp_enqueue_scripts', 'collective_finity_enqueue_blog_card_styles', 20 );

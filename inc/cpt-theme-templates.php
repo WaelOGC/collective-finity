@@ -384,7 +384,7 @@ function collective_finity_template_admin_styles( $hook ) {
         'cf-theme-builder-admin',
         get_template_directory_uri() . '/assets/css/theme-builder-admin.css',
         array(),
-        wp_get_theme()->get( 'Version' )
+        collective_finity_asset_version( get_template_directory() . '/assets/css/theme-builder-admin.css' )
     );
 }
 add_action( 'admin_enqueue_scripts', 'collective_finity_template_admin_styles' );

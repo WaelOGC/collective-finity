@@ -330,6 +330,10 @@ function collective_finity_sanitize_theme_options( $input ) {
     $output   = collective_finity_get_theme_options();
 
     if ( ! is_array( $input ) ) {
+        // TEMP DIAGNOSTIC — remove after confirming Theme Options save vs. cache.
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( '[CF TEMP] Theme Options sanitize skipped: input is not an array; type=' . gettype( $input ) );
+        }
         return $output;
     }
 
@@ -503,6 +507,32 @@ function collective_finity_sanitize_theme_options( $input ) {
         collective_finity_set_theme_part_template_id( 'sidebar', absint( $input['active_sidebar'] ) );
     }
 
+    // TEMP DIAGNOSTIC — remove after confirming Theme Options save vs. cache.
+    // Logs only when WP_DEBUG is true. Does not alter sanitize/save behavior.
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        $diagnostic_keys = array(
+            'primary_color',
+            'enable_glow_effects',
+            'footer_copyright',
+            'show_global_player',
+            'custom_css',
+        );
+        $snapshot = array();
+        foreach ( $diagnostic_keys as $key ) {
+            if ( ! array_key_exists( $key, $output ) ) {
+                continue;
+            }
+            $value = $output[ $key ];
+            if ( is_string( $value ) && strlen( $value ) > 80 ) {
+                $value = substr( $value, 0, 80 ) . '…';
+            }
+            $snapshot[ $key ] = $value;
+        }
+        error_log(
+            '[CF TEMP] Theme Options sanitize tab=' . $submitted_tab . ' values=' . wp_json_encode( $snapshot )
+        );
+    }
+
     return $output;
 }
 
@@ -526,8 +556,19 @@ function collective_finity_theme_options_assets( $hook ) {
     wp_enqueue_style( 'wp-color-picker' );
     wp_enqueue_script( 'wp-color-picker' );
     wp_enqueue_media();
-    wp_enqueue_style( 'cf-theme-options-admin', get_template_directory_uri() . '/assets/css/theme-options-admin.css', array(), wp_get_theme()->get( 'Version' ) );
-    wp_enqueue_script( 'cf-theme-options-admin', get_template_directory_uri() . '/assets/js/theme-options-admin.js', array( 'jquery', 'wp-color-picker', 'media-editor' ), wp_get_theme()->get( 'Version' ), true );
+    wp_enqueue_style(
+        'cf-theme-options-admin',
+        get_template_directory_uri() . '/assets/css/theme-options-admin.css',
+        array(),
+        collective_finity_asset_version( get_template_directory() . '/assets/css/theme-options-admin.css' )
+    );
+    wp_enqueue_script(
+        'cf-theme-options-admin',
+        get_template_directory_uri() . '/assets/js/theme-options-admin.js',
+        array( 'jquery', 'wp-color-picker', 'media-editor' ),
+        collective_finity_asset_version( get_template_directory() . '/assets/js/theme-options-admin.js' ),
+        true
+    );
 }
 add_action( 'admin_enqueue_scripts', 'collective_finity_theme_options_assets' );
 

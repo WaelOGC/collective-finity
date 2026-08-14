@@ -8,6 +8,25 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly
 }
 
+/**
+ * Cache-busting version for a theme asset.
+ *
+ * Returns filemtime() of the file on disk so browsers and host/proxy caches
+ * pick up CSS/JS changes automatically. Falls back to the style.css Version
+ * header when the file cannot be found. Do not rely on bumping Version for
+ * asset cache busting.
+ *
+ * @param string $file_path Absolute path to the asset file.
+ * @return string File modification time, or theme Version as fallback.
+ */
+function collective_finity_asset_version( $file_path ) {
+    if ( is_string( $file_path ) && '' !== $file_path && file_exists( $file_path ) ) {
+        return (string) filemtime( $file_path );
+    }
+
+    return (string) wp_get_theme()->get( 'Version' );
+}
+
 require_once get_template_directory() . '/inc/theme-parts.php';
 require_once get_template_directory() . '/inc/admin-menu.php';
 require_once get_template_directory() . '/inc/cpt-theme-templates.php';
@@ -1016,28 +1035,41 @@ add_action( 'after_setup_theme', 'collective_finity_create_default_pages' );
  * 3. ENQUEUE FRONTEND STYLES AND SCRIPTS (Localized for Secure AJAX Requests)
  */
 function collective_finity_scripts() {
-    $theme_version = wp_get_theme()->get( 'Version' );
-    $player_path   = get_template_directory() . '/js/music-player.js';
-    $player_ver    = file_exists( $player_path ) ? filemtime( $player_path ) : $theme_version;
+    wp_enqueue_style(
+        'main-style',
+        get_stylesheet_uri(),
+        array(),
+        collective_finity_asset_version( get_template_directory() . '/style.css' )
+    );
 
-    wp_enqueue_style( 'main-style', get_stylesheet_uri(), array(), $theme_version );
+    wp_enqueue_style(
+        'cf-shell',
+        get_template_directory_uri() . '/assets/css/cf-shell.css',
+        array( 'main-style' ),
+        collective_finity_asset_version( get_template_directory() . '/assets/css/cf-shell.css' )
+    );
 
-    $shell_css_path = get_template_directory() . '/assets/css/cf-shell.css';
-    $shell_css_ver  = file_exists( $shell_css_path ) ? filemtime( $shell_css_path ) : $theme_version;
-    wp_enqueue_style( 'cf-shell', get_template_directory_uri() . '/assets/css/cf-shell.css', array( 'main-style' ), $shell_css_ver );
-
-    $layout_css_path = get_template_directory() . '/assets/css/cf-content-layout.css';
-    $layout_css_ver  = file_exists( $layout_css_path ) ? filemtime( $layout_css_path ) : $theme_version;
-    wp_enqueue_style( 'cf-content-layout', get_template_directory_uri() . '/assets/css/cf-content-layout.css', array( 'cf-shell' ), $layout_css_ver );
+    wp_enqueue_style(
+        'cf-content-layout',
+        get_template_directory_uri() . '/assets/css/cf-content-layout.css',
+        array( 'cf-shell' ),
+        collective_finity_asset_version( get_template_directory() . '/assets/css/cf-content-layout.css' )
+    );
 
     if ( is_post_type_archive( 'albums' ) ) {
-        $albums_css_path = get_template_directory() . '/assets/css/cf-albums-archive.css';
-        $albums_js_path  = get_template_directory() . '/assets/js/cf-albums-archive.js';
-        $albums_css_ver  = file_exists( $albums_css_path ) ? filemtime( $albums_css_path ) : $theme_version;
-        $albums_js_ver   = file_exists( $albums_js_path ) ? filemtime( $albums_js_path ) : $theme_version;
-
-        wp_enqueue_style( 'cf-albums-archive', get_template_directory_uri() . '/assets/css/cf-albums-archive.css', array( 'cf-content-layout' ), $albums_css_ver );
-        wp_enqueue_script( 'cf-albums-archive', get_template_directory_uri() . '/assets/js/cf-albums-archive.js', array(), $albums_js_ver, true );
+        wp_enqueue_style(
+            'cf-albums-archive',
+            get_template_directory_uri() . '/assets/css/cf-albums-archive.css',
+            array( 'cf-content-layout' ),
+            collective_finity_asset_version( get_template_directory() . '/assets/css/cf-albums-archive.css' )
+        );
+        wp_enqueue_script(
+            'cf-albums-archive',
+            get_template_directory_uri() . '/assets/js/cf-albums-archive.js',
+            array(),
+            collective_finity_asset_version( get_template_directory() . '/assets/js/cf-albums-archive.js' ),
+            true
+        );
     }
 
     wp_enqueue_style( 'dashicons' );
@@ -1062,23 +1094,44 @@ function collective_finity_scripts() {
         }
     }
     wp_enqueue_script( 'jquery' );
-    wp_enqueue_script( 'music-player-js', get_template_directory_uri() . '/js/music-player.js', array( 'jquery', 'cf-auth-script' ), $player_ver, true );
+    wp_enqueue_script(
+        'music-player-js',
+        get_template_directory_uri() . '/js/music-player.js',
+        array( 'jquery', 'cf-auth-script' ),
+        collective_finity_asset_version( get_template_directory() . '/js/music-player.js' ),
+        true
+    );
 
-    $shell_js_path = get_template_directory() . '/assets/js/cf-shell.js';
-    $shell_js_ver  = file_exists( $shell_js_path ) ? filemtime( $shell_js_path ) : $theme_version;
-    wp_enqueue_script( 'cf-shell-js', get_template_directory_uri() . '/assets/js/cf-shell.js', array(), $shell_js_ver, true );
+    wp_enqueue_script(
+        'cf-shell-js',
+        get_template_directory_uri() . '/assets/js/cf-shell.js',
+        array(),
+        collective_finity_asset_version( get_template_directory() . '/assets/js/cf-shell.js' ),
+        true
+    );
 
-    $soft_nav_path = get_template_directory() . '/js/cf-soft-nav.js';
-    $soft_nav_ver  = file_exists( $soft_nav_path ) ? filemtime( $soft_nav_path ) : $theme_version;
-    wp_enqueue_script( 'cf-soft-nav-js', get_template_directory_uri() . '/js/cf-soft-nav.js', array(), $soft_nav_ver, true );
+    wp_enqueue_script(
+        'cf-soft-nav-js',
+        get_template_directory_uri() . '/js/cf-soft-nav.js',
+        array(),
+        collective_finity_asset_version( get_template_directory() . '/js/cf-soft-nav.js' ),
+        true
+    );
 
-    $cookie_css_path = get_template_directory() . '/assets/css/cookie-consent.css';
-    $cookie_js_path  = get_template_directory() . '/assets/js/cookie-consent.js';
-    $cookie_css_ver  = file_exists( $cookie_css_path ) ? filemtime( $cookie_css_path ) : $theme_version;
-    $cookie_js_ver   = file_exists( $cookie_js_path ) ? filemtime( $cookie_js_path ) : $theme_version;
-
-    wp_enqueue_style( 'cf-cookie-consent', get_template_directory_uri() . '/assets/css/cookie-consent.css', array( 'main-style' ), $cookie_css_ver, 'print' );
-    wp_enqueue_script( 'cf-cookie-consent', get_template_directory_uri() . '/assets/js/cookie-consent.js', array(), $cookie_js_ver, true );
+    wp_enqueue_style(
+        'cf-cookie-consent',
+        get_template_directory_uri() . '/assets/css/cookie-consent.css',
+        array( 'main-style' ),
+        collective_finity_asset_version( get_template_directory() . '/assets/css/cookie-consent.css' ),
+        'print'
+    );
+    wp_enqueue_script(
+        'cf-cookie-consent',
+        get_template_directory_uri() . '/assets/js/cookie-consent.js',
+        array(),
+        collective_finity_asset_version( get_template_directory() . '/assets/js/cookie-consent.js' ),
+        true
+    );
 
     $cookie_policy_page = get_page_by_path( 'cookie-policy', OBJECT, 'page' );
     $cookie_policy_url  = ( $cookie_policy_page && 'publish' === $cookie_policy_page->post_status )
@@ -1637,7 +1690,7 @@ function collective_finity_enqueue_artist_term_admin_assets( $hook ) {
     wp_enqueue_media();
 
     $js_path = get_template_directory() . '/js/admin-artist-term-meta.js';
-    $js_ver  = file_exists( $js_path ) ? filemtime( $js_path ) : '1.0.0';
+    $js_ver  = collective_finity_asset_version( $js_path );
 
     wp_enqueue_script(
         'collective-finity-admin-artist-term',
@@ -2122,14 +2175,14 @@ function collective_finity_enqueue_admin_track_scripts( $hook ) {
     }
 
     $css_file_path = get_template_directory() . '/assets/css/admin-track-meta.css';
-    $css_version   = file_exists( $css_file_path ) ? filemtime( $css_file_path ) : '1.0.0';
+    $css_version   = collective_finity_asset_version( $css_file_path );
 
     if ( 'tracks' === $screen->post_type ) {
         wp_enqueue_media();
 
         $js_file_path = get_template_directory() . '/js/admin-track-settings.js';
         $js_file_uri  = get_template_directory_uri() . '/js/admin-track-settings.js';
-        $js_version   = file_exists( $js_file_path ) ? filemtime( $js_file_path ) : '1.3.0';
+        $js_version   = collective_finity_asset_version( $js_file_path );
 
         wp_enqueue_script(
             'collective-finity-admin-track-js',

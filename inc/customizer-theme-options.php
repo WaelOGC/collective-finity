@@ -1158,7 +1158,7 @@ function collective_finity_customize_preview_enqueue() {
         'cf-customizer-preview',
         get_template_directory_uri() . '/assets/js/customizer-preview.js',
         array( 'customize-preview', 'jquery' ),
-        wp_get_theme()->get( 'Version' ),
+        collective_finity_asset_version( get_template_directory() . '/assets/js/customizer-preview.js' ),
         true
     );
 

@@ -309,13 +309,12 @@ function collective_finity_enqueue_legal_page_assets() {
     }
 
     $css_path = get_template_directory() . '/assets/css/legal-page.css';
-    $css_ver  = file_exists( $css_path ) ? filemtime( $css_path ) : wp_get_theme()->get( 'Version' );
 
     wp_enqueue_style(
         'cf-legal-page',
         get_template_directory_uri() . '/assets/css/legal-page.css',
         array( 'main-style' ),
-        $css_ver
+        collective_finity_asset_version( $css_path )
     );
 }
 add_action( 'wp_enqueue_scripts', 'collective_finity_enqueue_legal_page_assets', 25 );

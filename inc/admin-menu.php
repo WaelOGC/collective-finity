@@ -237,13 +237,12 @@ function collective_finity_enqueue_admin_branding( $hook ) {
     }
 
     $css_path = get_template_directory() . '/assets/css/admin-branding.css';
-    $version  = file_exists( $css_path ) ? filemtime( $css_path ) : wp_get_theme()->get( 'Version' );
 
     wp_enqueue_style(
         'cf-admin-branding',
         get_template_directory_uri() . '/assets/css/admin-branding.css',
         array(),
-        $version
+        collective_finity_asset_version( $css_path )
     );
 
     wp_enqueue_style( 'dashicons' );
