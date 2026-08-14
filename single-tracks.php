@@ -52,6 +52,7 @@ $track_comments = get_comments( array(
         $show_bpm     = collective_finity_track_show_bpm( get_the_ID() );
         $show_key     = collective_finity_track_show_key( get_the_ID() );
         $show_lyrics  = collective_finity_track_show_lyrics( get_the_ID() );
+        $lyrics_url   = get_post_meta( get_the_ID(), 'track_lyrics_url', true );
         $release_type = get_post_meta( get_the_ID(), 'track_release_type', true );
         $playback_url = ! empty( $preview_url ) ? $preview_url : $audio_url;
         $associated_album_id = get_post_meta( get_the_ID(), 'associated_album', true );
@@ -324,16 +325,21 @@ $track_comments = get_comments( array(
                 </div>
 
                 <!-- 6. Dynamic Audio Voice Tracking Lyrics System -->
+                <?php if ( ! empty( $lyrics_url ) ) : ?>
                 <div class="cf-lyrics-tracker-container" style="margin-bottom: 40px;">
                     <h3><?php _e('Lyrics / Narrative Sync', 'collective-finity'); ?></h3>
+                    <?php $cf_lyric_cues = collective_finity_parse_lyrics_file( $lyrics_url ); ?>
                     <div id="cf-lyrics-sync-playlist">
-                        <p class="cf-sync-line" data-start="0" data-end="10">✦ (Ambient introduction - cinematic buildup) ✦</p>
-                        <p class="cf-sync-line" data-start="11" data-end="25">"We craft digital experiences that matter..."</p>
-                        <p class="cf-sync-line" data-start="26" data-end="45">"On your land, under the warm, breathing sky..."</p>
-                        <p class="cf-sync-line" data-start="46" data-end="68">"Land of Light... where humanity, memory, and hope are born."</p>
-                        <p class="cf-sync-line" data-start="69" data-end="120">✦ (Atmospheric soundscape & synthesizers climax) ✦</p>
+                        <?php if ( ! empty( $cf_lyric_cues ) ) : ?>
+                            <?php foreach ( $cf_lyric_cues as $cue ) : ?>
+                                <p class="cf-sync-line" data-start="<?php echo esc_attr( $cue['start'] ); ?>" data-end="<?php echo esc_attr( $cue['end'] ); ?>"><?php echo esc_html( $cue['text'] ); ?></p>
+                            <?php endforeach; ?>
+                        <?php else : ?>
+                            <p class="cf-sync-line-empty"><?php esc_html_e( 'No synced lyrics available for this track.', 'collective-finity' ); ?></p>
+                        <?php endif; ?>
                     </div>
                 </div>
+                <?php endif; ?>
                 <?php endif; ?>
 
                 <!-- 2. STYLIZED COMMENTS SECTION WITH EMOJI SELECTOR AND FORCED INPUT FORM -->

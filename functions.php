@@ -117,6 +117,154 @@ function collective_finity_track_show_lyrics( $track_id ) {
 }
 
 /**
+ * Parse a .vtt or .lrc lyrics file into an array of timed cues.
+ *
+ * @param string $url URL of the lyrics file (from track_lyrics_url meta).
+ * @return array[] Array of ['start' => float, 'end' => float, 'text' => string].
+ */
+function collective_finity_parse_lyrics_file( $url ) {
+    if ( empty( $url ) ) {
+        return array();
+    }
+
+    // Prefer reading straight off disk (uploads on this server) over an
+    // HTTP round-trip; fall back to wp_remote_get for external URLs.
+    $upload_dir = wp_upload_dir();
+    $content    = false;
+
+    if ( 0 === strpos( $url, $upload_dir['baseurl'] ) ) {
+        $path = str_replace( $upload_dir['baseurl'], $upload_dir['basedir'], $url );
+        if ( file_exists( $path ) && is_readable( $path ) ) {
+            $content = file_get_contents( $path );
+        }
+    }
+
+    if ( false === $content ) {
+        $response = wp_remote_get( $url, array( 'timeout' => 8 ) );
+        if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+            return array();
+        }
+        $content = wp_remote_retrieve_body( $response );
+    }
+
+    if ( empty( $content ) ) {
+        return array();
+    }
+
+    $is_lrc = ( false !== stripos( $url, '.lrc' ) ) && ( false === stripos( $content, 'WEBVTT' ) );
+
+    return $is_lrc
+        ? collective_finity_parse_lrc_cues( $content )
+        : collective_finity_parse_vtt_cues( $content );
+}
+
+/**
+ * Parse WEBVTT cue blocks into [start, end, text] entries.
+ *
+ * @param string $content Raw VTT file contents.
+ * @return array[]
+ */
+function collective_finity_parse_vtt_cues( $content ) {
+    $cues    = array();
+    $content = str_replace( "\r\n", "\n", $content );
+    $blocks  = preg_split( '/\n\n+/', trim( $content ) );
+
+    foreach ( $blocks as $block ) {
+        if ( ! preg_match(
+            '/(\d{2}:\d{2}:\d{2}\.\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}\.\d{3})/',
+            $block,
+            $m
+        ) ) {
+            continue; // Skip the "WEBVTT" header block and any non-cue block.
+        }
+
+        $lines = explode( "\n", trim( $block ) );
+        // Drop the timestamp line (and an optional numeric cue-id line before it).
+        $text_lines = array();
+        foreach ( $lines as $line ) {
+            if ( false !== strpos( $line, '-->' ) || preg_match( '/^\d+$/', trim( $line ) ) ) {
+                continue;
+            }
+            $text_lines[] = $line;
+        }
+        $text = trim( implode( ' ', $text_lines ) );
+        if ( '' === $text ) {
+            continue;
+        }
+
+        $cues[] = array(
+            'start' => collective_finity_vtt_timestamp_to_seconds( $m[1] ),
+            'end'   => collective_finity_vtt_timestamp_to_seconds( $m[2] ),
+            'text'  => $text,
+        );
+    }
+
+    return $cues;
+}
+
+/**
+ * Convert a WEBVTT timestamp (HH:MM:SS.mmm) to seconds.
+ *
+ * @param string $ts Timestamp string.
+ * @return float
+ */
+function collective_finity_vtt_timestamp_to_seconds( $ts ) {
+    $parts = explode( ':', $ts );
+    if ( 3 !== count( $parts ) ) {
+        return 0.0;
+    }
+    return ( (float) $parts[0] * 3600 ) + ( (float) $parts[1] * 60 ) + (float) $parts[2];
+}
+
+/**
+ * Parse simple LRC lines ([mm:ss.xx]Text) into [start, end, text] entries.
+ * End time for each line = start time of the next line (last line gets +4s).
+ *
+ * @param string $content Raw LRC file contents.
+ * @return array[]
+ */
+function collective_finity_parse_lrc_cues( $content ) {
+    $raw = array();
+    foreach ( preg_split( '/\r\n|\r|\n/', $content ) as $line ) {
+        if ( ! preg_match( '/^\[(\d{2}):(\d{2})(?:\.(\d{1,2}))?\](.*)$/', trim( $line ), $m ) ) {
+            continue;
+        }
+        $seconds = ( (int) $m[1] * 60 ) + (int) $m[2] + ( isset( $m[3] ) ? ( (float) ( '0.' . $m[3] ) ) : 0 );
+        $text    = trim( $m[4] );
+        if ( '' === $text ) {
+            continue;
+        }
+        $raw[] = array( 'start' => $seconds, 'text' => $text );
+    }
+
+    $cues = array();
+    foreach ( $raw as $i => $line ) {
+        $end    = isset( $raw[ $i + 1 ] ) ? $raw[ $i + 1 ]['start'] : $line['start'] + 4;
+        $cues[] = array( 'start' => $line['start'], 'end' => $end, 'text' => $line['text'] );
+    }
+
+    return $cues;
+}
+
+/**
+ * Allow .lrc lyric files to be uploaded through the Media Library,
+ * alongside the already-supported .vtt format.
+ */
+add_filter( 'upload_mimes', function ( $mimes ) {
+    $mimes['lrc'] = 'text/plain';
+    return $mimes;
+} );
+
+add_filter( 'wp_check_filetype_and_ext', function ( $data, $file, $filename, $mimes ) {
+    if ( preg_match( '/\.lrc$/i', $filename ) ) {
+        $data['ext']             = 'lrc';
+        $data['type']            = 'text/plain';
+        $data['proper_filename'] = $filename;
+    }
+    return $data;
+}, 10, 4 );
+
+/**
  * Track meta visibility toggle that defaults to enabled when unset.
  * Used for streaming platform visibility so existing tracks keep their
  * current frontend behavior until an admin opts out.
