@@ -648,10 +648,23 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
 .cf-content-area h2 { font-size: 24px; margin-top: 0; margin-bottom: 20px; color: #fff; }
 .cf-entry-content { font-size: 16px; line-height: 1.8; color: #ccc; margin-bottom: 40px; }
 .cf-lyrics-tracker-container { background: rgba(0,0,0,0.4); padding: 25px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
-.cf-lyrics-tracker-container h3 { margin-top: 0; color: #fff; margin-bottom: 20px; font-size: 16px; letter-spacing: 1px; }
-#cf-lyrics-sync-playlist { display: flex; flex-direction: column; gap: 15px; }
-.cf-sync-line { font-size: 15px; color: #555; transition: color 0.3s, filter 0.3s; margin: 0; font-family: 'Space Mono', monospace; }
-.cf-sync-line.active { color: var(--primary-color); font-weight: bold; filter: drop-shadow(0 0 5px var(--primary-color)); }
+.cf-lyrics-tracker-container h3 { margin-top: 0; color: #fff; margin-bottom: 16px; font-size: 16px; letter-spacing: 1px; }
+#cf-lyrics-sync-playlist {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 260px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    padding: 20px 6px;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+}
+#cf-lyrics-sync-playlist::-webkit-scrollbar { width: 5px; }
+#cf-lyrics-sync-playlist::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+.cf-sync-line { font-size: 15px; color: #555; opacity: 0.5; transition: color 0.3s, opacity 0.3s, filter 0.3s, transform 0.3s; margin: 0; font-family: 'Space Mono', monospace; }
+.cf-sync-line.active { color: var(--primary-color); font-weight: bold; opacity: 1; filter: drop-shadow(0 0 5px var(--primary-color)); transform: scale(1.03); }
+.cf-sync-line-empty { font-size: 14px; color: #777; font-style: italic; }
 .cf-copyright-text { margin-top: 40px; font-size: 12px; color: #555; }
 
 /* Custom Comments and Emoji Picker Styles */
@@ -779,19 +792,32 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
         if (!window.__cfTrackAudioUiBound) {
             window.__cfTrackAudioUiBound = true;
 
+            var cfLyricsBox = document.getElementById('cf-lyrics-sync-playlist');
+            var cfLastActiveLine = null;
+
             audio.addEventListener('timeupdate', function() {
                 var currentTime = audio.currentTime;
-                
+                var newActiveLine = null;
+
                 $('.cf-sync-line').each(function() {
                     var start = parseFloat($(this).data('start'));
                     var end = parseFloat($(this).data('end'));
-                    
+
                     if (currentTime >= start && currentTime <= end) {
                         $(this).addClass('active');
+                        newActiveLine = this;
                     } else {
                         $(this).removeClass('active');
                     }
                 });
+
+                if (newActiveLine && newActiveLine !== cfLastActiveLine && cfLyricsBox) {
+                    cfLastActiveLine = newActiveLine;
+                    var boxRect  = cfLyricsBox.getBoundingClientRect();
+                    var lineRect = newActiveLine.getBoundingClientRect();
+                    var offset   = (lineRect.top + lineRect.height / 2) - (boxRect.top + boxRect.height / 2);
+                    cfLyricsBox.scrollTop += offset;
+                }
             });
 
         }
