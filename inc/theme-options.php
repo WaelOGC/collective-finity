@@ -59,16 +59,18 @@ function collective_finity_default_theme_options() {
         'footer_description' => 'Welcome to Collective Finity — a cinematic world where emotional sound, visual stories and creativity connect in one immersive universe.',
         'footer_logo'        => '',
         'footer_logo_size'   => 40,
-        'social_instagram'           => '',
+        'social_instagram'           => 'https://www.instagram.com/waelsafan88/',
         'social_instagram_community' => '',
-        'social_youtube'             => '',
-        'social_spotify'             => '',
-        'social_facebook'            => '',
-        'social_facebook_group'      => '',
-        'social_discord'             => '',
-        'social_tiktok'              => '',
-        'social_soundcloud'          => '',
-        'social_amazon'              => '',
+        'social_youtube'             => 'https://www.youtube.com/channel/UClT_3MOAUMSTlEzh2Kpsa5g',
+        'social_youtube_2'           => 'https://www.youtube.com/channel/UCtxMZjnSkpz7tQBgwEA2plw',
+        'social_spotify'             => 'https://open.spotify.com/artist/27HFMGczYg5s9ov0Q65UjD',
+        'social_spotify_2'           => 'https://open.spotify.com/artist/3VVlv2S2BfxXhuA6e088B5',
+        'social_facebook'            => 'https://www.facebook.com/ffcollective25',
+        'social_facebook_group'      => 'https://www.facebook.com/ffcollective25',
+        'social_discord'             => 'https://discord.gg/caBR3Fwux',
+        'social_tiktok'              => 'https://www.tiktok.com/@waelsfn',
+        'social_soundcloud'          => 'https://soundcloud.com/waelwt',
+        'social_amazon'              => 'https://music.amazon.com/artists/B0F4KQSKXP/wael-w-t',
         'social_amazon_music'      => '',
         'social_x'                   => '',
         'custom_css'         => '',
@@ -149,9 +151,11 @@ function collective_finity_get_community_urls_from_page_content() {
         'social_instagram'           => '/instagram\.com/i',
         'social_instagram_community' => '/instagram\.com/i',
         'social_youtube'             => '/youtube\.com|youtu\.be/i',
+        'social_youtube_2'           => '/youtube\.com|youtu\.be/i',
         'social_amazon'              => '/music\.amazon|amazon\./i',
         'social_soundcloud'          => '/soundcloud\.com/i',
         'social_spotify'             => '/open\.spotify\.com|spotify\.com/i',
+        'social_spotify_2'           => '/open\.spotify\.com|spotify\.com/i',
     );
 
     if ( ! preg_match_all( '/href=["\']([^"\']+)["\']/i', $content, $matches ) ) {
@@ -438,7 +442,9 @@ function collective_finity_sanitize_theme_options( $input ) {
             'social_instagram',
             'social_instagram_community',
             'social_youtube',
+            'social_youtube_2',
             'social_spotify',
+            'social_spotify_2',
             'social_facebook',
             'social_facebook_group',
             'social_discord',
@@ -975,7 +981,9 @@ function collective_finity_render_theme_options_footer_content_tab( $options ) {
         <tr><th scope="row"><label for="cf_social_instagram_community">Instagram — Community</label></th><td><input type="url" class="regular-text" id="cf_social_instagram_community" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_instagram_community]" value="<?php echo esc_url( $options['social_instagram_community'] ); ?>" placeholder="https://instagram.com/..."></td></tr>
         <tr><th scope="row"><label for="cf_social_tiktok">TikTok</label></th><td><input type="url" class="regular-text" id="cf_social_tiktok" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_tiktok]" value="<?php echo esc_url( $options['social_tiktok'] ); ?>" placeholder="https://tiktok.com/@..."></td></tr>
         <tr><th scope="row"><label for="cf_social_youtube">YouTube</label></th><td><input type="url" class="regular-text" id="cf_social_youtube" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_youtube]" value="<?php echo esc_url( $options['social_youtube'] ); ?>" placeholder="https://youtube.com/..."></td></tr>
+        <tr><th scope="row"><label for="cf_social_youtube_2">YouTube (2nd channel)</label></th><td><input type="url" class="regular-text" id="cf_social_youtube_2" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_youtube_2]" value="<?php echo esc_url( $options['social_youtube_2'] ); ?>" placeholder="https://youtube.com/..."></td></tr>
         <tr><th scope="row"><label for="cf_social_spotify">Spotify</label></th><td><input type="url" class="regular-text" id="cf_social_spotify" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_spotify]" value="<?php echo esc_url( $options['social_spotify'] ); ?>" placeholder="https://open.spotify.com/..."></td></tr>
+        <tr><th scope="row"><label for="cf_social_spotify_2">Spotify (2nd account)</label></th><td><input type="url" class="regular-text" id="cf_social_spotify_2" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_spotify_2]" value="<?php echo esc_url( $options['social_spotify_2'] ); ?>" placeholder="https://open.spotify.com/..."></td></tr>
         <tr><th scope="row"><label for="cf_social_soundcloud">SoundCloud</label></th><td><input type="url" class="regular-text" id="cf_social_soundcloud" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_soundcloud]" value="<?php echo esc_url( $options['social_soundcloud'] ); ?>" placeholder="https://soundcloud.com/..."></td></tr>
         <tr><th scope="row"><label for="cf_social_amazon">Amazon Music</label></th><td><input type="url" class="regular-text" id="cf_social_amazon" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_amazon]" value="<?php echo esc_url( $options['social_amazon'] ?: ( $options['social_amazon_music'] ?? '' ) ); ?>" placeholder="https://music.amazon.com/..."></td></tr>
         <tr><th scope="row"><label for="cf_social_x">X (Twitter)</label></th><td><input type="url" class="regular-text" id="cf_social_x" name="<?php echo esc_attr( collective_finity_theme_options_key() ); ?>[social_x]" value="<?php echo esc_url( $options['social_x'] ); ?>" placeholder="https://x.com/..."></td></tr>
