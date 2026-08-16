@@ -23,6 +23,16 @@ $cf_tagline     = $cf_tagline ? $cf_tagline : __( 'Experience Music Beyond Imagi
 $cf_description = $cf_description ? $cf_description : __( 'Welcome to Collective Finity — a cinematic world where emotional sound, visual stories and creativity connect in one immersive universe.', 'collective-finity' );
 ?>
 <footer class="cf-site-footer" role="contentinfo">
+    <div class="cf-a2hs-banner" id="cf-a2hs-banner" hidden>
+        <img class="cf-a2hs-banner-icon" src="<?php echo esc_url( collective_finity_site_logo_url( 'thumbnail' ) ); ?>" alt="">
+        <p class="cf-a2hs-banner-text">
+            <?php esc_html_e( 'Add Collective Finity to your home screen for quick access, like an app.', 'collective-finity' ); ?>
+        </p>
+        <button type="button" class="cf-a2hs-banner-btn" id="cf-a2hs-install-btn">
+            <?php esc_html_e( 'Add to Home Screen', 'collective-finity' ); ?>
+        </button>
+        <button type="button" class="cf-a2hs-banner-dismiss" id="cf-a2hs-dismiss-btn" aria-label="<?php esc_attr_e( 'Dismiss', 'collective-finity' ); ?>">&times;</button>
+    </div>
     <div class="cf-footer-inner">
         <div class="cf-footer-brand">
             <a class="cf-footer-brand-link" href="<?php echo esc_url( home_url( '/' ) ); ?>">

@@ -24,6 +24,8 @@ $cf_site_name = collective_finity_brand_name();
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="<?php echo esc_attr( $cf_site_name ); ?>">
     <link rel="apple-touch-icon" href="<?php echo esc_url( $cf_logo_url ); ?>">
+    <link rel="manifest" href="<?php echo esc_url( home_url( '/manifest.json' ) ); ?>">
+    <meta name="theme-color" content="<?php echo esc_attr( collective_finity_pwa_theme_color() ); ?>">
     <link rel="icon" type="image/png" sizes="192x192" href="<?php echo esc_url( $cf_logo_url ); ?>">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">

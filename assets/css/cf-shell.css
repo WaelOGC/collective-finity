@@ -940,6 +940,74 @@ html.cf-player-collapsed .cf-player-headline { justify-content: center; }
     max-width: 100%;
     min-width: 0;
 }
+.cf-a2hs-banner {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 0 24px;
+    padding: 12px 14px;
+    border: 1px solid var(--cf-divider);
+    border-radius: var(--cf-card-radius);
+    background: var(--cf-bg-panel);
+    color: var(--cf-text-2);
+}
+.cf-a2hs-banner[hidden] { display: none !important; }
+.cf-a2hs-banner-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: var(--cf-bg-card);
+}
+.cf-a2hs-banner-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--cf-text-2);
+}
+.cf-a2hs-banner-btn {
+    flex-shrink: 0;
+    padding: 9px 14px;
+    border: none;
+    border-radius: var(--cf-btn-radius);
+    background: var(--cf-accent);
+    color: var(--cf-bg-dark);
+    font-family: var(--cf-body);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--cf-transition-speed, 0.2s) ease, color var(--cf-transition-speed, 0.2s) ease;
+}
+.cf-a2hs-banner-btn:hover,
+.cf-a2hs-banner-btn:focus-visible {
+    background: var(--cf-accent-hover);
+    color: #0D0D0D;
+    outline: none;
+}
+.cf-a2hs-banner-dismiss {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--cf-text-3);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+.cf-a2hs-banner-dismiss:hover,
+.cf-a2hs-banner-dismiss:focus-visible {
+    color: var(--cf-text);
+    outline: none;
+}
 .cf-footer-inner { display: flex; flex-direction: row; gap: 48px; justify-content: space-between; }
 .cf-footer-brand { max-width: 320px; display: flex; flex-direction: column; gap: 10px; }
 .cf-footer-brand-link { display: flex; align-items: center; gap: 9px; text-decoration: none; }
@@ -1274,6 +1342,20 @@ body.cf-glow-disabled .cf-cta { background: linear-gradient(135deg, rgba(255,183
 /* ============ TABLET / MOBILE ============ */
 @media (max-width: 1023px) {
     body { padding: 0 0 var(--cf-footer-player-h) 0 !important; }
+
+    .cf-a2hs-banner:not([hidden]) {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: var(--cf-footer-player-h);
+        z-index: 19;
+        margin: 0;
+        width: 100%;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
+    }
 
     .cf-left-sidebar { display: none; }
     .cf-right-icons, .cf-right-collapse-btn { display: none !important; }

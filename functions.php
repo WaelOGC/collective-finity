@@ -38,6 +38,7 @@ require_once get_template_directory() . '/inc/customizer-theme-options.php';
 require_once get_template_directory() . '/inc/legal-pages.php';
 require_once get_template_directory() . '/inc/blog.php';
 require_once get_template_directory() . '/inc/faq.php';
+require_once get_template_directory() . '/inc/cf-manifest.php';
 
 /**
  * 1. BASIC THEME SUPPORT & MENUS
@@ -1263,6 +1264,14 @@ function collective_finity_scripts() {
         get_template_directory_uri() . '/js/cf-soft-nav.js',
         array(),
         collective_finity_asset_version( get_template_directory() . '/js/cf-soft-nav.js' ),
+        true
+    );
+
+    wp_enqueue_script(
+        'cf-pwa-install',
+        get_template_directory_uri() . '/js/pwa-install.js',
+        array(),
+        collective_finity_asset_version( get_template_directory() . '/js/pwa-install.js' ),
         true
     );
 
