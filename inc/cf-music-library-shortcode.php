@@ -95,6 +95,9 @@ function collective_finity_music_library_shortcode() {
 		'order'          => 'DESC',
 	) );
 
+	// ── 3b. Curated (admin-curated) public playlists, shown in the Featured Playlists panel ──
+	$curated_playlists = class_exists( 'CF_Playlists' ) ? CF_Playlists::get_curated_playlists( 6 ) : [];
+
 	// ── 4. Studio gallery — only real images, set via: update_option('cf_studio_gallery_ids', [123,456,...]) ──
 	$gallery_ids = get_option( 'cf_studio_gallery_ids', array() );
 
@@ -188,10 +191,11 @@ function collective_finity_music_library_shortcode() {
 		<?php collective_finity_ad_slot_wrapped( 'library_between_sections', '<div class="library-section cf-ad-library-between">', '</div>' ); ?>
 		<?php endif; ?>
 
-		<?php if ( ! empty( $popular_tracks ) ) : ?>
+		<?php if ( ! empty( $popular_tracks ) || ! empty( $curated_playlists ) ) : ?>
 		<section class="library-section split-layout">
 			<div class="split-left">
 				<h2 class="section-title">Popular Tracks</h2>
+				<?php if ( ! empty( $popular_tracks ) ) : ?>
 				<div class="track-list">
 					<?php foreach ( $popular_tracks as $i => $t ) :
 						$audio   = get_post_meta( $t->ID, 'track_preview_url', true ) ?: get_post_meta( $t->ID, 'track_audio_url', true );
@@ -214,13 +218,15 @@ function collective_finity_music_library_shortcode() {
 					</div>
 					<?php endforeach; ?>
 				</div>
+				<?php else : ?>
+				<div class="library-empty-note">
+					No popular tracks yet — check back once listeners start streaming.
+				</div>
+				<?php endif; ?>
 			</div>
 
 			<div class="split-right">
 				<h2 class="section-title">Featured Playlists</h2>
-				<?php
-				$curated_playlists = class_exists( 'CF_Playlists' ) ? CF_Playlists::get_curated_playlists( 6 ) : [];
-				?>
 				<?php if ( ! empty( $curated_playlists ) ) : ?>
 					<div class="curated-playlist-list">
 						<?php foreach ( $curated_playlists as $pl ) : ?>
