@@ -652,6 +652,8 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
 #cf-lyrics-sync-playlist {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    text-align: center;
     gap: 14px;
     max-height: 260px;
     overflow-y: auto;
