@@ -655,11 +655,47 @@ $cf_library_tabs[] = array(
 
 			<?php elseif ( 'playlists' === $cf_tracks_view ) : ?>
 
-				<div class="tracks-empty-state" data-cf-library-placeholder="playlists">
-					<span>🎶</span>
-					<h2><?php esc_html_e( 'Playlists Coming Soon', 'collective-finity' ); ?></h2>
-					<p><?php esc_html_e( 'Playlists are coming soon — this section will activate once the community playlist feature ships.', 'collective-finity' ); ?></p>
-				</div>
+				<?php
+				$cf_curated_playlists = class_exists( 'CF_Playlists' ) ? CF_Playlists::get_curated_playlists( 24 ) : array();
+				?>
+
+				<?php if ( ! empty( $cf_curated_playlists ) ) : ?>
+
+					<div class="cf-library-results" data-cf-library-results>
+						<div class="cf-card-grid" data-cf-view="grid">
+							<?php foreach ( $cf_curated_playlists as $cf_playlist ) : ?>
+								<a href="<?php echo esc_url( $cf_playlist['share_url'] ); ?>" class="cf-card" data-cf-search-title="<?php echo esc_attr( mb_strtolower( $cf_playlist['name'] ) ); ?>">
+									<div class="cf-cover">
+										<?php if ( ! empty( $cf_playlist['cover'] ) ) : ?>
+											<img src="<?php echo esc_url( $cf_playlist['cover'] ); ?>" alt="<?php echo esc_attr( $cf_playlist['name'] ); ?>" loading="lazy">
+										<?php else : ?>
+											<img src="<?php echo esc_url( collective_finity_default_art_url() ); ?>" alt="<?php echo esc_attr( $cf_playlist['name'] ); ?>" loading="lazy">
+										<?php endif; ?>
+									</div>
+									<div class="cf-card-title"><?php echo esc_html( $cf_playlist['name'] ); ?></div>
+									<div class="cf-card-sub">
+										<?php
+										echo esc_html( sprintf(
+											/* translators: %d: number of tracks */
+											_n( '%d track', '%d tracks', (int) $cf_playlist['item_count'], 'collective-finity' ),
+											(int) $cf_playlist['item_count']
+										) );
+										?>
+									</div>
+								</a>
+							<?php endforeach; ?>
+						</div>
+					</div>
+
+				<?php else : ?>
+
+					<div class="tracks-empty-state" data-cf-library-placeholder="playlists">
+						<span>🎶</span>
+						<h2><?php esc_html_e( 'Playlists Coming Soon', 'collective-finity' ); ?></h2>
+						<p><?php esc_html_e( 'Playlists are coming soon — this section will activate once the community playlist feature ships.', 'collective-finity' ); ?></p>
+					</div>
+
+				<?php endif; ?>
 
 			<?php else : ?>
 
