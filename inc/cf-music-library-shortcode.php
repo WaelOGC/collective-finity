@@ -218,9 +218,40 @@ function collective_finity_music_library_shortcode() {
 
 			<div class="split-right">
 				<h2 class="section-title">Featured Playlists</h2>
-				<div class="library-empty-note">
-					Playlists are coming soon — this section will activate once the community playlist feature ships.
-				</div>
+				<?php
+				$curated_playlists = class_exists( 'CF_Playlists' ) ? CF_Playlists::get_curated_playlists( 6 ) : [];
+				?>
+				<?php if ( ! empty( $curated_playlists ) ) : ?>
+					<div class="curated-playlist-list">
+						<?php foreach ( $curated_playlists as $pl ) : ?>
+							<a class="curated-playlist-card" href="<?php echo esc_url( $pl['share_url'] ); ?>">
+								<span class="curated-playlist-cover<?php echo empty( $pl['cover'] ) ? ' curated-playlist-cover--empty' : ''; ?>">
+									<?php if ( ! empty( $pl['cover'] ) ) : ?>
+										<img src="<?php echo esc_url( $pl['cover'] ); ?>" alt="" loading="lazy">
+									<?php else : ?>
+										<span aria-hidden="true">♪</span>
+									<?php endif; ?>
+								</span>
+								<span class="curated-playlist-info">
+									<span class="curated-playlist-name"><?php echo esc_html( $pl['name'] ); ?></span>
+									<span class="curated-playlist-count">
+										<?php
+										printf(
+											/* translators: %d: number of tracks */
+											esc_html( _n( '%d track', '%d tracks', (int) $pl['item_count'], 'collective-finity' ) ),
+											(int) $pl['item_count']
+										);
+										?>
+									</span>
+								</span>
+							</a>
+						<?php endforeach; ?>
+					</div>
+				<?php else : ?>
+					<div class="library-empty-note">
+						Playlists are coming soon — this section will activate once the community playlist feature ships.
+					</div>
+				<?php endif; ?>
 			</div>
 		</section>
 		<?php endif; ?>
@@ -248,6 +279,15 @@ function collective_finity_music_library_shortcode() {
 	.library-section{margin-bottom:60px}
 	.section-title{font-size:1.8rem;font-weight:800;letter-spacing:1px;margin:0 0 20px 0;color:#fff}
 	.section-subtitle{color:rgba(255,255,255,.5);font-size:.95rem;margin:-15px 0 25px 0;max-width:600px}
+	.curated-playlist-list{display:flex;flex-direction:column;gap:12px}
+	.curated-playlist-card{display:flex;align-items:center;gap:14px;padding:10px;border-radius:10px;background:rgba(255,255,255,.03);text-decoration:none;transition:background .2s ease}
+	.curated-playlist-card:hover{background:rgba(255,255,255,.07)}
+	.curated-playlist-cover{width:52px;height:52px;border-radius:8px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06)}
+	.curated-playlist-cover img{width:100%;height:100%;object-fit:cover;display:block}
+	.curated-playlist-cover--empty{color:rgba(255,255,255,.35);font-size:1.3rem}
+	.curated-playlist-info{display:flex;flex-direction:column;min-width:0}
+	.curated-playlist-name{color:#fff;font-weight:700;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+	.curated-playlist-count{color:rgba(255,255,255,.5);font-size:.82rem;margin-top:2px}
 	.library-empty-note{padding:24px;border:1px dashed rgba(255,255,255,.15);border-radius:12px;color:rgba(255,255,255,.5);font-size:.9rem;text-align:center}
 	.library-hero{text-align:center;padding:40px 20px 60px 20px}
 	.library-badge{display:inline-block;padding:6px 16px;background:rgba(255,183,0,.1);border:1px solid rgba(255,183,0,.3);border-radius:30px;color:#FFB700;font-size:.75rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px}
