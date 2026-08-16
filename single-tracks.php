@@ -656,6 +656,7 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
     max-height: 260px;
     overflow-y: auto;
     scroll-behavior: smooth;
+    position: relative;
     padding: 20px 6px;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
     mask-image: linear-gradient(to bottom, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
@@ -813,10 +814,15 @@ window.cfAlbumQueue = <?php echo wp_json_encode( $cf_album_queue ); ?>;
 
                 if (newActiveLine && newActiveLine !== cfLastActiveLine && cfLyricsBox) {
                     cfLastActiveLine = newActiveLine;
-                    var boxRect  = cfLyricsBox.getBoundingClientRect();
-                    var lineRect = newActiveLine.getBoundingClientRect();
-                    var offset   = (lineRect.top + lineRect.height / 2) - (boxRect.top + boxRect.height / 2);
-                    cfLyricsBox.scrollTop += offset;
+
+                    var targetScrollTop = newActiveLine.offsetTop
+                        - (cfLyricsBox.clientHeight / 2)
+                        + (newActiveLine.offsetHeight / 2);
+
+                    var maxScrollTop = cfLyricsBox.scrollHeight - cfLyricsBox.clientHeight;
+                    targetScrollTop = Math.max(0, Math.min(targetScrollTop, maxScrollTop));
+
+                    cfLyricsBox.scrollTop = targetScrollTop;
                 }
             });
 
